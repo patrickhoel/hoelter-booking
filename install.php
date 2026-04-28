@@ -42,6 +42,18 @@ try {
     ");
     echo "<p>✅ Datenbank-Tabellen wurden eingerichtet.</p>";
 
+    // --- NEU: Datenbank-Updates (Migrationen) für bestehende Installationen ---
+    // Fügt die JSON-Spalten sicher hinzu, falls sie noch nicht existieren
+    $migrations = [
+        "ALTER TABLE event_types ADD COLUMN schedule_json TEXT DEFAULT NULL",
+        "ALTER TABLE event_types ADD COLUMN form_fields_json TEXT DEFAULT NULL",
+        "ALTER TABLE bookings ADD COLUMN custom_data_json TEXT DEFAULT NULL"
+    ];
+    foreach ($migrations as $sql) {
+        try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
+    }
+    echo "<p>✅ Datenbank-Struktur wurde für individuelle Zeiten und Formulare aktualisiert.</p>";
+
     // 4. Standard-Werte einfügen (wie in der Python Version)
     $db->exec("INSERT INTO event_types (name, duration_minutes) SELECT 'Einzeltraining', 60 WHERE NOT EXISTS (SELECT 1 FROM event_types)");
     $db->exec("INSERT INTO settings (work_start_time, work_end_time) SELECT '09:00', '17:00' WHERE NOT EXISTS (SELECT 1 FROM settings)");

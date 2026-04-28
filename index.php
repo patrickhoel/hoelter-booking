@@ -3,12 +3,21 @@
 require_once 'config.php';
 $db = getDb();
 
-// Lade das erste aktive Training aus der Datenbank
-$stmt = $db->query("SELECT * FROM event_types WHERE is_active = 1 LIMIT 1");
+// Prüfen, ob eine spezifische Event-ID über die URL übergeben wurde (?event_id=2)
+$eventId = filter_input(INPUT_GET, 'event_id', FILTER_VALIDATE_INT);
+
+if ($eventId) {
+    $stmt = $db->prepare("SELECT * FROM event_types WHERE id = ? AND is_active = 1");
+    $stmt->execute([$eventId]);
+} else {
+    // Fallback: Lade das erste aktive Training aus der Datenbank
+    $stmt = $db->query("SELECT * FROM event_types WHERE is_active = 1 LIMIT 1");
+}
+
 $event = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$event) {
-    die("Kein aktives Training gefunden! Bitte die install.php ausführen.");
+    die("Dieses Training existiert nicht oder ist inaktiv.");
 }
 // Hier können wir später z.B. freie Termine aus der Datenbank laden
 // $freie_termine = ...
