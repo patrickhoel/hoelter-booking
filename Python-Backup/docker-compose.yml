@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      # Leitet Port 5000 deines Laptops an Port 5000 des Containers weiter
+      - "5000:5000"
+    volumes:
+      # WICHTIG: Dies spiegelt deinen lokalen Ordner in den Container.
+      # Wenn du in VS Code speicherst, aktualisiert sich die App sofort!
+      - .:/app
+    environment:
+      - FLASK_DEBUG=1

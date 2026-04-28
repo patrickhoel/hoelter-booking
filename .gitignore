@@ -1,0 +1,11 @@
+# Python Cache
+__pycache__/
+*.py[cod]
+
+# Virtuelle Umgebungen
+.venv/
+venv/
+
+# Datenbanken (Wir wollen keine echten Kundendaten auf GitHub hochladen!)
+*.db
+instance/

@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+# Arbeitsverzeichnis im Container festlegen
+WORKDIR /app
+
+# Abhängigkeiten kopieren und installieren
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Den restlichen Code in den Container kopieren
+COPY . .
+
+# Den Port nach außen freigeben
+EXPOSE 5000
+
+# Befehl zum Starten der App
+CMD ["python", "app.py"]
