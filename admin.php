@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// Login-Schutz: Wer nicht eingeloggt ist, fliegt raus!
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -25,9 +34,9 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <h1>Admin Dashboard</h1>
-                <p style="margin-top: -15px; color: #666;">Eingeloggt als: <strong>{{ current_user.username }}</strong></p>
+                <p style="margin-top: -15px; color: #666;">Eingeloggt als: <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></p>
             </div>
-            <a href="/logout" style="padding: 10px 15px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Logout</a>
+            <a href="logout.php" style="padding: 10px 15px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Logout</a>
         </div>
         
         <div class="card">
@@ -70,7 +79,7 @@
 
     <script>
         // 1. Einstellungen beim Laden abrufen
-        fetch('/api/settings')
+        fetch('api_settings.php')
             .then(r => r.json())
             .then(data => {
                 document.getElementById('startTime').value = data.work_start_time;
@@ -81,7 +90,7 @@
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const data = { work_start_time: document.getElementById('startTime').value, work_end_time: document.getElementById('endTime').value };
-            fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(r => r.json())
             .then(result => {
                 const msg = document.getElementById('settingsMessage');
@@ -91,7 +100,7 @@
         });
 
         // 3. Buchungen abrufen und in die Tabelle rendern
-        fetch('/api/bookings').then(r => r.json()).then(bookings => {
+        fetch('api_bookings.php').then(r => r.json()).then(bookings => {
             const tbody = document.getElementById('bookingsTableBody'); tbody.innerHTML = '';
             if(bookings.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Noch keine Buchungen vorhanden.</td></tr>'; return; }
             bookings.forEach(b => {

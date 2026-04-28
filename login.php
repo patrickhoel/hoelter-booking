@@ -1,3 +1,27 @@
+<?php
+session_start();
+
+// Wenn schon eingeloggt, direkt zum Dashboard
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+    header('Location: admin.php');
+    exit;
+}
+
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
+    
+    if ($username === 'admin' && $password === 'admin123') {
+        $_SESSION['logged_in'] = true;
+        $_SESSION['username'] = 'admin';
+        header('Location: admin.php');
+        exit;
+    } else {
+        $error = 'Falscher Benutzername oder Passwort!';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -17,9 +41,9 @@
 <body>
     <div class="login-box">
         <h2>Admin Login</h2>
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+        <?php if ($error): ?>
+            <div class="error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
         <form method="POST">
             <input type="text" name="username" placeholder="Benutzername..." required autofocus>
             <input type="password" name="password" placeholder="Passwort..." required>
