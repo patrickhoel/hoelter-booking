@@ -13,33 +13,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hölter-Digital - Admin Panel</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #e9ecef; padding: 20px; color: #333; }
-        .admin-container { max-width: 900px; margin: 0 auto; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h1 { margin-top: 0; color: #0056b3; }
-        h2 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="time"], input[type="text"], input[type="number"] { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        input[type="time"] { width: 150px; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.2s;}
-        button:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; }
-        .btn-danger { background-color: #dc3545; padding: 5px 10px; font-size: 14px; }
-        .btn-danger:hover { background-color: #c82333; }
-        
-        /* Modal Styles für das Einstellungs-Fenster */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 85vh; overflow-y: auto; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -10px; }
-        .close:hover { color: #000; }
-        .custom-field-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #f9f9f9; padding: 10px; border: 1px solid #eee; border-radius: 4px; }
-        .custom-field-row input[type="text"], .custom-field-row select { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin: 0; font-size: 14px;}
-        .custom-field-row input[type="checkbox"] { width: auto; margin-right: 5px; }
-    </style>
+    <link rel="stylesheet" href="assets/admin_style.css">
 </head>
 <body>
     <div class="admin-container">
@@ -48,11 +22,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <h1>Admin Dashboard</h1>
                 <p style="margin-top: -15px; color: #666;">Eingeloggt als: <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></p>
             </div>
-            <a href="logout.php" style="padding: 10px 15px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Logout</a>
+            <a href="logout.php" style="padding: 8px 16px; border: 1px solid var(--danger); color: var(--danger); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: 0.2s;" onmouseover="this.style.backgroundColor='rgba(220, 53, 69, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">Logout</a>
         </div>
         
         <div class="card">
-            <h2>⏰ Öffnungszeiten einstellen</h2>
+            <h2>Öffnungszeiten</h2>
             <form id="settingsForm">
                 <div style="display: flex; gap: 20px; align-items: flex-end;">
                     <div class="form-group">
@@ -72,7 +46,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         </div>
 
         <div class="card">
-            <h2>🏷️ Trainingsarten verwalten</h2>
+            <h2>Trainingsarten</h2>
             <form id="eventForm">
                 <div style="display: flex; gap: 20px; align-items: flex-end;">
                     <div class="form-group">
@@ -108,7 +82,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         </div>
 
         <div class="card">
-            <h2>📅 Alle Buchungen</h2>
+            <h2>Buchungen</h2>
             <table>
                 <thead>
                     <tr>
@@ -125,6 +99,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 </tbody>
             </table>
         </div>
+        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+            Powered by <a href="https://hoelter-digital.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Hölter-Digital</a>
+        </div>
     </div>
     
     <!-- EINSTELLUNGEN MODAL (Unsichtbar bis man auf "Einstellen" klickt) -->
@@ -134,7 +111,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <h2 id="modalEventName" style="margin-top: 0; color: #0056b3;">Einstellungen</h2>
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">👥 Kapazität & Puffer</h3>
+                <h3 style="margin-top:0;">Kapazität & Puffer</h3>
                 <div style="display: flex; gap: 15px;">
                     <label style="font-weight:normal;">Plätze (Max): <input type="number" id="modalCapacity" style="width: 80px; padding: 5px;"></label>
                     <label style="font-weight:normal;">Pufferzeit (Min): <input type="number" id="modalBuffer" style="width: 80px; padding: 5px;"></label>
@@ -142,7 +119,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">⏳ Buchungszeitraum</h3>
+                <h3 style="margin-top:0;">Buchungszeitraum</h3>
                 <div style="display: flex; gap: 15px;">
                     <label style="font-weight:normal;">Vorlaufzeit (Stunden): <input type="number" id="modalMinNotice" style="width: 80px; padding: 5px;" title="Wie viele Stunden im Voraus muss mindestens gebucht werden?"></label>
                     <label style="font-weight:normal;">Max. im Voraus (Tage): <input type="number" id="modalMaxNotice" style="width: 80px; padding: 5px;" title="Wie viele Tage in die Zukunft können Termine maximal gebucht werden?"></label>
@@ -150,7 +127,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">⏰ Buchungszeiten</h3>
+                <h3 style="margin-top:0;">Buchungszeiten</h3>
                 <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" id="useGlobalSchedule" onchange="toggleScheduleOptions()" style="width: auto;">
                     <strong>Globale Öffnungszeiten für dieses Training übernehmen</strong>
@@ -175,13 +152,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee;">
-                <h3 style="margin-top:0;">📋 Kunden-Daten abfragen</h3>
+                <h3 style="margin-top:0;">Kunden-Daten abfragen</h3>
                 <p style="font-size: 13px; color: #666;"><strong>Name</strong> und <strong>E-Mail</strong> sind globale Pflichtfelder und werden immer abgefragt. Hier kannst du optionale oder verpflichtende Zusatzfelder für dieses Training anlegen (z.B. Telefonnummer, Alter des Hundes).</p>
                 <div id="customFieldsContainer"></div>
-                <button type="button" onclick="addCustomField()" style="background-color: #6c757d; font-size: 14px; margin-top: 10px;">+ Weiteres Feld hinzufügen</button>
+                <button type="button" class="btn-secondary" onclick="addCustomField()" style="margin-top: 10px;">+ Weiteres Feld hinzufügen</button>
             </div>
 
-            <button type="button" onclick="saveEventSettings()" style="background-color: #28a745; width: 100%; margin-top: 10px; font-size: 18px;">💾 Einstellungen speichern</button>
+            <button type="button" class="btn-success" onclick="saveEventSettings()">Einstellungen speichern</button>
         </div>
     </div>
 
@@ -215,7 +192,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 const baseUrl = window.location.href.split('?')[0].replace('admin.php', 'index.php');
                 events.forEach(e => {
                     const eventLink = `${baseUrl}?event_id=${e.id}`;
-                    tbody.innerHTML += `<tr><td>${e.name}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly onclick="this.select()" style="width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px;" title="Klicken zum Kopieren"></td><td><button style="background-color: #ffc107; color: #000; padding: 5px 10px; font-size: 14px; margin-right: 5px;" onclick="editEvent(${e.id})">⚙️ Einstellen</button><button class="btn-danger" onclick="deleteEvent(${e.id})">🗑️ Löschen</button></td></tr>`;
+                    tbody.innerHTML += `<tr><td>${e.name}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly onclick="this.select()" style="width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px;" title="Klicken zum Kopieren"></td><td><button class="btn-edit" style="margin-right: 5px;" onclick="editEvent(${e.id})">Einstellen</button><button class="btn-danger" onclick="deleteEvent(${e.id})">Löschen</button></td></tr>`;
                 });
             });
         }
@@ -301,7 +278,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         <label style="display:flex; align-items:center; margin:0; font-size:13px; font-weight:normal; cursor:pointer;">
                             <input type="checkbox" ${field.required ? 'checked' : ''} onchange="updateField(${index}, 'required', this.checked)"> Pflichtfeld
                         </label>
-                        <button type="button" class="btn-danger" onclick="removeField(${index})">X</button>
+                        <button type="button" class="btn-danger btn-icon" onclick="removeField(${index})">X</button>
                     </div>
                 `;
             });
