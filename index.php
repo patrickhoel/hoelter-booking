@@ -19,8 +19,19 @@ $event = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$event) {
     die("Dieses Training existiert nicht oder ist inaktiv.");
 }
-// Hier können wir später z.B. freie Termine aus der Datenbank laden
-// $freie_termine = ...
+
+// JSON-Einstellungen entpacken, um die aktiven Wochentage herauszufinden
+$schedule = $event['schedule_json'] ? json_decode($event['schedule_json'], true) : null;
+$useGlobal = $schedule['use_global'] ?? true;
+// Standard: Montag (1) bis Samstag (6)
+$activeDays = $useGlobal ? [1, 2, 3, 4, 5, 6] : ($schedule['active_days'] ?? [1, 2, 3, 4, 5, 6]);
+
+// Eigene Formularfelder entpacken
+$formFields = $event['form_fields_json'] ? json_decode($event['form_fields_json'], true) : [];
+
+// Buchungszeitraum
+$noticeMinHours = $event['notice_min_hours'] ?? 24;
+$noticeMaxDays = $event['notice_max_days'] ?? 60;
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -50,12 +61,13 @@ if (!$event) {
         }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
-        input, select { 
+        input, select, textarea { 
             width: 100%; 
             padding: 10px; 
             border: 1px solid #ccc; 
             border-radius: 5px; 
             box-sizing: border-box; 
+            font-family: inherit;
         }
         button { 
             width: 100%; 
@@ -106,6 +118,18 @@ if (!$event) {
                 <input type="email" id="email" placeholder="max@beispiel.de" required>
             </div>
             
+            <!-- Dynamische Formularfelder laden -->
+            <?php foreach ($formFields as $field): ?>
+                <div class="form-group">
+                    <label><?= htmlspecialchars($field['label']) ?><?= $field['required'] ? ' *' : '' ?></label>
+                    <?php if ($field['type'] === 'textarea'): ?>
+                        <textarea class="custom-input" data-label="<?= htmlspecialchars($field['label']) ?>" rows="3" <?= $field['required'] ? 'required' : '' ?>></textarea>
+                    <?php else: ?>
+                        <input type="<?= $field['type'] === 'number' ? 'number' : 'text' ?>" class="custom-input" data-label="<?= htmlspecialchars($field['label']) ?>" <?= $field['required'] ? 'required' : '' ?>>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+
             <div class="form-group">
                 <label for="datePicker">Wähle ein Datum</label>
                 <input type="text" id="datePicker" placeholder="Datum auswählen..." required>
@@ -129,15 +153,23 @@ if (!$event) {
 
     <script>
         const eventId = document.getElementById('eventId').value;
+        // Wir übergeben die aktiven Tage aus PHP an JavaScript
+        const activeDays = <?= json_encode($activeDays) ?>;
+        
+        // Vorlaufzeit und maximaler Zeitraum berechnen
+        const now = new Date();
+        const minAllowedDate = new Date(now.getTime() + (<?= $noticeMinHours ?> * 60 * 60 * 1000));
+        const maxAllowedDate = new Date(now.getTime() + (<?= $noticeMaxDays ?> * 24 * 60 * 60 * 1000));
 
         // Flatpickr initialisieren
         flatpickr("#datePicker", {
             locale: "de", // Auf Deutsch stellen
-            minDate: "today", // Man kann keine Termine in der Vergangenheit buchen
+            minDate: minAllowedDate, // Man kann keine Termine in der Vergangenheit / Vorlaufzeit buchen
+            maxDate: maxAllowedDate, // Maximaler Buchungszeitraum
             disable: [
                 function(date) {
-                    // Optionale Funktion: Verhindere z.B. Buchungen an Sonntagen (0 = Sonntag)
-                    return (date.getDay() === 0);
+                    // Deaktiviere alle Tage, die NICHT in unserer activeDays Liste sind
+                    return !activeDays.includes(date.getDay());
                 }
             ],
             onChange: function(selectedDates, dateStr, instance) {
@@ -154,14 +186,21 @@ if (!$event) {
                             return;
                         }
                         
-                        data.available_slots.forEach(time => {
+                        data.available_slots.forEach(slot => {
                             const div = document.createElement('div');
                             div.className = 'time-slot';
-                            div.innerText = time;
+                            
+                            // Zusatztext "10/10 frei" anzeigen, wenn es ein Gruppentraining ist
+                            if (slot.max_capacity > 1) {
+                                div.innerHTML = `${slot.time} Uhr<br><span style="font-size:11px; font-weight:normal;">(${slot.spots_left}/${slot.max_capacity} frei)</span>`;
+                            } else {
+                                div.innerHTML = `${slot.time} Uhr`;
+                            }
+                            
                             div.onclick = function() {
                                 document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
                                 div.classList.add('selected');
-                                document.getElementById('selectedTime').value = time; // Uhrzeit merken
+                                document.getElementById('selectedTime').value = slot.time; // Uhrzeit merken
                             };
                             container.appendChild(div);
                         });
@@ -183,12 +222,19 @@ if (!$event) {
             const date = document.getElementById('datePicker').value;
             const finalDateTime = `${date}T${time}:00`;
 
+            // Benutzerdefinierte Felder sammeln
+            const customData = {};
+            document.querySelectorAll('.custom-input').forEach(input => {
+                customData[input.getAttribute('data-label')] = input.value;
+            });
+
             // Wir sammeln die Eingaben aus den Feldern
             const data = {
                 event_type_id: parseInt(document.getElementById('eventId').value),
                 customer_name: document.getElementById('name').value,
                 customer_email: document.getElementById('email').value,
-                start_time: finalDateTime
+                start_time: finalDateTime,
+                custom_data: customData
             };
 
             // Wir senden die Daten per POST an unsere API

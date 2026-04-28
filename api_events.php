@@ -29,7 +29,7 @@ try {
             echo json_encode(['error' => 'Der Name darf nicht leer sein.']);
         }
     } else {
-        $stmt = $db->query("SELECT id, name, duration_minutes, is_active FROM event_types ORDER BY name ASC");
+        $stmt = $db->query("SELECT id, name, duration_minutes, max_capacity, buffer_minutes, is_active FROM event_types ORDER BY name ASC");
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 } catch (Exception $e) {

@@ -15,7 +15,7 @@ try {
     
     // Buchungen mit den Namen des Trainings zusammenführen (JOIN)
     $stmt = $db->query("
-        SELECT b.id, b.customer_name, b.customer_email, b.start_time, e.name as event_name 
+        SELECT b.id, b.customer_name, b.customer_email, b.start_time, b.custom_data_json, e.name as event_name 
         FROM bookings b 
         JOIN event_types e ON b.event_type_id = e.id 
         ORDER BY b.start_time ASC

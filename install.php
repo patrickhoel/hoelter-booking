@@ -47,7 +47,11 @@ try {
     $migrations = [
         "ALTER TABLE event_types ADD COLUMN schedule_json TEXT DEFAULT NULL",
         "ALTER TABLE event_types ADD COLUMN form_fields_json TEXT DEFAULT NULL",
-        "ALTER TABLE bookings ADD COLUMN custom_data_json TEXT DEFAULT NULL"
+        "ALTER TABLE bookings ADD COLUMN custom_data_json TEXT DEFAULT NULL",
+        "ALTER TABLE event_types ADD COLUMN max_capacity INTEGER DEFAULT 1",
+        "ALTER TABLE event_types ADD COLUMN buffer_minutes INTEGER DEFAULT 0",
+        "ALTER TABLE event_types ADD COLUMN notice_min_hours INTEGER DEFAULT 24",
+        "ALTER TABLE event_types ADD COLUMN notice_max_days INTEGER DEFAULT 60"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
