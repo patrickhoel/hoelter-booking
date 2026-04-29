@@ -112,6 +112,12 @@ $companyAddress = $sysSettings['company_address'] ?? '';
             
             <!-- Dieser Teil wird erst nach Auswahl eines Slots sichtbar -->
             <div id="userDetailsForm" class="booking-form">
+                <!-- Honeypot-Feld gegen Spam-Bots (für normale Nutzer unsichtbar) -->
+                <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                    <label for="fax_number_hp">Faxnummer</label>
+                    <input type="text" id="fax_number_hp" tabindex="-1" autocomplete="off">
+                </div>
+
                 <div class="form-group">
                     <label for="name">Dein Name</label> <!-- Im Umbuchungs-Modus wird das Feld per JS befüllt und gesperrt -->
                     <input type="text" id="name" placeholder="Max Mustermann" required <?= $isRescheduleMode ? 'value="' . htmlspecialchars($rescheduleBooking['customer_name']) . '" readonly' : '' ?>>
@@ -261,7 +267,8 @@ $companyAddress = $sysSettings['company_address'] ?? '';
                 customer_name: document.getElementById('name').value,
                 customer_email: document.getElementById('email').value,
                 start_time: finalDateTime,
-                custom_data: customData
+                custom_data: customData,
+                honeypot: document.getElementById('fax_number_hp').value
             };
 
             // Füge Umbuchungs-Infos hinzu, falls vorhanden

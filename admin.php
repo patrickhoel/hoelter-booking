@@ -107,6 +107,20 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 </div>
 
                 <div class="card">
+                    <h2>Admin Zugang</h2>
+                    <div class="settings-group">
+                        <div class="form-group">
+                            <label>Benutzername</label>
+                            <input type="text" id="adminUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Neues Passwort (leer lassen, um es beizubehalten)</label>
+                            <input type="password" id="adminNewPassword" placeholder="***">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
                     <h2>Buchungs-Ablauf</h2>
                     <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main);">
                         <input type="checkbox" id="requireManualConf" style="width: auto;">
@@ -170,7 +184,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         </div>
 
         <div class="card tab-content" id="tab-bookings">
-            <h2>Buchungen</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 24px;">
+                <h2 style="margin: 0; border: none; padding: 0;">Buchungen</h2>
+                <select id="bookingFilter" onchange="loadBookings()" style="width: auto; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-main); font-weight: 600; cursor: pointer; outline: none;">
+                    <option value="upcoming">Zukünftige Termine</option>
+                    <option value="past">Vergangene Termine</option>
+                    <option value="all">Alle Termine</option>
+                </select>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -285,6 +306,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 document.getElementById('companyLinkImpressum').value = data.company_link_impressum || '';
                 document.getElementById('companyLinkPrivacy').value = data.company_link_privacy || '';
                 document.getElementById('companyLinkAgb').value = data.company_link_agb || '';
+                document.getElementById('adminUsername').value = data.admin_username || 'admin';
+                document.getElementById('adminNewPassword').value = '';
                 document.getElementById('adminEmail').value = data.admin_email || '';
             });
 
@@ -307,6 +330,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 company_link_impressum: document.getElementById('companyLinkImpressum').value,
                 company_link_privacy: document.getElementById('companyLinkPrivacy').value,
                 company_link_agb: document.getElementById('companyLinkAgb').value,
+                admin_username: document.getElementById('adminUsername').value,
+                admin_new_password: document.getElementById('adminNewPassword').value,
                 admin_email: document.getElementById('adminEmail').value
             };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
@@ -445,11 +470,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
         // 5. Buchungen abrufen und in die Tabelle rendern
         function loadBookings() {
-            fetch('api_bookings.php').then(r => r.json()).then(bookings => {
+            const filter = document.getElementById('bookingFilter') ? document.getElementById('bookingFilter').value : 'upcoming';
+            fetch('api_bookings.php?filter=' + filter).then(r => r.json()).then(bookings => {
                 const tbody = document.getElementById('bookingsTableBody'); tbody.innerHTML = '';
-                if(bookings.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Noch keine Buchungen vorhanden.</td></tr>'; return; }
+                if(bookings.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Keine Termine für diese Auswahl gefunden.</td></tr>'; return; }
                 bookings.forEach(b => {
                     const dateString = new Date(b.start_time).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const isPast = new Date(b.start_time) < new Date();
                     
                     // Zusatzinfos auslesen und formatieren
                     let customDataHtml = '-';
@@ -480,12 +507,17 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     } 
                     else {
                         let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})">Bestätigen</button>` : '';
-                        actionButtons = `
-                            <div class="action-cell">
-                                ${confirmBtn}
-                                <button class="btn-edit btn-icon" onclick="offerAlternative(${b.id})">Verschieben</button>
-                                <button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Stornieren</button>
-                            </div>`;
+                        if (isPast) {
+                            actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Löschen</button></div>`;
+                            baseStatus = '<span style="color: var(--text-muted); font-weight: 600;">Abgeschlossen</span>';
+                        } else {
+                            actionButtons = `
+                                <div class="action-cell">
+                                    ${confirmBtn}
+                                    <button class="btn-edit btn-icon" onclick="offerAlternative(${b.id})">Verschieben</button>
+                                    <button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Stornieren</button>
+                                </div>`;
+                        }
                     }
 
                     tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${baseStatus}${statusText}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${actionButtons}</td></tr>`;

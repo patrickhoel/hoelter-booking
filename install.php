@@ -68,12 +68,17 @@ try {
         "ALTER TABLE settings ADD COLUMN company_link_impressum TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN company_link_privacy TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN smtp_from_name TEXT DEFAULT ''",
-        "ALTER TABLE settings ADD COLUMN company_link_agb TEXT DEFAULT ''"
+        "ALTER TABLE settings ADD COLUMN company_link_agb TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN admin_username TEXT DEFAULT 'admin'",
+        "ALTER TABLE settings ADD COLUMN admin_password_hash TEXT DEFAULT ''"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
     }
     echo "<p>✅ Datenbank-Struktur wurde für individuelle Zeiten und Formulare aktualisiert.</p>";
+
+    // Standard-Passwort 'admin123' als Hash setzen, falls noch keines vorhanden ist
+    $db->exec("UPDATE settings SET admin_password_hash = '" . password_hash('admin123', PASSWORD_DEFAULT) . "' WHERE admin_password_hash = '' OR admin_password_hash IS NULL");
 
     // 4. Standard-Werte einfügen (wie in der Python Version)
     $db->exec("INSERT INTO event_types (name, duration_minutes) SELECT 'Einzeltraining', 60 WHERE NOT EXISTS (SELECT 1 FROM event_types)");

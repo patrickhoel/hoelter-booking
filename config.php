@@ -2,6 +2,9 @@
 // config.php
 // Hier definieren wir globale Einstellungen für das gesamte System
 
+// --- ZEITZONEN-SICHERHEIT ---
+date_default_timezone_set('Europe/Berlin');
+
 // PHPMailer einbinden (ohne Composer)
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

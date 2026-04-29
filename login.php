@@ -9,12 +9,20 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once 'config.php';
+    $db = getDb();
+    
+    $stmt = $db->query("SELECT admin_username, admin_password_hash FROM settings LIMIT 1");
+    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    $adminUser = $settings['admin_username'] ?? 'admin';
+    $adminHash = $settings['admin_password_hash'] ?? '';
+    
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
-    if ($username === 'admin' && $password === 'admin123') {
+    if ($username === $adminUser && password_verify($password, $adminHash)) {
         $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = 'admin';
+        $_SESSION['username'] = $adminUser;
         header('Location: admin.php');
         exit;
     } else {

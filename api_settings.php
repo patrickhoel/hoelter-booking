@@ -33,10 +33,20 @@ try {
         $company_link_impressum = $data['company_link_impressum'] ?? '';
         $company_link_privacy = $data['company_link_privacy'] ?? '';
         $company_link_agb = $data['company_link_agb'] ?? '';
+        $admin_username = $data['admin_username'] ?? 'admin';
+        $admin_new_password = $data['admin_new_password'] ?? '';
         
         if ($start && $end) {
-            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?");
-            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb]);
+            $sql = "UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?, admin_username = ?";
+            $params = [$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb, $admin_username];
+            
+            if (!empty($admin_new_password)) {
+                $sql .= ", admin_password_hash = ?";
+                $params[] = password_hash($admin_new_password, PASSWORD_DEFAULT);
+            }
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
             echo json_encode(['message' => 'Arbeitszeiten erfolgreich gespeichert!']);
         } else {
             http_response_code(400);

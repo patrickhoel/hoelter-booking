@@ -19,6 +19,15 @@ try {
     $customData = isset($data['custom_data']) ? json_encode($data['custom_data']) : null;
     $rescheduleId = $data['reschedule_id'] ?? null;
     $rescheduleToken = $data['reschedule_token'] ?? null;
+    $honeypot = $data['honeypot'] ?? '';
+
+    // --- SPAMSCHUTZ (Honeypot) ---
+    // Wenn das unsichtbare Feld ausgefüllt ist, handelt es sich um einen Bot.
+    // Wir brechen leise ab und täuschen einen Erfolg vor.
+    if (!empty($honeypot)) {
+        echo json_encode(['message' => 'Termin erfolgreich gebucht!']);
+        exit;
+    }
 
     if (!$eventId || !$name || !$email || !$startTimeStr) {
         throw new Exception("Bitte alle Felder ausfüllen.");
