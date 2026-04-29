@@ -26,9 +26,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         </div>
         
         <div class="card">
-            <h2>Öffnungszeiten</h2>
+            <h2>System & E-Mail Einstellungen</h2>
             <form id="settingsForm">
-                <div style="display: flex; gap: 20px; align-items: flex-end;">
+                <!-- Öffnungszeiten -->
+                <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;">
                     <div class="form-group">
                         <label for="startTime">Startzeit</label>
                         <input type="time" id="startTime" required>
@@ -37,11 +38,39 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         <label for="endTime">Endzeit</label>
                         <input type="time" id="endTime" required>
                     </div>
+                </div>
+
+                <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">Buchungs-Ablauf</h3>
+                <label style="display:flex; align-items:center; gap: 10px; margin-bottom: 20px; cursor: pointer; font-weight: normal; color: var(--text-main);">
+                    <input type="checkbox" id="requireManualConf" style="width: auto;">
+                    <strong>Zwei-Wege-Bestätigung (Manuelle Bestätigung durch Admin erforderlich)</strong>
+                </label>
+
+                <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">E-Mail Absender (SMTP Vorbereitung)</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div class="form-group">
-                        <button type="submit">Speichern</button>
+                        <label>Absender E-Mail</label>
+                        <input type="text" id="smtpFrom" placeholder="info@deinedomain.de">
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Host</label>
+                        <input type="text" id="smtpHost" placeholder="smtp.ionos.de">
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Port</label>
+                        <input type="text" id="smtpPort" placeholder="587">
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Benutzer</label>
+                        <input type="text" id="smtpUser">
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Passwort</label>
+                        <input type="password" id="smtpPass">
                     </div>
                 </div>
-                <div id="settingsMessage" style="font-weight: bold; color: green; margin-top: 10px;"></div>
+                <button type="submit">Einstellungen speichern</button>
+                <div id="settingsMessage" style="font-weight: bold; color: var(--success); margin-top: 10px;"></div>
             </form>
         </div>
 
@@ -169,12 +198,27 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             .then(data => {
                 document.getElementById('startTime').value = data.work_start_time;
                 document.getElementById('endTime').value = data.work_end_time;
+                document.getElementById('requireManualConf').checked = data.require_manual_confirmation == 1;
+                document.getElementById('smtpFrom').value = data.smtp_from || '';
+                document.getElementById('smtpHost').value = data.smtp_host || '';
+                document.getElementById('smtpPort').value = data.smtp_port || '587';
+                document.getElementById('smtpUser').value = data.smtp_user || '';
+                document.getElementById('smtpPass').value = data.smtp_pass || '';
             });
 
         // 2. Einstellungen absenden und speichern
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const data = { work_start_time: document.getElementById('startTime').value, work_end_time: document.getElementById('endTime').value };
+            const data = { 
+                work_start_time: document.getElementById('startTime').value, 
+                work_end_time: document.getElementById('endTime').value,
+                require_manual_confirmation: document.getElementById('requireManualConf').checked ? 1 : 0,
+                smtp_from: document.getElementById('smtpFrom').value,
+                smtp_host: document.getElementById('smtpHost').value,
+                smtp_port: document.getElementById('smtpPort').value,
+                smtp_user: document.getElementById('smtpUser').value,
+                smtp_pass: document.getElementById('smtpPass').value
+            };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(r => r.json())
             .then(result => {
@@ -322,12 +366,26 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         } catch(e) {}
                     }
                     
-                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}</td><td><a href="mailto:${b.customer_email}">${b.customer_email}</a></td><td style="font-size: 13px;">${customDataHtml}</td><td><button class="btn-danger" onclick="deleteBooking(${b.id})">Löschen</button></td></tr>`;
+                    let statusBadge = b.status === 'pending' ? '<span style="color: #f59e0b; font-weight: 600;">⏳ Ausstehend</span>' : '<span style="color: var(--success); font-weight: 600;">✅ Bestätigt</span>';
+                    let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})" style="margin-right: 5px; width: auto; padding: 6px 12px; margin-top: 0;">Bestätigen</button>` : '';
+
+                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${statusBadge}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${confirmBtn}<button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Löschen</button></td></tr>`;
                 });
             });
         }
         
         loadBookings(); // Beim Start sofort laden
+
+        // 5.1 Termin manuell bestätigen
+        function confirmBooking(id) {
+            if(confirm("Möchtest du diesen Termin bestätigen? Der Kunde erhält nun eine E-Mail.")) {
+                fetch('api_confirm_booking.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                }).then(() => loadBookings()); // Tabelle nach dem Bestätigen neu laden
+            }
+        }
 
         // 5.5 Event (Trainingsart) löschen
         function deleteEvent(id) {

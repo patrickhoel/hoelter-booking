@@ -25,9 +25,10 @@ try {
     $startTime = new DateTime($startTimeStr);
 
     // 3. Doppelbuchungs-Check (wie in der Availability-API)
-    $stmt = $db->prepare("SELECT duration_minutes, max_capacity, buffer_minutes, notice_min_hours, notice_max_days FROM event_types WHERE id = ?");
+    $stmt = $db->prepare("SELECT name, duration_minutes, max_capacity, buffer_minutes, notice_min_hours, notice_max_days FROM event_types WHERE id = ?");
     $stmt->execute([$eventId]);
     $event = $stmt->fetch(PDO::FETCH_ASSOC);
+    $eventName = $event['name'] ?? 'Training';
     $duration = $event['duration_minutes'];
     $maxCapacity = $event['max_capacity'] ?? 1;
     $buffer = $event['buffer_minutes'] ?? 0;
@@ -73,12 +74,34 @@ try {
         http_response_code(409); // 409 Conflict
         throw new Exception("Dieser Zeitraum ist leider schon restlos ausgebucht.");
     }
+    
+    // 3.5 Prüfen, ob Zwei-Wege-Bestätigung aktiv ist
+    $settingStmt = $db->query("SELECT require_manual_confirmation FROM settings LIMIT 1");
+    $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
+    $require_manual = $sysSettings['require_manual_confirmation'] ?? 0;
+    $status = $require_manual ? 'pending' : 'confirmed';
 
     // 4. Alles OK -> Buchung in die Datenbank schreiben
-    $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json) VALUES (?, ?, ?, ?, ?)");
-    $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData]);
+    $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json, status) VALUES (?, ?, ?, ?, ?, ?)");
+    $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData, $status]);
 
-    echo json_encode(['message' => 'Termin erfolgreich gebucht!']);
+    // 5. Automatische E-Mail an den Kunden versenden
+    $formattedDate = $startTime->format('d.m.Y \u\m H:i') . ' Uhr';
+    
+    $icsData = null;
+    if ($require_manual) {
+        $subject = "Deine Termin-Anfrage ist eingegangen";
+        $body = "<h2>Hallo $name,</h2><p>wir haben deine Anfrage für den Termin am <strong>$formattedDate</strong> erhalten.</p><p>Wir prüfen dies nun und melden uns in Kürze mit der finalen Bestätigung bei dir!</p>";
+        $msg = 'Termin erfolgreich angefragt! Warte auf Bestätigung...';
+    } else {
+        $subject = "Terminbestätigung";
+        $body = "<h2>Hallo $name,</h2><p>dein Termin am <strong>$formattedDate</strong> ist hiermit verbindlich gebucht!</p><p>Wir freuen uns auf dich.</p>";
+        $msg = 'Termin erfolgreich gebucht!';
+        $icsData = generateIcsData($eventName, $startTime, $duration);
+    }
+    sendSystemMail($email, $subject, $body, $icsData);
+
+    echo json_encode(['message' => $msg]);
 
 } catch (Exception $e) {
     if (http_response_code() === 200) { // Wenn kein spezifischer Fehlercode gesetzt wurde

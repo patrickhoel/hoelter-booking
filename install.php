@@ -51,7 +51,14 @@ try {
         "ALTER TABLE event_types ADD COLUMN max_capacity INTEGER DEFAULT 1",
         "ALTER TABLE event_types ADD COLUMN buffer_minutes INTEGER DEFAULT 0",
         "ALTER TABLE event_types ADD COLUMN notice_min_hours INTEGER DEFAULT 24",
-        "ALTER TABLE event_types ADD COLUMN notice_max_days INTEGER DEFAULT 60"
+        "ALTER TABLE event_types ADD COLUMN notice_max_days INTEGER DEFAULT 60",
+        "ALTER TABLE settings ADD COLUMN smtp_host TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN smtp_port TEXT DEFAULT '587'",
+        "ALTER TABLE settings ADD COLUMN smtp_user TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN smtp_pass TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN smtp_from TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN require_manual_confirmation INTEGER DEFAULT 0",
+        "ALTER TABLE bookings ADD COLUMN status TEXT DEFAULT 'confirmed'"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

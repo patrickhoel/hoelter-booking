@@ -19,10 +19,16 @@ try {
         
         $start = $data['work_start_time'] ?? null;
         $end = $data['work_end_time'] ?? null;
+        $manual = isset($data['require_manual_confirmation']) ? (int)$data['require_manual_confirmation'] : 0;
+        $smtp_from = $data['smtp_from'] ?? '';
+        $smtp_host = $data['smtp_host'] ?? '';
+        $smtp_port = $data['smtp_port'] ?? '587';
+        $smtp_user = $data['smtp_user'] ?? '';
+        $smtp_pass = $data['smtp_pass'] ?? '';
         
         if ($start && $end) {
-            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?");
-            $stmt->execute([$start, $end]);
+            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?");
+            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass]);
             echo json_encode(['message' => 'Arbeitszeiten erfolgreich gespeichert!']);
         } else {
             http_response_code(400);
@@ -30,7 +36,7 @@ try {
         }
     } else {
         // GET: Einstellungen abrufen
-        $stmt = $db->query("SELECT work_start_time, work_end_time FROM settings LIMIT 1");
+        $stmt = $db->query("SELECT * FROM settings LIMIT 1");
         $settings = $stmt->fetch(PDO::FETCH_ASSOC);
         echo json_encode($settings);
     }
