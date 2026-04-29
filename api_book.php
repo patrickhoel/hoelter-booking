@@ -78,12 +78,20 @@ try {
     }
     
     // 3.5 Prüfen, ob Zwei-Wege-Bestätigung aktiv ist
-    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email FROM settings LIMIT 1");
+    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email, company_link_impressum, company_link_privacy FROM settings LIMIT 1");
     $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
     $require_manual = $sysSettings['require_manual_confirmation'] ?? 0;
     $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
     $adminEmail = $sysSettings['admin_email'] ?? '';
+    $impressumLink = $sysSettings['company_link_impressum'] ?? '';
+    $privacyLink = $sysSettings['company_link_privacy'] ?? '';
     $status = $require_manual ? 'pending' : 'confirmed';
+
+    $legalLinks = [];
+    if (!empty($impressumLink)) $legalLinks[] = "<a href='$impressumLink' style='color: #86868b; text-decoration: none;'>Impressum</a>";
+    if (!empty($privacyLink)) $legalLinks[] = "<a href='$privacyLink' style='color: #86868b; text-decoration: none;'>Datenschutz</a>";
+    $legalHtml = !empty($legalLinks) ? "<p style='color: #86868b; font-size: 12px; margin-bottom: 10px;'>" . implode(" &nbsp;|&nbsp; ", $legalLinks) . "</p>" : "";
+    $footerHtml = "<div style='margin-top: 30px; text-align: center;'>" . $legalHtml . "<p style='color: #d2d2d7; font-size: 11px; margin: 0;'>Smarte Buchungen mit <strong style='color:#d2d2d7;'>Planago</strong></p></div></div>";
     
     // Geheimen Token für Stornierung generieren
     $cancelToken = bin2hex(random_bytes(16));
@@ -101,22 +109,68 @@ try {
         }
 
         // 2. Bestehende Buchung aktualisieren
+        $newStatus = $require_manual ? 'rescheduled_by_customer' : 'confirmed';
         $updateStmt = $db->prepare("UPDATE bookings SET start_time = ?, status = ?, custom_data_json = ? WHERE id = ?");
-        $updateStmt->execute([$startTime->format('Y-m-d H:i:s'), $status, $customData, $rescheduleId]);
+        $updateStmt->execute([$startTime->format('Y-m-d H:i:s'), $newStatus, $customData, $rescheduleId]);
 
         // 3. Bestätigungs-E-Mail für den *neuen* Termin senden
         $formattedDateStr = $startTime->format('d.m.Y');
         $formattedTimeStr = $startTime->format('H:i');
-        $subject = "Termin erfolgreich verschoben - $companyName";
-        $body = "<h2>Hallo $name,</h2><p>dein Termin wurde erfolgreich auf den <strong>$formattedDateStr um $formattedTimeStr Uhr</strong> verschoben.</p><p>Wir freuen uns auf dich.</p>";
-        $msg = 'Dein Termin wurde erfolgreich verschoben!';
-        $icsData = generateIcsData($eventName, $startTime, $duration);
+        
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+        $cancelLink = $baseUrl . "/cancel.php?token=" . $rescheduleToken;
+
+        $icsData = null;
+        if ($require_manual) {
+            $subject = "Neuer Terminvorschlag eingegangen - $companyName";
+            $body = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Vorschlag eingegangen</h1>
+                    <p style='color: #86868b; font-size: 16px;'>Wir haben deinen neuen Terminvorschlag erhalten und prüfen diesen nun.</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$eventName</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Neuer Zeitpunkt</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$formattedDateStr um $formattedTimeStr Uhr</td></tr>
+                    </table>
+                </div>
+                <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                    <a href='$cancelLink' style='color: #86868b; font-size: 13px; text-decoration: underline;'>Anfrage zurückziehen</a>
+                </div>
+                " . $footerHtml;
+            $msg = 'Dein neuer Terminvorschlag wurde erfolgreich übermittelt! Warte auf Bestätigung...';
+        } else {
+            $subject = "Termin erfolgreich verschoben - $companyName";
+            $body = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Termin verschoben!</h1>
+                    <p style='color: #86868b; font-size: 16px;'>Dein Termin wurde erfolgreich auf den neuen Zeitpunkt gelegt.</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$eventName</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Neuer Zeitpunkt</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$formattedDateStr um $formattedTimeStr Uhr</td></tr>
+                    </table>
+                </div>
+                <p style='color: #1d1d1f; font-size: 15px; line-height: 1.5; margin-bottom: 25px;'>Wir haben dir eine neue Kalender-Datei (.ics) angehängt, damit du den Termin in dein Handy speichern kannst.</p>
+                <div style='border-top: 1px solid #d2d2d7; padding-top: 20px;'>
+                " . $footerHtml;
+            $msg = 'Dein Termin wurde erfolgreich verschoben!';
+            $icsData = generateIcsData($eventName, $startTime, $duration);
+        }
         sendSystemMail($email, $subject, $body, $icsData);
 
         // 4. Admin über die erfolgreiche Verschiebung informieren
         if (!empty($adminEmail)) {
-            $adminSubj = "Termin verschoben: $eventName am " . $startTime->format('d.m. H:i');
-            $adminBody = "Ein Kunde hat einen Termin verschoben.<br><strong>Neuer Zeitpunkt:</strong> $formattedDateStr um $formattedTimeStr Uhr.<br><strong>Status:</strong> Der Termin wurde auf '$status' gesetzt.";
+            $adminSubj = "Kunde hat Termin verschoben: $eventName am " . $startTime->format('d.m. H:i');
+            $adminBody = "Ein Kunde hat auf deine Verschiebungs-Anfrage reagiert und einen neuen Termin gewählt.<br><strong>Neuer Zeitpunkt:</strong> $formattedDateStr um $formattedTimeStr Uhr.<br><strong>Status:</strong> " . ($require_manual ? "Ausstehend (Muss im Dashboard bestätigt werden - Status: 'Neuer Terminvorschlag')" : "Automatisch bestätigt.");
             sendSystemMail($adminEmail, $adminSubj, $adminBody);
         }
 
@@ -159,7 +213,7 @@ try {
                 <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
                     <a href='$cancelLink' style='color: #86868b; font-size: 13px; text-decoration: underline;'>Anfrage zurückziehen</a>
                 </div>
-            </div>";
+            " . $footerHtml;
             $msg = 'Termin erfolgreich angefragt! Warte auf Bestätigung...';
         } else {
             $subject = "Terminbestätigung - $companyName";
@@ -182,7 +236,7 @@ try {
                     <p style='color: #86868b; font-size: 13px; margin-bottom: 15px;'>Sollte etwas dazwischenkommen:</p>
                     <a href='$cancelLink' style='display: inline-block; background-color: #ff3b30; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Termin stornieren</a>
                 </div>
-            </div>";
+            " . $footerHtml;
             $msg = 'Termin erfolgreich gebucht!';
             $icsData = generateIcsData($eventName, $startTime, $duration);
         }

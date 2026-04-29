@@ -28,74 +28,106 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         <div class="tabs" style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto;">
             <button class="tab-btn active" onclick="openTab('tab-bookings')" id="btn-tab-bookings">Buchungen</button>
             <button class="tab-btn" onclick="openTab('tab-events')" id="btn-tab-events">Trainingsarten</button>
-            <button class="tab-btn" onclick="openTab('tab-settings')" id="btn-tab-settings">Einstellungen</button>
+            <button class="tab-btn" onclick="openTab('tab-email')" id="btn-tab-email">E-Mail & SMTP</button>
+            <button class="tab-btn" onclick="openTab('tab-company')" id="btn-tab-company">Unternehmensprofil</button>
         </div>
         
-        <div class="card tab-content" id="tab-settings" style="display: none;">
-            <h2>System & E-Mail Einstellungen</h2>
-            <form id="settingsForm">
-                <h3 style="margin-top:0; font-size: 1.1rem;">Dein Unternehmen (Branding & Info)</h3>
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label>Unternehmensname (für E-Mails)</label>
-                        <input type="text" id="companyName" placeholder="Z.B. Hundeschule Mustermann" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label>Admin E-Mail (Benachrichtigung bei neuen Buchungen)</label>
-                        <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
-                    </div>
-                </div>
-
-                <!-- Öffnungszeiten -->
-                <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">Standard Öffnungszeiten</h3>
-                <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;">
-                    <div class="form-group">
-                        <label for="startTime">Startzeit</label>
-                        <input type="time" id="startTime" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="endTime">Endzeit</label>
-                        <input type="time" id="endTime" required>
-                    </div>
-                </div>
-
-                <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">Buchungs-Ablauf</h3>
-                <label style="display:flex; align-items:center; gap: 10px; margin-bottom: 20px; cursor: pointer; font-weight: normal; color: var(--text-main);">
-                    <input type="checkbox" id="requireManualConf" style="width: auto;">
-                    <strong>Zwei-Wege-Bestätigung (Manuelle Bestätigung durch Admin erforderlich)</strong>
-                </label>
-
-                <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">E-Mail Absender (SMTP Vorbereitung)</h3>
-                <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
-                    <div class="form-group" style="width: 100%;">
-                        <label>Absender E-Mail</label>
-                        <input type="email" id="smtpFrom" placeholder="info@deinedomain.de">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+        <!-- Ein gemeinsames Formular umfasst nun beide Einstellungs-Tabs -->
+        <form id="settingsForm">
+            
+            <!-- E-MAIL TAB -->
+            <div id="tab-email" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h2>E-Mail & SMTP</h2>
+                    <div class="settings-group">
                         <div class="form-group">
                             <label>SMTP Host</label>
-                            <input type="text" id="smtpHost" placeholder="smtp.ionos.de">
+                            <input type="text" id="smtpHost" placeholder="smtp.deinedomain.de">
                         </div>
                         <div class="form-group">
                             <label>SMTP Port</label>
                             <input type="text" id="smtpPort" placeholder="587">
                         </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
-                            <label>SMTP Benutzer</label>
+                            <label>Benutzername</label>
                             <input type="text" id="smtpUser">
                         </div>
                         <div class="form-group">
-                            <label>SMTP Passwort</label>
+                            <label>Passwort</label>
                             <input type="password" id="smtpPass">
+                        </div>
+                        <div class="form-group">
+                            <label>Absender Name</label>
+                            <input type="text" id="smtpFromName" placeholder="Z.B. Planago Booking">
+                        </div>
+                        <div class="form-group">
+                            <label>Absender E-Mail</label>
+                            <input type="email" id="smtpFromEmail" placeholder="info@deinedomain.de">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Admin E-Mail (Benachrichtigung bei neuen Buchungen)</label>
+                            <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Einstellungen speichern</button>
+                    <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <!-- UNTERNEHMENS-TAB -->
+            <div id="tab-company" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h2>Unternehmensdaten</h2>
+                    <div class="settings-group">
+                        <div class="form-group">
+                            <label>Unternehmensname</label>
+                            <input type="text" id="companyName" placeholder="Z.B. Hundeschule Mustermann" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefon</label>
+                            <input type="text" id="companyPhone" placeholder="+49 123 45678">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Adresse / Anschrift</label>
+                            <textarea id="companyAddress" rows="2" placeholder="Musterstraße 1..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Link zum Impressum</label>
+                            <input type="text" id="companyLinkImpressum" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label>Link zum Datenschutz</label>
+                            <input type="text" id="companyLinkPrivacy" placeholder="https://...">
                         </div>
                     </div>
                 </div>
-                <button type="submit">Einstellungen speichern</button>
-                <div id="settingsMessage" style="font-weight: bold; color: var(--success); margin-top: 10px;"></div>
-            </form>
-        </div>
+
+                <div class="card">
+                    <h2>Buchungs-Ablauf</h2>
+                    <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main);">
+                        <input type="checkbox" id="requireManualConf" style="width: auto;">
+                        <strong>Zwei-Wege-Bestätigung (Manuelle Bestätigung durch Admin erforderlich)</strong>
+                    </label>
+                </div>
+
+                <div class="card">
+                    <h2>Reguläre Arbeitszeiten</h2>
+                    <p class="text-muted" style="margin-top:0;">Wann bist du grundsätzlich für Termine verfügbar?</p>
+                    <div class="settings-group">
+                        <div class="form-group">
+                            <label for="startTime">Startzeit</label>
+                            <input type="time" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">Endzeit</label>
+                            <input type="time" id="endTime" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Profil & Zeiten speichern</button>
+                    <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
+                </div>
+            </div>
+        </form>
 
         <div class="card tab-content" id="tab-events" style="display: none;">
             <h2>Trainingsarten</h2>
@@ -237,12 +269,17 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 document.getElementById('startTime').value = data.work_start_time;
                 document.getElementById('endTime').value = data.work_end_time;
                 document.getElementById('requireManualConf').checked = data.require_manual_confirmation == 1;
-                document.getElementById('smtpFrom').value = data.smtp_from || '';
+                document.getElementById('smtpFromEmail').value = data.smtp_from || '';
+                document.getElementById('smtpFromName').value = data.smtp_from_name || '';
                 document.getElementById('smtpHost').value = data.smtp_host || '';
                 document.getElementById('smtpPort').value = data.smtp_port || '587';
                 document.getElementById('smtpUser').value = data.smtp_user || '';
                 document.getElementById('smtpPass').value = data.smtp_pass || '';
                 document.getElementById('companyName').value = data.company_name || 'Planago Booking';
+                document.getElementById('companyPhone').value = data.company_phone || '';
+                document.getElementById('companyAddress').value = data.company_address || '';
+                document.getElementById('companyLinkImpressum').value = data.company_link_impressum || '';
+                document.getElementById('companyLinkPrivacy').value = data.company_link_privacy || '';
                 document.getElementById('adminEmail').value = data.admin_email || '';
             });
 
@@ -253,21 +290,27 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 work_start_time: document.getElementById('startTime').value, 
                 work_end_time: document.getElementById('endTime').value,
                 require_manual_confirmation: document.getElementById('requireManualConf').checked ? 1 : 0,
-                smtp_from: document.getElementById('smtpFrom').value,
+                smtp_from: document.getElementById('smtpFromEmail').value,
+                smtp_from_name: document.getElementById('smtpFromName').value,
                 smtp_host: document.getElementById('smtpHost').value,
                 smtp_port: document.getElementById('smtpPort').value,
                 smtp_user: document.getElementById('smtpUser').value,
                 smtp_pass: document.getElementById('smtpPass').value,
                 company_name: document.getElementById('companyName').value,
+                company_phone: document.getElementById('companyPhone').value,
+                company_address: document.getElementById('companyAddress').value,
+                company_link_impressum: document.getElementById('companyLinkImpressum').value,
+                company_link_privacy: document.getElementById('companyLinkPrivacy').value,
                 admin_email: document.getElementById('adminEmail').value
             };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(r => r.json())
             .then(result => {
-                const msg = document.getElementById('settingsMessage');
-                msg.innerText = result.message || result.error;
-                msg.style.color = result.error ? 'var(--danger)' : 'var(--success)';
-                setTimeout(() => msg.innerText = '', 3000);
+                document.querySelectorAll('.settingsMessage').forEach(msg => {
+                    msg.innerText = result.message || result.error;
+                    msg.style.color = result.error ? 'var(--danger)' : 'var(--success)';
+                    setTimeout(() => msg.innerText = '', 3000);
+                });
             });
         });
 
@@ -411,18 +454,35 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         } catch(e) {}
                     }
                     
-                    let statusBadge = b.status === 'pending' ? '<span style="color: #f59e0b; font-weight: 600;">Ausstehend</span>' : '<span style="color: var(--success); font-weight: 600;">Bestätigt</span>';
+                    let baseStatus = b.status === 'pending' ? '<span style="color: #f59e0b; font-weight: 600;">Ausstehend</span>' : '<span style="color: var(--success); font-weight: 600;">Bestätigt</span>';
+                    let statusText = '';
+                    let actionButtons = '';
+
                     if (b.status === 'reschedule_requested') {
-                        statusBadge = '<span style="color: #a855f7; font-weight: 600;">Verschiebung</span>';
+                        baseStatus = '<span style="color: #a855f7; font-weight: 600;">Verschiebung</span>';
+                        statusText = '<br><span class="status-badge status-pending">⏳ Alternativtermin angefragt</span>';
+                        actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Absagen</button></div>`;
+                    } 
+                    else if (b.status === 'rescheduled_by_customer') {
+                        baseStatus = '<span style="color: #f59e0b; font-weight: 600;">Angefragt</span>';
+                        statusText = '<br><span class="status-badge status-new-proposal">✉️ Neuer Terminvorschlag!</span>';
+                        actionButtons = `
+                            <div class="action-cell">
+                                <button class="btn-success btn-icon" onclick="confirmBooking(${b.id})">Bestätigen</button>
+                                <button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Ablehnen</button>
+                            </div>`;
+                    } 
+                    else {
+                        let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})">Bestätigen</button>` : '';
+                        actionButtons = `
+                            <div class="action-cell">
+                                ${confirmBtn}
+                                <button class="btn-edit btn-icon" onclick="offerAlternative(${b.id})">Verschieben</button>
+                                <button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Stornieren</button>
+                            </div>`;
                     }
 
-                    let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})" style="margin-right: 5px; width: auto; margin-top: 0;">Bestätigen</button>` : '';
-                    
-                    let rescheduleBtn = b.status !== 'reschedule_requested' 
-                        ? `<button class="btn-edit btn-icon" onclick="offerAlternative(${b.id})" style="margin-right: 5px;">Verschieben</button>`
-                        : `<span style="font-size: 12px; color: var(--text-muted); margin-right: 5px; display: inline-block; padding: 8px 0;">Angefragt</span>`;
-
-                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${statusBadge}</td><td style="font-size: 13px;">${customDataHtml}</td><td><div style="display:flex; align-items:center;">${confirmBtn}${rescheduleBtn}<button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Löschen</button></div></td></tr>`;
+                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${baseStatus}${statusText}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${actionButtons}</td></tr>`;
                 });
             });
         }

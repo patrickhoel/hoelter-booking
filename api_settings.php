@@ -27,10 +27,15 @@ try {
         $smtp_pass = $data['smtp_pass'] ?? '';
         $company_name = $data['company_name'] ?? 'Planago Booking';
         $admin_email = $data['admin_email'] ?? '';
+        $smtp_from_name = $data['smtp_from_name'] ?? '';
+        $company_phone = $data['company_phone'] ?? '';
+        $company_address = $data['company_address'] ?? '';
+        $company_link_impressum = $data['company_link_impressum'] ?? '';
+        $company_link_privacy = $data['company_link_privacy'] ?? '';
         
         if ($start && $end) {
-            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?");
-            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email]);
+            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?");
+            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy]);
             echo json_encode(['message' => 'Arbeitszeiten erfolgreich gespeichert!']);
         } else {
             http_response_code(400);

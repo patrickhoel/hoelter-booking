@@ -55,11 +55,12 @@ function generateIcsData($eventName, $startTimeObj, $durationMinutes) {
 // Globale E-Mail Funktion für das System
 function sendSystemMail($to, $subject, $body, $icsData = null) {
     $db = getDb();
-    $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, company_name FROM settings LIMIT 1");
+    $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_from_name, company_name FROM settings LIMIT 1");
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
     
     $from = !empty($settings['smtp_from']) ? $settings['smtp_from'] : 'noreply@' . $_SERVER['HTTP_HOST'];
     $company = !empty($settings['company_name']) ? $settings['company_name'] : 'Planago Booking';
+    $fromName = !empty($settings['smtp_from_name']) ? $settings['smtp_from_name'] : $company;
     $host = $settings['smtp_host'] ?? '';
     $port = $settings['smtp_port'] ?? '587';
     $user = $settings['smtp_user'] ?? '';
@@ -83,7 +84,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
         }
         
         // Absender und Empfänger
-        $mail->setFrom($from, $company);
+        $mail->setFrom($from, $fromName);
         $mail->addAddress($to);
         
         // Inhalt

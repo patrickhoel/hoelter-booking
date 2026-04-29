@@ -53,6 +53,12 @@ $formFields = $event['form_fields_json'] ? json_decode($event['form_fields_json'
 // Buchungszeitraum
 $noticeMinHours = $event['notice_min_hours'] ?? 24;
 $noticeMaxDays = $event['notice_max_days'] ?? 60;
+
+// --- NEU: Impressum & Datenschutz auslesen ---
+$settingsStmt = $db->query("SELECT company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+$sysSettings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
+$impressumLink = $sysSettings['company_link_impressum'] ?? '';
+$privacyLink = $sysSettings['company_link_privacy'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -132,6 +138,18 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
         
         <div id="message"></div>
     </div>
+
+    <!-- NEU: Impressum & Datenschutz Links -->
+    <?php if (!empty($impressumLink) || !empty($privacyLink)): ?>
+        <div style="text-align: center; margin-top: 20px; font-size: 12px;">
+            <?php if (!empty($impressumLink)): ?>
+                <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Impressum</a>
+            <?php endif; ?>
+            <?php if (!empty($privacyLink)): ?>
+                <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Datenschutz</a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
     <script>
         const eventId = document.getElementById('eventId').value;
