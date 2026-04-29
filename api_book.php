@@ -76,30 +76,46 @@ try {
     }
     
     // 3.5 Prüfen, ob Zwei-Wege-Bestätigung aktiv ist
-    $settingStmt = $db->query("SELECT require_manual_confirmation FROM settings LIMIT 1");
+    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email FROM settings LIMIT 1");
     $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
     $require_manual = $sysSettings['require_manual_confirmation'] ?? 0;
+    $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
+    $adminEmail = $sysSettings['admin_email'] ?? '';
     $status = $require_manual ? 'pending' : 'confirmed';
+    
+    // Geheimen Token für Stornierung generieren
+    $cancelToken = bin2hex(random_bytes(16));
 
     // 4. Alles OK -> Buchung in die Datenbank schreiben
-    $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json, status) VALUES (?, ?, ?, ?, ?, ?)");
-    $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData, $status]);
+    $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json, status, cancel_token) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData, $status, $cancelToken]);
 
     // 5. Automatische E-Mail an den Kunden versenden
     $formattedDate = $startTime->format('d.m.Y \u\m H:i') . ' Uhr';
     
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+    $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+    $cancelLink = $baseUrl . "/cancel.php?token=" . $cancelToken;
+    
     $icsData = null;
     if ($require_manual) {
-        $subject = "Deine Termin-Anfrage ist eingegangen";
-        $body = "<h2>Hallo $name,</h2><p>wir haben deine Anfrage für den Termin am <strong>$formattedDate</strong> erhalten.</p><p>Wir prüfen dies nun und melden uns in Kürze mit der finalen Bestätigung bei dir!</p>";
+        $subject = "Termin-Anfrage eingegangen - $companyName";
+        $body = "<h2>Hallo $name,</h2><p>wir haben deine Anfrage für den Termin am <strong>$formattedDate</strong> erhalten.</p><p>Wir prüfen dies nun und melden uns in Kürze mit der finalen Bestätigung bei dir!</p><hr><p style='font-size:12px; color:#666;'>Möchtest du die Anfrage zurückziehen? <a href='$cancelLink'>Hier klicken zum Absagen</a></p>";
         $msg = 'Termin erfolgreich angefragt! Warte auf Bestätigung...';
     } else {
-        $subject = "Terminbestätigung";
-        $body = "<h2>Hallo $name,</h2><p>dein Termin am <strong>$formattedDate</strong> ist hiermit verbindlich gebucht!</p><p>Wir freuen uns auf dich.</p>";
+        $subject = "Terminbestätigung - $companyName";
+        $body = "<h2>Hallo $name,</h2><p>dein Termin am <strong>$formattedDate</strong> ist hiermit verbindlich gebucht!</p><p>Wir freuen uns auf dich.</p><hr><p style='font-size:12px; color:#666;'>Termin absagen? <a href='$cancelLink'>Hier klicken</a></p>";
         $msg = 'Termin erfolgreich gebucht!';
         $icsData = generateIcsData($eventName, $startTime, $duration);
     }
     sendSystemMail($email, $subject, $body, $icsData);
+
+    // 6. Benachrichtigung an Admin
+    if (!empty($adminEmail)) {
+        $adminSubj = "Neue Buchung: $eventName am " . $startTime->format('d.m. H:i');
+        $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Training:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
+        sendSystemMail($adminEmail, $adminSubj, $adminBody);
+    }
 
     echo json_encode(['message' => $msg]);
 

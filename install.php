@@ -58,7 +58,10 @@ try {
         "ALTER TABLE settings ADD COLUMN smtp_pass TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN smtp_from TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN require_manual_confirmation INTEGER DEFAULT 0",
-        "ALTER TABLE bookings ADD COLUMN status TEXT DEFAULT 'confirmed'"
+        "ALTER TABLE bookings ADD COLUMN status TEXT DEFAULT 'confirmed'",
+        "ALTER TABLE settings ADD COLUMN company_name TEXT DEFAULT 'Planago Booking'",
+        "ALTER TABLE settings ADD COLUMN admin_email TEXT DEFAULT ''",
+        "ALTER TABLE bookings ADD COLUMN cancel_token TEXT DEFAULT ''"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

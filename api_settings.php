@@ -25,10 +25,12 @@ try {
         $smtp_port = $data['smtp_port'] ?? '587';
         $smtp_user = $data['smtp_user'] ?? '';
         $smtp_pass = $data['smtp_pass'] ?? '';
+        $company_name = $data['company_name'] ?? 'Planago Booking';
+        $admin_email = $data['admin_email'] ?? '';
         
         if ($start && $end) {
-            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?");
-            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass]);
+            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?");
+            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email]);
             echo json_encode(['message' => 'Arbeitszeiten erfolgreich gespeichert!']);
         } else {
             http_response_code(400);

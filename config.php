@@ -2,6 +2,14 @@
 // config.php
 // Hier definieren wir globale Einstellungen für das gesamte System
 
+// PHPMailer einbinden (ohne Composer)
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/PHPMailer/src/SMTP.php';
+
 define('DB_PATH', __DIR__ . '/data/database.db');
 
 // Hilfsfunktion für die Datenbankverbindung
@@ -47,81 +55,52 @@ function generateIcsData($eventName, $startTimeObj, $durationMinutes) {
 // Globale E-Mail Funktion für das System
 function sendSystemMail($to, $subject, $body, $icsData = null) {
     $db = getDb();
-    $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from FROM settings LIMIT 1");
+    $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, company_name FROM settings LIMIT 1");
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
     
     $from = !empty($settings['smtp_from']) ? $settings['smtp_from'] : 'noreply@' . $_SERVER['HTTP_HOST'];
+    $company = !empty($settings['company_name']) ? $settings['company_name'] : 'Planago Booking';
     $host = $settings['smtp_host'] ?? '';
     $port = $settings['smtp_port'] ?? '587';
     $user = $settings['smtp_user'] ?? '';
     $pass = $settings['smtp_pass'] ?? '';
     
-    $crlf = "\r\n";
-    $boundary = md5(time());
+    $mail = new PHPMailer(true);
     
-    // MIME-Header für Multipart E-Mail (HTML + Anhang)
-    $mimeHeaders = "MIME-Version: 1.0" . $crlf;
-    $mimeHeaders .= "From: Planago <{$from}>" . $crlf;
-    $mimeHeaders .= "Reply-To: {$from}" . $crlf;
-    $mimeHeaders .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"" . $crlf;
-
-    // E-Mail Body zusammenbauen (HTML Text)
-    $message = "--{$boundary}" . $crlf;
-    $message .= "Content-Type: text/html; charset=UTF-8" . $crlf;
-    $message .= "Content-Transfer-Encoding: 8bit" . $crlf . $crlf;
-    $message .= $body . $crlf . $crlf;
-
-    // Falls vorhanden: .ics Datei als Anhang hinzufügen (Base64 kodiert)
-    if ($icsData) {
-        $message .= "--{$boundary}" . $crlf;
-        $message .= "Content-Type: text/calendar; charset=utf-8; method=REQUEST; name=\"termin.ics\"" . $crlf;
-        $message .= "Content-Disposition: attachment; filename=\"termin.ics\"" . $crlf;
-        $message .= "Content-Transfer-Encoding: base64" . $crlf . $crlf;
-        $message .= chunk_split(base64_encode($icsData)) . $crlf;
+    try {
+        // Server-Einstellungen
+        if (!empty($host) && !empty($user) && !empty($pass)) {
+            $mail->isSMTP();
+            $mail->Host       = $host;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $user;
+            $mail->Password   = $pass;
+            $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $port;
+        } else {
+            // Fallback auf normale PHP mail() Funktion, falls keine SMTP-Daten hinterlegt sind
+            $mail->isMail();
+        }
+        
+        // Absender und Empfänger
+        $mail->setFrom($from, $company);
+        $mail->addAddress($to);
+        
+        // Inhalt
+        $mail->CharSet = 'UTF-8';
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+        
+        // iCal Datei anhängen
+        if ($icsData) {
+            $mail->addStringAttachment($icsData, 'termin.ics', 'base64', 'text/calendar');
+        }
+        
+        $mail->send();
+    } catch (Exception $e) {
+        // Fehler stumm ignorieren oder ins Log schreiben
+        error_log("PHPMailer Fehler: {$mail->ErrorInfo}");
     }
-    $message .= "--{$boundary}--" . $crlf;
-    
-    // Fallback: Wenn noch gar keine SMTP-Daten eingetragen wurden, nutze die alte PHP Funktion
-    if (empty($host) || empty($user) || empty($pass)) {
-        @mail($to, $subject, $message, $mimeHeaders);
-        return;
-    }
-
-    // --- ECHTE SMTP ENGINE (Direkte Verbindung zum Mailserver) ---
-    
-    $smtpHeaders = $mimeHeaders;
-    $smtpHeaders .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=" . $crlf;
-
-    // Bei Port 465 (SSL) direkt verschlüsselt verbinden
-    $protocol = ($port == 465) ? 'ssl://' : '';
-    $smtp = @fsockopen($protocol . $host, $port, $errno, $errstr, 10);
-    if (!$smtp) return; // Verbindung fehlgeschlagen
-
-    // Kleine Hilfsfunktion, um die Server-Antworten abzuwarten
-    $readRes = function($sock) { $res = ''; while ($str = fgets($sock, 515)) { $res .= $str; if (substr($str, 3, 1) == ' ') break; } return $res; };
-
-    $readRes($smtp); // Server-Begrüßung lesen
-    fputs($smtp, "EHLO localhost" . $crlf); $readRes($smtp);
-
-    // STARTTLS Verschlüsselung für Port 587 (Standard bei Ionos, Strato, etc.) aktivieren
-    if ($port == 587 || $port == 25) {
-        fputs($smtp, "STARTTLS" . $crlf); $readRes($smtp);
-        @stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-        fputs($smtp, "EHLO localhost" . $crlf); $readRes($smtp);
-    }
-
-    // Sicherer SMTP Login
-    fputs($smtp, "AUTH LOGIN" . $crlf); $readRes($smtp);
-    fputs($smtp, base64_encode($user) . $crlf); $readRes($smtp);
-    fputs($smtp, base64_encode($pass) . $crlf); $authRes = $readRes($smtp);
-    
-    // Nur senden, wenn Login erfolgreich war (Server meldet Code 235)
-    if (substr($authRes, 0, 3) === '235') {
-        fputs($smtp, "MAIL FROM: <{$from}>" . $crlf); $readRes($smtp);
-        fputs($smtp, "RCPT TO: <{$to}>" . $crlf); $readRes($smtp);
-        fputs($smtp, "DATA" . $crlf); $readRes($smtp);
-        fputs($smtp, $smtpHeaders . $crlf . $message . $crlf . "." . $crlf); $readRes($smtp);
-    }
-    fputs($smtp, "QUIT" . $crlf); fclose($smtp);
 }
 ?>

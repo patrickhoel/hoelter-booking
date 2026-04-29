@@ -28,7 +28,20 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         <div class="card">
             <h2>System & E-Mail Einstellungen</h2>
             <form id="settingsForm">
+                <h3 style="margin-top:0; font-size: 1.1rem;">Dein Unternehmen (Branding & Info)</h3>
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Unternehmensname (für E-Mails)</label>
+                        <input type="text" id="companyName" placeholder="Z.B. Hundeschule Mustermann" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Admin E-Mail (Benachrichtigung bei neuen Buchungen)</label>
+                        <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
+                    </div>
+                </div>
+
                 <!-- Öffnungszeiten -->
+                <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">Standard Öffnungszeiten</h3>
                 <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;">
                     <div class="form-group">
                         <label for="startTime">Startzeit</label>
@@ -204,6 +217,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 document.getElementById('smtpPort').value = data.smtp_port || '587';
                 document.getElementById('smtpUser').value = data.smtp_user || '';
                 document.getElementById('smtpPass').value = data.smtp_pass || '';
+                document.getElementById('companyName').value = data.company_name || 'Planago Booking';
+                document.getElementById('adminEmail').value = data.admin_email || '';
             });
 
         // 2. Einstellungen absenden und speichern
@@ -217,13 +232,16 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 smtp_host: document.getElementById('smtpHost').value,
                 smtp_port: document.getElementById('smtpPort').value,
                 smtp_user: document.getElementById('smtpUser').value,
-                smtp_pass: document.getElementById('smtpPass').value
+                smtp_pass: document.getElementById('smtpPass').value,
+                company_name: document.getElementById('companyName').value,
+                admin_email: document.getElementById('adminEmail').value
             };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(r => r.json())
             .then(result => {
                 const msg = document.getElementById('settingsMessage');
-                msg.innerText = result.message;
+                msg.innerText = result.message || result.error;
+                msg.style.color = result.error ? 'var(--danger)' : 'var(--success)';
                 setTimeout(() => msg.innerText = '', 3000);
             });
         });
