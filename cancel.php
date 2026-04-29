@@ -116,7 +116,7 @@ if ($token) {
 <div class="container cancel-container">
     <?php if (!empty($companyLogo)): ?>
         <div style="text-align: center; margin-bottom: 20px;">
-            <img src="<?= htmlspecialchars($companyLogo) ?>" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
+            <img src="logo.php" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
         </div>
     <?php endif; ?>
 

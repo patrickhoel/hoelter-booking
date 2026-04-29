@@ -3,7 +3,7 @@
 require_once 'config.php';
 
 echo "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px;'>";
-echo "<h1 style='color: #0056b3;'>Hölter-Digital Setup 🚀</h1>";
+echo "<h1 style='color: #0056b3;'>Planago Setup 🚀</h1>";
 
 // 1. Prüfen, ob der /data/ Ordner existiert, falls nicht, automatisch anlegen
 if (!file_exists(__DIR__ . '/data')) {
@@ -72,7 +72,10 @@ try {
         "ALTER TABLE settings ADD COLUMN admin_username TEXT DEFAULT 'admin'",
         "ALTER TABLE settings ADD COLUMN admin_password_hash TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN widget_accent_color TEXT DEFAULT '#34c759'",
-        "ALTER TABLE settings ADD COLUMN company_logo TEXT DEFAULT ''"
+        "ALTER TABLE settings ADD COLUMN company_logo TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN google_review_link TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN enable_review_email INTEGER DEFAULT 0",
+        "ALTER TABLE bookings ADD COLUMN review_email_sent INTEGER DEFAULT 0"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

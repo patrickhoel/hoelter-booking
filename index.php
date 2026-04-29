@@ -96,7 +96,7 @@ $companyLogo = $sysSettings['company_logo'] ?? '';
     <div class="container">
         <?php if (!empty($companyLogo)): ?>
             <div style="text-align: center; margin-bottom: 20px;">
-                <img src="<?= htmlspecialchars($companyLogo) ?>" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
+                <img src="logo.php" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
             </div>
         <?php endif; ?>
 
@@ -316,6 +316,10 @@ $companyLogo = $sysSettings['company_logo'] ?? '';
                 }
             });
         });
+
+        // --- HINTERGRUND-AUFGABEN (Automatisierte Bewertungs-E-Mails etc.) ---
+        // Wird unsichtbar ausgeführt, ohne das Kundenerlebnis zu verlangsamen
+        setTimeout(() => fetch('cron.php').catch(() => {}), 2500);
     </script>
 </body>
 </html>

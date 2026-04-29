@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hölter-Digital - Login</title>
+    <title>Planago - Login</title>
     <link rel="stylesheet" href="assets/admin_style.css">
 </head>
 <body>
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit">Einloggen</button>
         </form>
         <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
-            Powered by <a href="https://hoelter-digital.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Hölter-Digital</a>
+            Powered by <a href="https://planago.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Planago</a>
         </div>
     </div>
 </body>

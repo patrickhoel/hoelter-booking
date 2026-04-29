@@ -36,6 +36,8 @@ try {
         $admin_username = $data['admin_username'] ?? 'admin';
         $admin_new_password = $data['admin_new_password'] ?? '';
         $widget_accent_color = $data['widget_accent_color'] ?? '#34c759';
+        $google_review_link = $data['google_review_link'] ?? '';
+        $enable_review_email = isset($data['enable_review_email']) ? (int)$data['enable_review_email'] : 0;
         
         // Aktuelles Logo auslesen
         $stmtLogo = $db->query("SELECT company_logo FROM settings LIMIT 1");
@@ -44,31 +46,15 @@ try {
 
         // Wenn ein neues Logo hochgeladen wurde (Base64)
         if (!empty($data['company_logo_base64'])) {
-            if (!file_exists(__DIR__ . '/assets/uploads')) {
-                mkdir(__DIR__ . '/assets/uploads', 0777, true);
-            }
-            $base64Parts = explode(';', $data['company_logo_base64']);
-            if (count($base64Parts) == 2) {
-                $type = $base64Parts[0];
-                $imgData = base64_decode(explode(',', $base64Parts[1])[1]);
-                
-                $ext = 'jpg';
-                if (strpos($type, 'png') !== false) $ext = 'png';
-                elseif (strpos($type, 'gif') !== false) $ext = 'gif';
-                elseif (strpos($type, 'svg') !== false) $ext = 'svg';
-                elseif (strpos($type, 'webp') !== false) $ext = 'webp';
-                
-                $filename = 'assets/uploads/logo_' . time() . '.' . $ext;
-                file_put_contents(__DIR__ . '/' . $filename, $imgData);
-                $company_logo = $filename;
-            }
+            // Wir speichern den Base64-String nun DIREKT und absolut sicher in der Datenbank!
+            $company_logo = $data['company_logo_base64'];
         } elseif (isset($data['remove_logo']) && $data['remove_logo'] === true) {
             $company_logo = '';
         }
 
         if ($start && $end) {
-            $sql = "UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?, admin_username = ?, widget_accent_color = ?, company_logo = ?";
-            $params = [$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb, $admin_username, $widget_accent_color, $company_logo];
+            $sql = "UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?, admin_username = ?, widget_accent_color = ?, company_logo = ?, google_review_link = ?, enable_review_email = ?";
+            $params = [$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb, $admin_username, $widget_accent_color, $company_logo, $google_review_link, $enable_review_email];
             
             if (!empty($admin_new_password)) {
                 $sql .= ", admin_password_hash = ?";
@@ -77,7 +63,7 @@ try {
             
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
-            echo json_encode(['message' => 'Arbeitszeiten erfolgreich gespeichert!']);
+            echo json_encode(['message' => 'Einstellungen erfolgreich gespeichert!']);
         } else {
             http_response_code(400);
             echo json_encode(['error' => 'Fehlende Daten']);

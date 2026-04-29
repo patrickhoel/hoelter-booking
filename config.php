@@ -2,6 +2,12 @@
 // config.php
 // Hier definieren wir globale Einstellungen für das gesamte System
 
+// --- SYSTEM VERSION ---
+define('PLANAGO_VERSION', '1.0.0');
+
+// --- LIZENZSCHLÜSSEL ---
+define('PLANAGO_LICENSE_KEY', 'DEIN_GEHEIMER_LIZENZSCHLUESSEL_12345');
+
 // --- ZEITZONEN-SICHERHEIT ---
 date_default_timezone_set('Europe/Berlin');
 
@@ -38,7 +44,7 @@ function generateIcsData($eventName, $startTimeObj, $durationMinutes) {
 
     $ics = "BEGIN:VCALENDAR\r\n";
     $ics .= "VERSION:2.0\r\n";
-    $ics .= "PRODID:-//Hölter Digital//Planago Booking//DE\r\n";
+    $ics .= "PRODID:-//Planago//Planago Booking//DE\r\n";
     $ics .= "CALSCALE:GREGORIAN\r\n";
     $ics .= "METHOD:REQUEST\r\n"; // Wichtig, damit Mail-Programme es als Einladung erkennen
     $ics .= "BEGIN:VEVENT\r\n";

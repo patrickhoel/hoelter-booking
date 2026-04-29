@@ -6,19 +6,28 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: login.php');
     exit;
 }
+
+// Lade Config für die Versionsnummer
+require_once 'config.php';
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hölter-Digital - Admin Panel</title>
+    <title>Planago - Admin Panel</title>
     <link rel="stylesheet" href="assets/admin_style.css">
 </head>
 <body>
     <div class="admin-container">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
+                <!-- Update Banner (wird per JS eingeblendet, wenn Update verfügbar) -->
+                <div id="updateBanner" style="display: none; background: linear-gradient(135deg, #007aff, #0056b3); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">
+                    <div><strong>🚀 Neues Planago-Update verfügbar!</strong> Version <span id="newVersionNumber"></span> ist da.</div>
+                    <button onclick="startUpdate()" id="updateBtn" style="background: white; color: #007aff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">Jetzt updaten</button>
+                </div>
+
                 <h1>Admin Dashboard</h1>
                 <p style="margin-top: -15px; color: #666;">Eingeloggt als: <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></p>
             </div>
@@ -118,6 +127,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <input type="color" id="widgetAccentColor" style="height: 44px; width: 60px; padding: 2px; cursor: pointer; border-radius: 8px;">
                                 <button type="button" style="height: 44px; padding: 0 15px; width: auto; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;" onclick="document.getElementById('widgetAccentColor').value='#34c759';">Standard</button>
+                            </div>
+                        </div>
+                        <div class="form-group full-width" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
+                            <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main); margin-bottom: 10px;">
+                                <input type="checkbox" id="enableReviewEmail" style="width: auto;">
+                                <strong>Automatische Google-Bewertungs-E-Mail aktivieren</strong>
+                            </label>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 15px;">Sendet deinen Kunden 24 Stunden nach ihrem abgeschlossenen Termin automatisch eine freundliche E-Mail mit der Bitte um eine Bewertung.</p>
+                            
+                            <div id="reviewLinkContainer" style="display: none;">
+                                <label>Dein Google Bewertungs-Link (Kurz-URL)</label>
+                                <input type="text" id="googleReviewLink" placeholder="https://g.page/r/...">
                             </div>
                         </div>
                     </div>
@@ -232,7 +253,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </table>
         </div>
         <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
-            Powered by <a href="https://hoelter-digital.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Hölter-Digital</a>
+            Powered by <a href="https://planago.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Planago</a>
         </div>
     </div>
     
@@ -240,7 +261,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <div id="eventSettingsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalEventName" style="margin-top: 0; color: #0056b3;">Einstellungen</h2>
+            <h2 id="modalEventName" style="margin-top: 0; color: var(--accent);">Einstellungen</h2>
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
                 <h3 style="margin-top:0;">Kapazität & Puffer</h3>
@@ -311,6 +332,73 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             document.getElementById('btn-' + tabId).classList.add('active');
         }
         
+        // --- SICHERHEIT: XSS-Schutz ---
+        // Verhindert, dass bösartiger JavaScript-Code, den Kunden bei der Buchung 
+        // ins Namensfeld eintragen, im Admin-Panel ausgeführt wird.
+        function escapeHtml(unsafe) {
+            return (unsafe || '').toString()
+                 .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // --- UPDATE CHECK LOGIK ---
+        const CURRENT_VERSION = "<?= PLANAGO_VERSION ?>";
+        let latestUpdateUrl = "";
+
+        function isNewerVersion(oldVer, newVer) {
+            const oldParts = oldVer.split('.').map(Number);
+            const newParts = newVer.split('.').map(Number);
+            for (let i = 0; i < Math.max(oldParts.length, newParts.length); i++) {
+                const o = oldParts[i] || 0;
+                const n = newParts[i] || 0;
+                if (n > o) return true;
+                if (n < o) return false;
+            }
+            return false;
+        }
+
+        function checkForUpdates() {
+            // Hier fragt die Software deinen zentralen Planago-Server ab!
+            fetch('https://planago.de/update/version.json')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.version && isNewerVersion(CURRENT_VERSION, data.version)) {
+                        document.getElementById('newVersionNumber').innerText = data.version;
+                        latestUpdateUrl = data.zip_url;
+                        document.getElementById('updateBanner').style.display = 'flex';
+                    }
+                }).catch(e => console.log('Keine Verbindung zum Update-Server.'));
+        }
+        
+        function startUpdate() {
+            if (!confirm("Möchtest du Planago jetzt aktualisieren? Der Vorgang dauert nur wenige Sekunden.")) return;
+            
+            const btn = document.getElementById('updateBtn');
+            btn.innerText = "Wird installiert...";
+            btn.style.opacity = "0.7";
+            btn.disabled = true;
+
+            fetch('update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zip_url: latestUpdateUrl })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if(res.error) {
+                    alert("Fehler beim Update: " + res.error);
+                    btn.innerText = "Erneut versuchen";
+                    btn.style.opacity = "1";
+                    btn.disabled = false;
+                } else {
+                    alert(res.message);
+                    location.reload();
+                }
+            }).catch(() => alert("Kritischer Fehler bei der Verbindung."));
+        }
+        
+        checkForUpdates(); // Direkt beim Laden im Hintergrund prüfen!
+
         // --- LOGO UPLOAD LOGIK ---
         let logoBase64 = '';
         let removeLogoFlag = false;
@@ -318,6 +406,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         document.getElementById('companyLogoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                if (file.size > 2.5 * 1024 * 1024) { // 2.5 MB Limit
+                    alert("Das Bild ist zu groß! Bitte verwende eine Datei unter 2.5 MB.");
+                    this.value = '';
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = function(evt) {
                     logoBase64 = evt.target.result;
@@ -363,11 +456,19 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 document.getElementById('adminNewPassword').value = '';
                 document.getElementById('adminEmail').value = data.admin_email || '';
                 if (data.company_logo) {
-                    document.getElementById('logoPreview').src = data.company_logo + '?t=' + new Date().getTime(); // Verhindert Caching
+                    document.getElementById('logoPreview').src = 'logo.php?t=' + new Date().getTime(); // Lädt direkt aus der Datenbank
                     document.getElementById('logoPreview').style.display = 'block';
                     document.getElementById('removeLogoBtn').style.display = 'block';
                 }
+                
+                document.getElementById('enableReviewEmail').checked = data.enable_review_email == 1;
+                document.getElementById('googleReviewLink').value = data.google_review_link || '';
+                document.getElementById('reviewLinkContainer').style.display = data.enable_review_email == 1 ? 'block' : 'none';
             });
+
+        document.getElementById('enableReviewEmail').addEventListener('change', function() {
+            document.getElementById('reviewLinkContainer').style.display = this.checked ? 'block' : 'none';
+        });
 
         // 2. Einstellungen absenden und speichern
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
@@ -391,6 +492,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 widget_accent_color: document.getElementById('widgetAccentColor').value,
                 company_logo_base64: logoBase64,
                 remove_logo: removeLogoFlag,
+                enable_review_email: document.getElementById('enableReviewEmail').checked ? 1 : 0,
+                google_review_link: document.getElementById('googleReviewLink').value,
                 admin_username: document.getElementById('adminUsername').value,
                 admin_new_password: document.getElementById('adminNewPassword').value,
                 admin_email: document.getElementById('adminEmail').value
@@ -403,6 +506,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     msg.style.color = result.error ? 'var(--danger)' : 'var(--success)';
                     setTimeout(() => msg.innerText = '', 3000);
                 });
+                // Nach dem Speichern den Zwischenspeicher leeren, um Datei-Dopplungen zu vermeiden
+                logoBase64 = '';
+                document.getElementById('companyLogoInput').value = '';
             });
         });
 
@@ -413,8 +519,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 if(events.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Keine Terminarten gefunden.</td></tr>'; return; }
                 const baseUrl = window.location.href.split('?')[0].replace('admin.php', 'index.php');
                 events.forEach(e => {
+                    const safeName = escapeHtml(e.name);
                     const eventLink = `${baseUrl}?event_id=${e.id}`;
-                    tbody.innerHTML += `<tr><td>${e.name}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly onclick="this.select()" style="width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px;" title="Klicken zum Kopieren"></td><td><button class="btn-edit" style="margin-right: 5px;" onclick="editEvent(${e.id})">Einstellen</button><button class="btn-danger" onclick="deleteEvent(${e.id})">Löschen</button></td></tr>`;
+                    tbody.innerHTML += `<tr><td>${safeName}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly onclick="this.select()" style="width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px;" title="Klicken zum Kopieren"></td><td><button class="btn-edit" style="margin-right: 5px;" onclick="editEvent(${e.id})">Einstellen</button><button class="btn-danger" onclick="deleteEvent(${e.id})">Löschen</button></td></tr>`;
                 });
             });
         }
@@ -539,12 +646,16 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     const dateString = new Date(b.start_time).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const isPast = new Date(b.start_time) < new Date();
                     
+                    const safeCustomer = escapeHtml(b.customer_name);
+                    const safeEmail = escapeHtml(b.customer_email);
+                    const safeEvent = escapeHtml(b.event_name);
+
                     // Zusatzinfos auslesen und formatieren
                     let customDataHtml = '-';
                     if (b.custom_data_json) {
                         try {
                             const parsed = JSON.parse(b.custom_data_json);
-                            customDataHtml = Object.entries(parsed).map(([key, val]) => `<div style="margin-bottom:3px;"><strong>${key}:</strong> ${val}</div>`).join('');
+                            customDataHtml = Object.entries(parsed).map(([key, val]) => `<div style="margin-bottom:3px;"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(val)}</div>`).join('');
                         } catch(e) {}
                     }
                     
@@ -581,7 +692,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         }
                     }
 
-                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${baseStatus}${statusText}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${actionButtons}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${safeEvent}</td><td>${safeCustomer}<br><a href="mailto:${safeEmail}" style="font-size: 12px; color: var(--accent);">${safeEmail}</a></td><td>${baseStatus}${statusText}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${actionButtons}</td></tr>`;
                 });
             });
         }
