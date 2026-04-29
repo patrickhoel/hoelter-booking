@@ -38,98 +38,25 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Termin buchen</title>
+    <title>Planago - Termin buchen</title>
     
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/de.js"></script>
 
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: #f4f7f6;
-            padding: 20px; 
-        }
-        .widget-container {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            max-width: 400px;
-            margin: 0 auto; /* Zentriert das Widget */
-        }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
-        input, select, textarea { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            border-radius: 5px; 
-            box-sizing: border-box; 
-            font-family: inherit;
-        }
-        button { 
-            width: 100%; 
-            padding: 12px; 
-            background-color: #28a745; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            margin-top: 10px;
-        }
-        button:hover { background-color: #218838; }
-        #message { margin-top: 15px; text-align: center; font-weight: bold; }
-        
-        /* Schickes Design für unsere Termin-Buttons */
-        .slots-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .time-slot {
-            padding: 10px; text-align: center; background: #e9ecef;
-            border: 1px solid #ccc; border-radius: 5px; cursor: pointer;
-            transition: all 0.2s; font-weight: bold; color: #333;
-        }
-        .time-slot:hover { background: #d6d8db; }
-        .time-slot.selected { background: #28a745; color: white; border-color: #28a745; }
-    </style>
+    <!-- Planago "Apple Vibe" Stylesheet -->
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-    <div class="widget-container">
-        <h2 style="text-align: center; margin-top: 0; color: #333;"><?= htmlspecialchars($event['name']) ?></h2>
-<p style="text-align: center; color: #666; margin-bottom: 20px;">Dauer: <?= $event['duration_minutes'] ?> Minuten</p>
+    <div class="container">
+        <h2 style="text-align: center;"><?= htmlspecialchars($event['name']) ?></h2>
+        <p style="text-align: center; margin-bottom: 20px;">Dauer: <?= $event['duration_minutes'] ?> Minuten</p>
         
-<form id="bookingForm">
-    <input type="hidden" id="eventId" value="<?= $event['id'] ?>">
+        <form id="bookingForm">
+            <input type="hidden" id="eventId" value="<?= $event['id'] ?>">
             
-            <div class="form-group">
-                <label for="name">Dein Name</label>
-                <input type="text" id="name" placeholder="Max Mustermann" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Deine E-Mail</label>
-                <input type="email" id="email" placeholder="max@beispiel.de" required>
-            </div>
-            
-            <!-- Dynamische Formularfelder laden -->
-            <?php foreach ($formFields as $field): ?>
-                <div class="form-group">
-                    <label><?= htmlspecialchars($field['label']) ?><?= $field['required'] ? ' *' : '' ?></label>
-                    <?php if ($field['type'] === 'textarea'): ?>
-                        <textarea class="custom-input" data-label="<?= htmlspecialchars($field['label']) ?>" rows="3" <?= $field['required'] ? 'required' : '' ?>></textarea>
-                    <?php else: ?>
-                        <input type="<?= $field['type'] === 'number' ? 'number' : 'text' ?>" class="custom-input" data-label="<?= htmlspecialchars($field['label']) ?>" <?= $field['required'] ? 'required' : '' ?>>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-
             <div class="form-group">
                 <label for="datePicker">Wähle ein Datum</label>
                 <input type="text" id="datePicker" placeholder="Datum auswählen..." required>
@@ -138,14 +65,38 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
             <!-- Hier laden wir die freien Uhrzeiten rein -->
             <div class="form-group">
                 <label>Verfügbare Zeiten</label>
-                <div id="timeSlotsContainer" class="slots-grid">
-                    <p style="font-size: 13px; color: #666; grid-column: span 3;">Bitte wähle zuerst ein Datum aus.</p>
+                <div id="time-slots">
+                    <p style="font-size: 13px; grid-column: span 3;">Bitte wähle zuerst ein Datum aus.</p>
                 </div>
-                <!-- Unsichtbares Feld, in das wir die ausgewählte Uhrzeit schreiben -->
-                <input type="hidden" id="selectedTime" required>
             </div>
             
-            <button type="submit">Jetzt verbindlich buchen</button>
+            <!-- Dieser Teil wird erst nach Auswahl eines Slots sichtbar -->
+            <div id="userDetailsForm" class="booking-form">
+                <div class="form-group">
+                    <label for="name">Dein Name</label>
+                    <input type="text" id="name" placeholder="Max Mustermann" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Deine E-Mail</label>
+                    <input type="email" id="email" placeholder="max@beispiel.de" required>
+                </div>
+                
+                <!-- Dynamische Formularfelder laden -->
+                <?php foreach ($formFields as $field): ?>
+                    <div class="form-group">
+                        <label><?= htmlspecialchars($field['label']) ?><?= $field['required'] ? ' *' : '' ?></label>
+                        <?php if ($field['type'] === 'textarea'): ?>
+                            <textarea class="custom-input" data-label="<?= htmlspecialchars($field['label']) ?>" rows="3" <?= $field['required'] ? 'required' : '' ?>></textarea>
+                        <?php else: ?>
+                            <input type="<?= $field['type'] === 'number' ? 'number' : 'text' ?>" class="custom-input" data-label="<?= htmlspecialchars($field['label']) ?>" <?= $field['required'] ? 'required' : '' ?>>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+
+                <input type="hidden" id="selectedTime" required>
+                <button type="submit">Jetzt verbindlich buchen</button>
+            </div>
         </form>
         
         <div id="message"></div>
@@ -177,9 +128,10 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
                 fetch(`api_availability.php?event_id=${eventId}&date=${dateStr}`)
                     .then(r => r.json())
                     .then(data => {
-                        const container = document.getElementById('timeSlotsContainer');
+                        const container = document.getElementById('time-slots');
                         container.innerHTML = ''; // Vorherige löschen
                         document.getElementById('selectedTime').value = ''; // Auswahl zurücksetzen
+                        document.getElementById('userDetailsForm').style.display = 'none'; // Formular ausblenden
                         
                         if (data.available_slots.length === 0) {
                             container.innerHTML = '<p style="color: red; grid-column: span 3;">Keine freien Termine an diesem Tag.</p>';
@@ -188,19 +140,24 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
                         
                         data.available_slots.forEach(slot => {
                             const div = document.createElement('div');
-                            div.className = 'time-slot';
+                            div.className = 'slot';
                             
                             // Zusatztext "10/10 frei" anzeigen, wenn es ein Gruppentraining ist
                             if (slot.max_capacity > 1) {
-                                div.innerHTML = `${slot.time} Uhr<br><span style="font-size:11px; font-weight:normal;">(${slot.spots_left}/${slot.max_capacity} frei)</span>`;
+                                div.innerHTML = `${slot.time}<br><span style="font-size:11px; font-weight:normal; color: var(--text-muted);">(${slot.spots_left}/${slot.max_capacity} frei)</span>`;
                             } else {
                                 div.innerHTML = `${slot.time} Uhr`;
                             }
                             
                             div.onclick = function() {
-                                document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+                                document.querySelectorAll('.slot').forEach(el => el.classList.remove('selected'));
                                 div.classList.add('selected');
                                 document.getElementById('selectedTime').value = slot.time; // Uhrzeit merken
+                                
+                                // Formular einblenden und hinscrollen
+                                const userForm = document.getElementById('userDetailsForm');
+                                userForm.style.display = 'block';
+                                userForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             };
                             container.appendChild(div);
                         });
@@ -252,7 +209,7 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
                 } else {
                     msgDiv.style.color = 'green';
                     msgDiv.innerText = result.message;
-                    document.getElementById('bookingForm').reset(); // Formular leeren
+                    document.getElementById('bookingForm').style.display = 'none'; // Komplettes Formular ausblenden
                 }
             });
         });

@@ -1,53 +1,53 @@
-/* --- 1. DAS SAAS-FARBSCHEMA & VARIABLEN (Importiert von Hauptwebsite) --- */
+/* --- assets/admin_style.css - Planago "Apple Vibe" für das Backend --- */
+
 :root {
-    --bg-color: #0d1117; 
-    --surface-color: #161b22;
-    --card-bg: #161b22;         /* Fallback für bestehendes HTML */
-    --border-color: #30363d;
-    --border: #30363d;          /* Fallback für bestehendes HTML */
-    --text-main: #f8fafc; 
-    --text-muted: #8b949e; 
-    --accent-glow: #1e5aa0; 
-    --accent-bright: #3b82f6; 
-    --accent: #3b82f6;          /* Fallback für bestehendes HTML */
-    --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1e5aa0 100%);
-    --danger: #ef4444;          /* Modernes Rot */
-    --success: #10b981;         /* Dein "Verfügbar" Grün */
-    --radius: 16px;             /* Angepasst an dein Design */
+    /* Standard: Heller Modus (Clean, Vertrauensvoll, Lesbar) */
+    --bg-color: #f5f5f7;        /* Weiches Apple-Hintergrundgrau */
+    --surface-color: #ffffff;   /* Weiße Karten */
+    --card-bg: #ffffff;         /* Fallback */
+    --border-color: #d2d2d7;
+    --border: #d2d2d7;
+    --text-main: #1d1d1f;       /* Sanftes Dunkelgrau */
+    --text-muted: #86868b;
+    --accent: #34c759;          /* Planago Grün */
+    --accent-bright: #2ebc4f;
+    --accent-glow: rgba(52, 199, 89, 0.2);
+    --danger: #ff3b30;          /* Apple Rot für Löschen-Buttons */
+    --success: #34c759;
+    --radius: 14px;
+    --shadow: 0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Magie: Reagiert auf die Handy/Windows-Einstellungen des Kunden */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #000000;
+        --surface-color: #1c1c1e;
+        --card-bg: #1c1c1e;
+        --border-color: #38383a;
+        --border: #38383a;
+        --text-main: #f5f5f7;
+        --text-muted: #98989d;
+        --shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
+    }
 }
 
 html { scroll-behavior: smooth; }
 
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
     line-height: 1.6;
     padding: 20px;
-    position: relative;
-}
-
-/* Subtiler Glow-Effekt im Hintergrund für Premium-Look */
-body::before {
-    content: '';
-    position: absolute;
-    top: -200px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 800px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(30, 90, 160, 0.15) 0%, rgba(13, 17, 23, 0) 70%);
-    z-index: -1;
-    border-radius: 50%;
-    pointer-events: none;
 }
 
 /* Karten & Container */
 .admin-container, .login-box { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
-.login-box { background: var(--surface-color); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; margin-top: 10vh;}
-.card { background: var(--surface-color); padding: 32px; border-radius: var(--radius); border: 1px solid var(--border-color); margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: all 0.3s ease; }
-.card:hover { border-color: #4b5563; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); }
+.login-box { background: var(--surface-color); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border-color); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; margin-top: 10vh;}
+.card { background: var(--surface-color); padding: 32px; border-radius: var(--radius); border: 1px solid var(--border-color); margin-bottom: 24px; box-shadow: var(--shadow); transition: all 0.3s ease; }
+.card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
 
 /* Typografie */
 h1, h2, h3 { color: var(--text-main); margin-top: 0; letter-spacing: -0.5px; }
@@ -56,34 +56,38 @@ p, label { color: var(--text-muted); }
 
 /* Formulare & Inputs */
 input[type="text"], input[type="password"], input[type="number"], input[type="time"], select, textarea { 
-    background: #0d1117; 
+    background: var(--bg-color); 
     color: var(--text-main); 
-    border: 1px solid var(--border-color); 
-    border-radius: 8px; 
-    padding: 10px 14px; 
-    color-scheme: dark; 
+    border: 1px solid transparent; 
+    border-radius: 10px; 
+    padding: 12px 14px; 
     font-family: inherit;
     transition: all 0.2s;
+    font-size: 0.95rem;
 }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-bright); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); background: var(--surface-color); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-/* Buttons - Perfektes Match zu deinem Website-Design */
+/* Buttons */
 button {
     display: inline-block;
-    background: var(--accent-gradient);
+    background: var(--accent);
     color: #ffffff;
     border: none;
-    border-radius: 8px;
-    padding: 10px 24px;
-    font-size: 14px;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(30, 90, 160, 0.3);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 button:hover {
-    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
-    transform: translateY(-2px); 
+    background: var(--accent-bright);
+    box-shadow: 0 6px 16px var(--accent-glow);
+    transform: translateY(-1px); 
+}
+button:active {
+    transform: scale(0.98);
 }
 
 button.btn-edit, button.btn-secondary {
@@ -93,36 +97,34 @@ button.btn-edit, button.btn-secondary {
     box-shadow: none;
 }
 button.btn-edit:hover, button.btn-secondary:hover {
-    border-color: var(--accent-glow);
-    background: rgba(30, 90, 160, 0.05);
-    transform: translateY(-2px);
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-color);
 }
 
 button.btn-danger {
     background: var(--surface-color);
     color: var(--danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(255, 59, 48, 0.3);
     box-shadow: none;
 }
 button.btn-danger:hover {
     border-color: var(--danger);
-    background: rgba(239, 68, 68, 0.05);
-    transform: translateY(-2px);
+    background: rgba(255, 59, 48, 0.05);
 }
 
-button.btn-success { background: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); width: 100%; font-size: 16px; padding: 14px; margin-top: 10px; }
-button.btn-success:hover { background: #059669; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
-button.btn-icon { padding: 6px 12px; font-size: 12px; }
+button.btn-success { background: var(--accent); width: 100%; font-size: 16px; padding: 14px; margin-top: 10px; }
+button.btn-icon { padding: 8px 12px; font-size: 13px; }
 
 /* Tabellen */
 table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
-th { background-color: rgba(139, 148, 158, 0.05); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
-tr:hover td { background-color: rgba(139, 148, 158, 0.02); }
+th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-size: 0.95rem; }
+th { background-color: var(--bg-color); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; border-radius: 6px 6px 0 0;}
+tr:hover td { background-color: var(--bg-color); }
 
 /* Modals (Popups) */
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); overflow-y: auto; backdrop-filter: blur(5px); }
-.modal-content { background-color: var(--surface-color); margin: 5% auto; padding: 32px; border-radius: 16px; width: 90%; max-width: 650px; border: 1px solid var(--border-color); color: var(--text-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); position: relative; }
-.custom-field-row { background: #0d1117; border-color: var(--border-color); }
-.close { color: var(--text-muted); }
-.close:hover { color: var(--accent-bright); }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); overflow-y: auto; }
+.modal-content { background-color: var(--surface-color); margin: 5% auto; padding: 32px; border-radius: var(--radius); width: 90%; max-width: 650px; border: 1px solid var(--border-color); color: var(--text-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
+.custom-field-row { background: var(--bg-color); border-color: var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+.close { color: var(--text-muted); font-size: 24px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+.close:hover { color: var(--danger); }
