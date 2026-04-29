@@ -23,7 +23,7 @@ try {
         if ($name) {
             $stmt = $db->prepare("INSERT INTO event_types (name, duration_minutes, is_active) VALUES (?, ?, 1)");
             $stmt->execute([$name, $duration]);
-            echo json_encode(['message' => 'Trainingsart erfolgreich angelegt!']);
+            echo json_encode(['message' => 'Terminart erfolgreich angelegt!']);
         } else {
             http_response_code(400);
             echo json_encode(['error' => 'Der Name darf nicht leer sein.']);

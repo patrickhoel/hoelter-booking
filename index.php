@@ -17,7 +17,7 @@ if ($rescheduleId && $rescheduleToken) {
     $rescheduleBooking = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($rescheduleBooking) {
         $isRescheduleMode = true;
-        // Erzwinge, dass das Widget das richtige Training lädt
+        // Erzwinge, dass das Widget die richtige Terminart lädt
         $eventId = $rescheduleBooking['event_type_id'];
     }
 }
@@ -31,14 +31,14 @@ if ($eventId) { // Lade das spezifische Event
     $stmt = $db->prepare("SELECT * FROM event_types WHERE id = ? AND is_active = 1");
     $stmt->execute([$eventId]);
 } else {
-    // Fallback: Lade das erste aktive Training aus der Datenbank
+    // Fallback: Lade die erste aktive Terminart aus der Datenbank
     $stmt = $db->query("SELECT * FROM event_types WHERE is_active = 1 LIMIT 1");
 }
 
 $event = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$event) {
-    die("Dieses Training existiert nicht oder ist inaktiv.");
+    die("Diese Terminart existiert nicht oder ist inaktiv.");
 }
 
 // JSON-Einstellungen entpacken, um die aktiven Wochentage herauszufinden

@@ -27,7 +27,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         
         <div class="tabs" style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto;">
             <button class="tab-btn active" onclick="openTab('tab-bookings')" id="btn-tab-bookings">Buchungen</button>
-            <button class="tab-btn" onclick="openTab('tab-events')" id="btn-tab-events">Trainingsarten</button>
+            <button class="tab-btn" onclick="openTab('tab-events')" id="btn-tab-events">Terminarten</button>
+            <button class="tab-btn" onclick="openTab('tab-process')" id="btn-tab-process">Buchungsprozess</button>
             <button class="tab-btn" onclick="openTab('tab-email')" id="btn-tab-email">E-Mail & SMTP</button>
             <button class="tab-btn" onclick="openTab('tab-company')" id="btn-tab-company">Unternehmensprofil</button>
         </div>
@@ -136,6 +137,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     </div>
                 </div>
 
+                <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Unternehmensprofil speichern</button>
+                <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
+            </div>
+
+            <!-- BUCHUNGSPROZESS TAB -->
+            <div id="tab-process" class="tab-content" style="display: none;">
                 <div class="card">
                     <h2>Buchungs-Ablauf</h2>
                     <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main);">
@@ -157,18 +164,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <input type="time" id="endTime" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Profil & Zeiten speichern</button>
-                    <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
                 </div>
+                <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Prozess & Zeiten speichern</button>
+                <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
             </div>
         </form>
 
         <div class="card tab-content" id="tab-events" style="display: none;">
-            <h2>Trainingsarten</h2>
+            <h2>Terminarten</h2>
             <form id="eventForm">
                 <div style="display: flex; gap: 20px; align-items: flex-end;">
                     <div class="form-group">
-                        <label for="eventName">Name (z.B. Welpentraining)</label>
+                        <label for="eventName">Name (z.B. Erstgespräch)</label>
                         <input type="text" id="eventName" required>
                     </div>
                     <div class="form-group">
@@ -194,7 +201,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     </tr>
                 </thead>
                 <tbody id="eventsTableBody">
-                    <tr><td colspan="6">Lade Trainingsarten...</td></tr>
+                    <tr><td colspan="6">Lade Terminarten...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -212,7 +219,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <thead>
                     <tr>
                         <th>Datum & Uhrzeit</th>
-                        <th>Training</th>
+                        <th>Terminart</th>
                         <th>Kunde</th>
                         <th>E-Mail</th>
                         <th>Zusatzinfos</th>
@@ -263,10 +270,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <h3 style="margin-top:0;">Buchungszeiten</h3>
                 <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" id="useGlobalSchedule" onchange="toggleScheduleOptions()" style="width: auto;">
-                    <strong>Globale Öffnungszeiten für dieses Training übernehmen</strong>
+                    <strong>Globale Öffnungszeiten für diese Terminart übernehmen</strong>
                 </label>
                 <div id="customScheduleOptions" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                    <p style="margin-top:0; font-size: 14px; color: #666;">An welchen Tagen findet dieses Training statt?</p>
+                    <p style="margin-top:0; font-size: 14px; color: #666;">An welchen Tagen findet dieser Termin statt?</p>
                     <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                         <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="1"> Mo</label>
                         <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="2"> Di</label>
@@ -286,7 +293,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee;">
                 <h3 style="margin-top:0;">Kunden-Daten abfragen</h3>
-                <p style="font-size: 13px; color: #666;"><strong>Name</strong> und <strong>E-Mail</strong> sind globale Pflichtfelder und werden immer abgefragt. Hier kannst du optionale oder verpflichtende Zusatzfelder für dieses Training anlegen (z.B. Telefonnummer, Alter des Hundes).</p>
+                <p style="font-size: 13px; color: #666;"><strong>Name</strong> und <strong>E-Mail</strong> sind globale Pflichtfelder und werden immer abgefragt. Hier kannst du optionale oder verpflichtende Zusatzfelder für diese Terminart anlegen (z.B. Telefonnummer, Geburtsdatum).</p>
                 <div id="customFieldsContainer"></div>
                 <button type="button" class="btn-secondary" onclick="addCustomField()" style="margin-top: 10px;">+ Weiteres Feld hinzufügen</button>
             </div>
@@ -403,7 +410,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         function loadEvents() {
             fetch('api_events.php').then(r => r.json()).then(events => {
                 const tbody = document.getElementById('eventsTableBody'); tbody.innerHTML = '';
-                if(events.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Keine Trainingsarten gefunden.</td></tr>'; return; }
+                if(events.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Keine Terminarten gefunden.</td></tr>'; return; }
                 const baseUrl = window.location.href.split('?')[0].replace('admin.php', 'index.php');
                 events.forEach(e => {
                     const eventLink = `${baseUrl}?event_id=${e.id}`;
@@ -606,9 +613,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             }
         }
 
-        // 5.5 Event (Trainingsart) löschen
+        // 5.5 Event (Terminart) löschen
         function deleteEvent(id) {
-            if(confirm("Möchtest du dieses Training wirklich löschen? ACHTUNG: Alle bestehenden Buchungen für dieses Training werden ebenfalls gelöscht!")) {
+            if(confirm("Möchtest du diese Terminart wirklich löschen? ACHTUNG: Alle bestehenden Buchungen für diese Terminart werden ebenfalls gelöscht!")) {
                 fetch('api_delete_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

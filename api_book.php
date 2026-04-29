@@ -39,7 +39,7 @@ try {
     $stmt = $db->prepare("SELECT name, duration_minutes, max_capacity, buffer_minutes, notice_min_hours, notice_max_days FROM event_types WHERE id = ?");
     $stmt->execute([$eventId]);
     $event = $stmt->fetch(PDO::FETCH_ASSOC);
-    $eventName = $event['name'] ?? 'Training';
+    $eventName = $event['name'] ?? 'Termin';
     $duration = $event['duration_minutes'];
     $maxCapacity = $event['max_capacity'] ?? 1;
     $buffer = $event['buffer_minutes'] ?? 0;
@@ -274,7 +274,7 @@ try {
         // 6. Benachrichtigung an Admin
         if (!empty($adminEmail)) {
             $adminSubj = "Neue Buchung: $eventName am " . $startTime->format('d.m. H:i');
-            $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Training:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
+            $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Terminart:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
             sendSystemMail($adminEmail, $adminSubj, $adminBody);
         }
 

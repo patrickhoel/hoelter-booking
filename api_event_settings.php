@@ -47,7 +47,7 @@ try {
                 echo json_encode($event);
             } else {
                 http_response_code(404);
-                echo json_encode(['error' => 'Training nicht gefunden.']);
+                echo json_encode(['error' => 'Terminart nicht gefunden.']);
             }
         } else {
             http_response_code(400);
