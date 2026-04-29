@@ -10,16 +10,24 @@ if (empty($token)) {
     $message = "Ungültiger Link.";
 } else {
     // Prüfen, ob der Token existiert
-    $stmt = $db->prepare("SELECT b.id, b.start_time, e.name as event_name FROM bookings b JOIN event_types e ON b.event_type_id = e.id WHERE b.cancel_token = ?");
+    $stmt = $db->prepare("SELECT b.id, b.start_time, e.name as event_name, e.cancel_limit_hours FROM bookings b JOIN event_types e ON b.event_type_id = e.id WHERE b.cancel_token = ?");
     $stmt->execute([$token]);
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$booking) {
         $message = "Dieser Termin existiert nicht mehr oder wurde bereits abgesagt.";
     } else {
-        $date = (new DateTime($booking['start_time']))->format('d.m.Y \u\m H:i') . ' Uhr';
+        $bookingTime = new DateTime($booking['start_time']);
+        $date = $bookingTime->format('d.m.Y \u\m H:i') . ' Uhr';
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $now = new DateTime();
+        $limitHours = $booking['cancel_limit_hours'] ?? 24;
+        $deadline = (clone $bookingTime)->modify("-{$limitHours} hours");
+        
+        if ($now > $deadline) {
+            $message = "Eine Stornierung ist leider nur bis zu {$limitHours} Stunden vor dem Termin möglich. Bitte kontaktiere uns direkt.";
+            $booking = null; // Blendet den "Ja, absagen" Button aus
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Kunde hat die Stornierung bestätigt -> Buchung löschen
             $db->prepare("DELETE FROM bookings WHERE id = ?")->execute([$booking['id']]);
             $message = "Dein Termin wurde erfolgreich storniert.";

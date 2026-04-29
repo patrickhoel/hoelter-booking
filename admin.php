@@ -25,7 +25,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <a href="logout.php" style="padding: 8px 16px; border: 1px solid var(--danger); color: var(--danger); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: 0.2s;" onmouseover="this.style.backgroundColor='rgba(220, 53, 69, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">Logout</a>
         </div>
         
-        <div class="card">
+        <div class="tabs" style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto;">
+            <button class="tab-btn active" onclick="openTab('tab-bookings')" id="btn-tab-bookings">Buchungen</button>
+            <button class="tab-btn" onclick="openTab('tab-events')" id="btn-tab-events">Trainingsarten</button>
+            <button class="tab-btn" onclick="openTab('tab-settings')" id="btn-tab-settings">Einstellungen</button>
+        </div>
+        
+        <div class="card tab-content" id="tab-settings" style="display: none;">
             <h2>System & E-Mail Einstellungen</h2>
             <form id="settingsForm">
                 <h3 style="margin-top:0; font-size: 1.1rem;">Dein Unternehmen (Branding & Info)</h3>
@@ -60,26 +66,30 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 </label>
 
                 <h3 style="margin-top:0; font-size: 1.1rem; border-top: 1px solid var(--border-color); padding-top: 15px;">E-Mail Absender (SMTP Vorbereitung)</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
+                <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group" style="width: 100%;">
                         <label>Absender E-Mail</label>
-                        <input type="text" id="smtpFrom" placeholder="info@deinedomain.de">
+                        <input type="email" id="smtpFrom" placeholder="info@deinedomain.de">
                     </div>
-                    <div class="form-group">
-                        <label>SMTP Host</label>
-                        <input type="text" id="smtpHost" placeholder="smtp.ionos.de">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>SMTP Host</label>
+                            <input type="text" id="smtpHost" placeholder="smtp.ionos.de">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Port</label>
+                            <input type="text" id="smtpPort" placeholder="587">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>SMTP Port</label>
-                        <input type="text" id="smtpPort" placeholder="587">
-                    </div>
-                    <div class="form-group">
-                        <label>SMTP Benutzer</label>
-                        <input type="text" id="smtpUser">
-                    </div>
-                    <div class="form-group">
-                        <label>SMTP Passwort</label>
-                        <input type="password" id="smtpPass">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>SMTP Benutzer</label>
+                            <input type="text" id="smtpUser">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Passwort</label>
+                            <input type="password" id="smtpPass">
+                        </div>
                     </div>
                 </div>
                 <button type="submit">Einstellungen speichern</button>
@@ -87,7 +97,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </form>
         </div>
 
-        <div class="card">
+        <div class="card tab-content" id="tab-events" style="display: none;">
             <h2>Trainingsarten</h2>
             <form id="eventForm">
                 <div style="display: flex; gap: 20px; align-items: flex-end;">
@@ -123,7 +133,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </table>
         </div>
 
-        <div class="card">
+        <div class="card tab-content" id="tab-bookings">
             <h2>Buchungen</h2>
             <table>
                 <thead>
@@ -169,6 +179,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
+                <h3 style="margin-top:0;">Stornierungsbedingungen</h3>
+                <div style="display: flex; gap: 15px;">
+                    <label style="font-weight:normal;">Bis wie viele Stunden vor dem Termin darf der Kunde absagen?<br> 
+                    <input type="number" id="modalCancelLimit" style="width: 80px; padding: 5px; margin-top: 5px;" title="Stunden"> Stunden</label>
+                </div>
+            </div>
+
+            <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
                 <h3 style="margin-top:0;">Buchungszeiten</h3>
                 <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" id="useGlobalSchedule" onchange="toggleScheduleOptions()" style="width: auto;">
@@ -205,6 +223,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     </div>
 
     <script>
+        // Tab-Steuerung
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).style.display = 'block';
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
         // 1. Einstellungen beim Laden abrufen
         fetch('api_settings.php')
             .then(r => r.json())
@@ -294,6 +319,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     // 0.5 Buchungszeitraum (Vorlauf & Max)
                     document.getElementById('modalMinNotice').value = data.notice_min_hours !== undefined ? data.notice_min_hours : 24;
                     document.getElementById('modalMaxNotice').value = data.notice_max_days !== undefined ? data.notice_max_days : 60;
+                    document.getElementById('modalCancelLimit').value = data.cancel_limit_hours !== undefined ? data.cancel_limit_hours : 24;
 
                     // 1. Buchungszeiten setzen
                     let schedule = { use_global: true, start_time: "09:00", end_time: "17:00", active_days: [1,2,3,4,5] };
@@ -360,7 +386,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 max_capacity: document.getElementById('modalCapacity').value,
                 buffer_minutes: document.getElementById('modalBuffer').value,
                 notice_min_hours: document.getElementById('modalMinNotice').value,
-                notice_max_days: document.getElementById('modalMaxNotice').value
+                notice_max_days: document.getElementById('modalMaxNotice').value,
+                cancel_limit_hours: document.getElementById('modalCancelLimit').value
             };
             
             fetch('api_event_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
@@ -384,10 +411,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         } catch(e) {}
                     }
                     
-                    let statusBadge = b.status === 'pending' ? '<span style="color: #f59e0b; font-weight: 600;">⏳ Ausstehend</span>' : '<span style="color: var(--success); font-weight: 600;">✅ Bestätigt</span>';
-                    let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})" style="margin-right: 5px; width: auto; padding: 6px 12px; margin-top: 0;">Bestätigen</button>` : '';
+                    let statusBadge = b.status === 'pending' ? '<span style="color: #f59e0b; font-weight: 600;">Ausstehend</span>' : '<span style="color: var(--success); font-weight: 600;">Bestätigt</span>';
+                    if (b.status === 'reschedule_requested') {
+                        statusBadge = '<span style="color: #a855f7; font-weight: 600;">Verschiebung</span>';
+                    }
 
-                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${statusBadge}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${confirmBtn}<button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Löschen</button></td></tr>`;
+                    let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})" style="margin-right: 5px; width: auto; margin-top: 0;">Bestätigen</button>` : '';
+                    
+                    let rescheduleBtn = b.status !== 'reschedule_requested' 
+                        ? `<button class="btn-edit btn-icon" onclick="offerAlternative(${b.id})" style="margin-right: 5px;">Verschieben</button>`
+                        : `<span style="font-size: 12px; color: var(--text-muted); margin-right: 5px; display: inline-block; padding: 8px 0;">Angefragt</span>`;
+
+                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${b.event_name}</td><td>${b.customer_name}<br><a href="mailto:${b.customer_email}" style="font-size: 12px; color: var(--accent);">${b.customer_email}</a></td><td>${statusBadge}</td><td style="font-size: 13px;">${customDataHtml}</td><td><div style="display:flex; align-items:center;">${confirmBtn}${rescheduleBtn}<button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Löschen</button></div></td></tr>`;
                 });
             });
         }
@@ -402,6 +437,20 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id })
                 }).then(() => loadBookings()); // Tabelle nach dem Bestätigen neu laden
+            }
+        }
+
+        // 5.2 Termin verschieben (Gegenvorschlag)
+        function offerAlternative(bookingId) {
+            if(confirm("Möchtest du dem Kunden eine E-Mail schicken und ihn bitten, einen neuen Termin zu wählen?")) {
+                fetch('api_reschedule_invite.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id: bookingId })
+                })
+                .then(res => res.json())
+                .then(data => { alert(data.message); });
+                loadBookings(); // Lade die Tabelle neu, um den geänderten Status sofort zu sehen
             }
         }
 

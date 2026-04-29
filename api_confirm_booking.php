@@ -33,9 +33,30 @@ try {
             $cancelLink = $baseUrl . "/cancel.php?token=" . $booking['cancel_token'];
 
             $startTimeObj = new DateTime($booking['start_time']);
-            $date = $startTimeObj->format('d.m.Y \u\m H:i') . ' Uhr';
+            $formattedDateStr = $startTimeObj->format('d.m.Y');
+            $formattedTimeStr = $startTimeObj->format('H:i');
+            
             $subject = "Termin bestätigt: " . $booking['event_name'] . " - " . $companyName;
-            $body = "<h2>Hallo {$booking['customer_name']},</h2><p>gute Nachrichten: Dein Termin am <strong>$date</strong> für <em>{$booking['event_name']}</em> wurde soeben bestätigt!</p><p>Wir freuen uns auf dich.</p><hr><p style='font-size:12px; color:#666;'>Möchtest du den Termin doch noch absagen? <a href='$cancelLink'>Hier klicken</a></p>";
+            $body = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Termin bestätigt!</h1>
+                    <p style='color: #86868b; font-size: 16px;'>$companyName hat deinen Termin erfolgreich eingetragen.</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>{$booking['event_name']}</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Wann</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$formattedDateStr um $formattedTimeStr Uhr</td></tr>
+                    </table>
+                </div>
+                <p style='color: #1d1d1f; font-size: 15px; line-height: 1.5; margin-bottom: 25px;'>Wir haben dir eine Kalender-Datei (.ics) angehängt, damit du den Termin mit einem Klick in dein Handy speichern kannst.</p>
+                <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                    <p style='color: #86868b; font-size: 13px; margin-bottom: 15px;'>Sollte etwas dazwischenkommen:</p>
+                    <a href='$cancelLink' style='display: inline-block; background-color: #ff3b30; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Termin stornieren</a>
+                </div>
+            </div>";
             $icsData = generateIcsData($booking['event_name'], $startTimeObj, $booking['duration_minutes']);
             sendSystemMail($booking['customer_email'], $subject, $body, $icsData);
         }

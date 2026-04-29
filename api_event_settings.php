@@ -25,10 +25,11 @@ try {
         $buffer_minutes = isset($data['buffer_minutes']) ? (int)$data['buffer_minutes'] : 0;
         $notice_min = isset($data['notice_min_hours']) ? (int)$data['notice_min_hours'] : 24;
         $notice_max = isset($data['notice_max_days']) ? (int)$data['notice_max_days'] : 60;
+        $cancel_limit = isset($data['cancel_limit_hours']) ? (int)$data['cancel_limit_hours'] : 24;
         
         if ($id) {
-            $stmt = $db->prepare("UPDATE event_types SET schedule_json = ?, form_fields_json = ?, max_capacity = ?, buffer_minutes = ?, notice_min_hours = ?, notice_max_days = ? WHERE id = ?");
-            $stmt->execute([$schedule_json, $form_fields_json, $max_capacity, $buffer_minutes, $notice_min, $notice_max, $id]);
+            $stmt = $db->prepare("UPDATE event_types SET schedule_json = ?, form_fields_json = ?, max_capacity = ?, buffer_minutes = ?, notice_min_hours = ?, notice_max_days = ?, cancel_limit_hours = ? WHERE id = ?");
+            $stmt->execute([$schedule_json, $form_fields_json, $max_capacity, $buffer_minutes, $notice_min, $notice_max, $cancel_limit, $id]);
             echo json_encode(['message' => 'Einstellungen erfolgreich gespeichert!']);
         } else {
             http_response_code(400);
@@ -38,7 +39,7 @@ try {
         // GET Request: Einstellungen auslesen
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         if ($id) {
-            $stmt = $db->prepare("SELECT id, name, schedule_json, form_fields_json, max_capacity, buffer_minutes, notice_min_hours, notice_max_days FROM event_types WHERE id = ?");
+            $stmt = $db->prepare("SELECT id, name, schedule_json, form_fields_json, max_capacity, buffer_minutes, notice_min_hours, notice_max_days, cancel_limit_hours FROM event_types WHERE id = ?");
             $stmt->execute([$id]);
             $event = $stmt->fetch(PDO::FETCH_ASSOC);
             

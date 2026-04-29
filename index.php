@@ -3,10 +3,31 @@
 require_once 'config.php';
 $db = getDb();
 
-// Prüfen, ob eine spezifische Event-ID über die URL übergeben wurde (?event_id=2)
-$eventId = filter_input(INPUT_GET, 'event_id', FILTER_VALIDATE_INT);
+// --- NEU: Logik für den "Umbuchen"-Modus ---
+$rescheduleId = filter_input(INPUT_GET, 'reschedule', FILTER_VALIDATE_INT);
+$rescheduleToken = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
+$rescheduleBooking = null;
+$isRescheduleMode = false;
+$eventId = null;
 
-if ($eventId) {
+if ($rescheduleId && $rescheduleToken) {
+    // Finde die ursprüngliche Buchung, die verschoben werden soll
+    $stmt = $db->prepare("SELECT * FROM bookings WHERE id = ? AND cancel_token = ? AND status = 'reschedule_requested'");
+    $stmt->execute([$rescheduleId, $rescheduleToken]);
+    $rescheduleBooking = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($rescheduleBooking) {
+        $isRescheduleMode = true;
+        // Erzwinge, dass das Widget das richtige Training lädt
+        $eventId = $rescheduleBooking['event_type_id'];
+    }
+}
+
+if (!$eventId) {
+    // Normaler Modus: Prüfen, ob eine spezifische Event-ID über die URL übergeben wurde (?event_id=2)
+    $eventId = filter_input(INPUT_GET, 'event_id', FILTER_VALIDATE_INT);
+}
+
+if ($eventId) { // Lade das spezifische Event
     $stmt = $db->prepare("SELECT * FROM event_types WHERE id = ? AND is_active = 1");
     $stmt->execute([$eventId]);
 } else {
@@ -51,11 +72,21 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
 <body>
 
     <div class="container">
-        <h2 style="text-align: center;"><?= htmlspecialchars($event['name']) ?></h2>
-        <p style="text-align: center; margin-bottom: 20px;">Dauer: <?= $event['duration_minutes'] ?> Minuten</p>
+        <?php if ($isRescheduleMode): ?>
+            <h2 style="text-align: center;">Neuen Termin wählen</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Bitte wähle einen neuen Termin für <strong><?= htmlspecialchars($event['name']) ?></strong>.</p>
+        <?php else: ?>
+            <h2 style="text-align: center;"><?= htmlspecialchars($event['name']) ?></h2>
+            <p style="text-align: center; margin-bottom: 20px;">Dauer: <?= $event['duration_minutes'] ?> Minuten</p>
+        <?php endif; ?>
         
         <form id="bookingForm">
             <input type="hidden" id="eventId" value="<?= $event['id'] ?>">
+            <!-- Versteckte Felder für den Umbuchungs-Modus -->
+            <?php if ($isRescheduleMode): ?>
+                <input type="hidden" id="rescheduleId" value="<?= $rescheduleBooking['id'] ?>">
+                <input type="hidden" id="rescheduleToken" value="<?= $rescheduleBooking['cancel_token'] ?>">
+            <?php endif; ?>
             
             <div class="form-group">
                 <label for="datePicker">Wähle ein Datum</label>
@@ -73,13 +104,13 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
             <!-- Dieser Teil wird erst nach Auswahl eines Slots sichtbar -->
             <div id="userDetailsForm" class="booking-form">
                 <div class="form-group">
-                    <label for="name">Dein Name</label>
-                    <input type="text" id="name" placeholder="Max Mustermann" required>
+                    <label for="name">Dein Name</label> <!-- Im Umbuchungs-Modus wird das Feld per JS befüllt und gesperrt -->
+                    <input type="text" id="name" placeholder="Max Mustermann" required <?= $isRescheduleMode ? 'value="' . htmlspecialchars($rescheduleBooking['customer_name']) . '" readonly' : '' ?>>
                 </div>
                 
                 <div class="form-group">
-                    <label for="email">Deine E-Mail</label>
-                    <input type="email" id="email" placeholder="max@beispiel.de" required>
+                    <label for="email">Deine E-Mail</label> <!-- Im Umbuchungs-Modus wird das Feld per JS befüllt und gesperrt -->
+                    <input type="email" id="email" placeholder="max@beispiel.de" required <?= $isRescheduleMode ? 'value="' . htmlspecialchars($rescheduleBooking['customer_email']) . '" readonly' : '' ?>>
                 </div>
                 
                 <!-- Dynamische Formularfelder laden -->
@@ -95,7 +126,7 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
                 <?php endforeach; ?>
 
                 <input type="hidden" id="selectedTime" required>
-                <button type="submit">Jetzt verbindlich buchen</button>
+                <button type="submit"><?= $isRescheduleMode ? 'Neuen Termin bestätigen' : 'Jetzt verbindlich buchen' ?></button>
             </div>
         </form>
         
@@ -193,6 +224,13 @@ $noticeMaxDays = $event['notice_max_days'] ?? 60;
                 start_time: finalDateTime,
                 custom_data: customData
             };
+
+            // Füge Umbuchungs-Infos hinzu, falls vorhanden
+            const rescheduleIdInput = document.getElementById('rescheduleId');
+            if (rescheduleIdInput) {
+                data.reschedule_id = parseInt(rescheduleIdInput.value);
+                data.reschedule_token = document.getElementById('rescheduleToken').value;
+            }
 
             // Wir senden die Daten per POST an unsere API
             fetch('api_book.php', {

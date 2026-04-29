@@ -17,6 +17,8 @@ try {
     $email = $data['customer_email'] ?? null;
     $startTimeStr = $data['start_time'] ?? null;
     $customData = isset($data['custom_data']) ? json_encode($data['custom_data']) : null;
+    $rescheduleId = $data['reschedule_id'] ?? null;
+    $rescheduleToken = $data['reschedule_token'] ?? null;
 
     if (!$eventId || !$name || !$email || !$startTimeStr) {
         throw new Exception("Bitte alle Felder ausfüllen.");
@@ -86,38 +88,115 @@ try {
     // Geheimen Token für Stornierung generieren
     $cancelToken = bin2hex(random_bytes(16));
 
-    // 4. Alles OK -> Buchung in die Datenbank schreiben
-    $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json, status, cancel_token) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData, $status, $cancelToken]);
+    if ($rescheduleId && $rescheduleToken) {
+        // --- LOGIK FÜR TERMIN-VERSCHIEBUNG ---
+        
+        // 1. Prüfen, ob der Token und die ID zur ursprünglichen Buchung passen
+        $stmt = $db->prepare("SELECT id FROM bookings WHERE id = ? AND cancel_token = ? AND status = 'reschedule_requested'");
+        $stmt->execute([$rescheduleId, $rescheduleToken]);
+        $originalBooking = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // 5. Automatische E-Mail an den Kunden versenden
-    $formattedDate = $startTime->format('d.m.Y \u\m H:i') . ' Uhr';
-    
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-    $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
-    $cancelLink = $baseUrl . "/cancel.php?token=" . $cancelToken;
-    
-    $icsData = null;
-    if ($require_manual) {
-        $subject = "Termin-Anfrage eingegangen - $companyName";
-        $body = "<h2>Hallo $name,</h2><p>wir haben deine Anfrage für den Termin am <strong>$formattedDate</strong> erhalten.</p><p>Wir prüfen dies nun und melden uns in Kürze mit der finalen Bestätigung bei dir!</p><hr><p style='font-size:12px; color:#666;'>Möchtest du die Anfrage zurückziehen? <a href='$cancelLink'>Hier klicken zum Absagen</a></p>";
-        $msg = 'Termin erfolgreich angefragt! Warte auf Bestätigung...';
-    } else {
-        $subject = "Terminbestätigung - $companyName";
-        $body = "<h2>Hallo $name,</h2><p>dein Termin am <strong>$formattedDate</strong> ist hiermit verbindlich gebucht!</p><p>Wir freuen uns auf dich.</p><hr><p style='font-size:12px; color:#666;'>Termin absagen? <a href='$cancelLink'>Hier klicken</a></p>";
-        $msg = 'Termin erfolgreich gebucht!';
+        if (!$originalBooking) {
+            throw new Exception("Ungültige Anfrage zum Verschieben oder der Termin wurde bereits verschoben.");
+        }
+
+        // 2. Bestehende Buchung aktualisieren
+        $updateStmt = $db->prepare("UPDATE bookings SET start_time = ?, status = ?, custom_data_json = ? WHERE id = ?");
+        $updateStmt->execute([$startTime->format('Y-m-d H:i:s'), $status, $customData, $rescheduleId]);
+
+        // 3. Bestätigungs-E-Mail für den *neuen* Termin senden
+        $formattedDateStr = $startTime->format('d.m.Y');
+        $formattedTimeStr = $startTime->format('H:i');
+        $subject = "Termin erfolgreich verschoben - $companyName";
+        $body = "<h2>Hallo $name,</h2><p>dein Termin wurde erfolgreich auf den <strong>$formattedDateStr um $formattedTimeStr Uhr</strong> verschoben.</p><p>Wir freuen uns auf dich.</p>";
+        $msg = 'Dein Termin wurde erfolgreich verschoben!';
         $icsData = generateIcsData($eventName, $startTime, $duration);
-    }
-    sendSystemMail($email, $subject, $body, $icsData);
+        sendSystemMail($email, $subject, $body, $icsData);
 
-    // 6. Benachrichtigung an Admin
-    if (!empty($adminEmail)) {
-        $adminSubj = "Neue Buchung: $eventName am " . $startTime->format('d.m. H:i');
-        $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Training:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
-        sendSystemMail($adminEmail, $adminSubj, $adminBody);
-    }
+        // 4. Admin über die erfolgreiche Verschiebung informieren
+        if (!empty($adminEmail)) {
+            $adminSubj = "Termin verschoben: $eventName am " . $startTime->format('d.m. H:i');
+            $adminBody = "Ein Kunde hat einen Termin verschoben.<br><strong>Neuer Zeitpunkt:</strong> $formattedDateStr um $formattedTimeStr Uhr.<br><strong>Status:</strong> Der Termin wurde auf '$status' gesetzt.";
+            sendSystemMail($adminEmail, $adminSubj, $adminBody);
+        }
 
-    echo json_encode(['message' => $msg]);
+        echo json_encode(['message' => $msg]);
+
+    } else {
+        // --- LOGIK FÜR NEUE BUCHUNG (bestehender Code) ---
+        
+        // 4. Alles OK -> Buchung in die Datenbank schreiben
+        $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json, status, cancel_token) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData, $status, $cancelToken]);
+
+        // 5. Automatische E-Mail an den Kunden versenden
+        $formattedDate = $startTime->format('d.m.Y \u\m H:i') . ' Uhr';
+        
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+        $cancelLink = $baseUrl . "/cancel.php?token=" . $cancelToken;
+        
+        $icsData = null;
+        $formattedDateStr = $startTime->format('d.m.Y');
+        $formattedTimeStr = $startTime->format('H:i');
+
+        if ($require_manual) {
+            $subject = "Termin-Anfrage eingegangen - $companyName";
+            $body = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Anfrage eingegangen</h1>
+                    <p style='color: #86868b; font-size: 16px;'>Wir melden uns in Kürze mit der finalen Bestätigung.</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$eventName</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Wann</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$formattedDateStr um $formattedTimeStr Uhr</td></tr>
+                    </table>
+                </div>
+                <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                    <a href='$cancelLink' style='color: #86868b; font-size: 13px; text-decoration: underline;'>Anfrage zurückziehen</a>
+                </div>
+            </div>";
+            $msg = 'Termin erfolgreich angefragt! Warte auf Bestätigung...';
+        } else {
+            $subject = "Terminbestätigung - $companyName";
+            $body = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Termin bestätigt!</h1>
+                    <p style='color: #86868b; font-size: 16px;'>$companyName hat deinen Termin erfolgreich eingetragen.</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$eventName</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Wann</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$formattedDateStr um $formattedTimeStr Uhr</td></tr>
+                    </table>
+                </div>
+                <p style='color: #1d1d1f; font-size: 15px; line-height: 1.5; margin-bottom: 25px;'>Wir haben dir eine Kalender-Datei (.ics) angehängt, damit du den Termin mit einem Klick in dein Handy speichern kannst.</p>
+                <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                    <p style='color: #86868b; font-size: 13px; margin-bottom: 15px;'>Sollte etwas dazwischenkommen:</p>
+                    <a href='$cancelLink' style='display: inline-block; background-color: #ff3b30; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Termin stornieren</a>
+                </div>
+            </div>";
+            $msg = 'Termin erfolgreich gebucht!';
+            $icsData = generateIcsData($eventName, $startTime, $duration);
+        }
+        sendSystemMail($email, $subject, $body, $icsData);
+
+        // 6. Benachrichtigung an Admin
+        if (!empty($adminEmail)) {
+            $adminSubj = "Neue Buchung: $eventName am " . $startTime->format('d.m. H:i');
+            $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Training:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
+            sendSystemMail($adminEmail, $adminSubj, $adminBody);
+        }
+
+        echo json_encode(['message' => $msg]);
+    }
 
 } catch (Exception $e) {
     if (http_response_code() === 200) { // Wenn kein spezifischer Fehlercode gesetzt wurde

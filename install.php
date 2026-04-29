@@ -61,7 +61,8 @@ try {
         "ALTER TABLE bookings ADD COLUMN status TEXT DEFAULT 'confirmed'",
         "ALTER TABLE settings ADD COLUMN company_name TEXT DEFAULT 'Planago Booking'",
         "ALTER TABLE settings ADD COLUMN admin_email TEXT DEFAULT ''",
-        "ALTER TABLE bookings ADD COLUMN cancel_token TEXT DEFAULT ''"
+        "ALTER TABLE bookings ADD COLUMN cancel_token TEXT DEFAULT ''",
+        "ALTER TABLE event_types ADD COLUMN cancel_limit_hours INTEGER DEFAULT 24"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
