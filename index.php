@@ -55,8 +55,9 @@ $noticeMinHours = $event['notice_min_hours'] ?? 24;
 $noticeMaxDays = $event['notice_max_days'] ?? 60;
 
 // --- NEU: Impressum & Datenschutz auslesen ---
-$settingsStmt = $db->query("SELECT company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy FROM settings LIMIT 1");
 $sysSettings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
+$companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
 $privacyLink = $sysSettings['company_link_privacy'] ?? '';
 ?>
@@ -130,6 +131,13 @@ $privacyLink = $sysSettings['company_link_privacy'] ?? '';
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
+
+                <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
+                    <input type="checkbox" id="privacyConsent" name="privacyConsent" required style="width: auto; margin-top: 3px; cursor: pointer;">
+                    <label for="privacyConsent" style="font-size: 0.8rem; line-height: 1.4; color: var(--text-muted); font-weight: normal; margin: 0;">
+                        Ich habe die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
+                    </label>
+                </div>
 
                 <input type="hidden" id="selectedTime" required>
                 <button type="submit"><?= $isRescheduleMode ? 'Neuen Termin bestätigen' : 'Jetzt verbindlich buchen' ?></button>

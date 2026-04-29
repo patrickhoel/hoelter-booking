@@ -24,17 +24,28 @@ try {
         $booking = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($booking) {
-            $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+            $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_address FROM settings LIMIT 1");
             $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
             $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
             $impressumLink = $sysSettings['company_link_impressum'] ?? '';
             $privacyLink = $sysSettings['company_link_privacy'] ?? '';
+            $companyAddress = $sysSettings['company_address'] ?? '';
 
-            $legalLinks = [];
-            if (!empty($impressumLink)) $legalLinks[] = "<a href='$impressumLink' style='color: #86868b; text-decoration: none;'>Impressum</a>";
-            if (!empty($privacyLink)) $legalLinks[] = "<a href='$privacyLink' style='color: #86868b; text-decoration: none;'>Datenschutz</a>";
-            $legalHtml = !empty($legalLinks) ? "<p style='color: #86868b; font-size: 12px; margin-bottom: 10px;'>" . implode(" &nbsp;|&nbsp; ", $legalLinks) . "</p>" : "";
-            $footerHtml = "<div style='margin-top: 30px; text-align: center;'>" . $legalHtml . "<p style='color: #d2d2d7; font-size: 11px; margin: 0;'>Smarte Buchungen mit <strong style='color:#d2d2d7;'>Planago</strong></p></div></div>";
+            $footerName = htmlspecialchars($companyName);
+            $footerAddress = nl2br(htmlspecialchars($companyAddress));
+            $footerImpressum = htmlspecialchars($impressumLink ?: '#');
+            $footerPrivacy = htmlspecialchars($privacyLink ?: '#');
+
+            $emailFooter = "
+                <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
+                    <strong>$footerName</strong><br>
+                    $footerAddress<br><br>
+                    <a href='$footerImpressum' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>Impressum</a>
+                    <a href='$footerPrivacy' style='color: #86868b; text-decoration: underline;'>Datenschutz</a>
+                    <br><br>
+                    <span style='color: #d2d2d7;'>Powered by <strong>Planago</strong></span>
+                </div>
+            </div>";
 
             $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
             $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
@@ -64,7 +75,7 @@ try {
                     <p style='color: #86868b; font-size: 13px; margin-bottom: 15px;'>Sollte etwas dazwischenkommen:</p>
                     <a href='$cancelLink' style='display: inline-block; background-color: #ff3b30; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Termin stornieren</a>
                 </div>
-                " . $footerHtml;
+                " . $emailFooter;
             $icsData = generateIcsData($booking['event_name'], $startTimeObj, $booking['duration_minutes']);
             sendSystemMail($booking['customer_email'], $subject, $body, $icsData);
         }

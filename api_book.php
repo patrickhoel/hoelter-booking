@@ -78,20 +78,31 @@ try {
     }
     
     // 3.5 Prüfen, ob Zwei-Wege-Bestätigung aktiv ist
-    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email, company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email, company_link_impressum, company_link_privacy, company_address FROM settings LIMIT 1");
     $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
     $require_manual = $sysSettings['require_manual_confirmation'] ?? 0;
     $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
     $adminEmail = $sysSettings['admin_email'] ?? '';
     $impressumLink = $sysSettings['company_link_impressum'] ?? '';
     $privacyLink = $sysSettings['company_link_privacy'] ?? '';
+    $companyAddress = $sysSettings['company_address'] ?? '';
     $status = $require_manual ? 'pending' : 'confirmed';
 
-    $legalLinks = [];
-    if (!empty($impressumLink)) $legalLinks[] = "<a href='$impressumLink' style='color: #86868b; text-decoration: none;'>Impressum</a>";
-    if (!empty($privacyLink)) $legalLinks[] = "<a href='$privacyLink' style='color: #86868b; text-decoration: none;'>Datenschutz</a>";
-    $legalHtml = !empty($legalLinks) ? "<p style='color: #86868b; font-size: 12px; margin-bottom: 10px;'>" . implode(" &nbsp;|&nbsp; ", $legalLinks) . "</p>" : "";
-    $footerHtml = "<div style='margin-top: 30px; text-align: center;'>" . $legalHtml . "<p style='color: #d2d2d7; font-size: 11px; margin: 0;'>Smarte Buchungen mit <strong style='color:#d2d2d7;'>Planago</strong></p></div></div>";
+    $footerName = htmlspecialchars($companyName);
+    $footerAddress = nl2br(htmlspecialchars($companyAddress));
+    $footerImpressum = htmlspecialchars($impressumLink ?: '#');
+    $footerPrivacy = htmlspecialchars($privacyLink ?: '#');
+
+    $emailFooter = "
+        <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
+            <strong>$footerName</strong><br>
+            $footerAddress<br><br>
+            <a href='$footerImpressum' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>Impressum</a>
+            <a href='$footerPrivacy' style='color: #86868b; text-decoration: underline;'>Datenschutz</a>
+            <br><br>
+            <span style='color: #d2d2d7;'>Powered by <strong>Planago</strong></span>
+        </div>
+    </div>";
     
     // Geheimen Token für Stornierung generieren
     $cancelToken = bin2hex(random_bytes(16));
@@ -141,7 +152,7 @@ try {
                 <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
                     <a href='$cancelLink' style='color: #86868b; font-size: 13px; text-decoration: underline;'>Anfrage zurückziehen</a>
                 </div>
-                " . $footerHtml;
+                " . $emailFooter;
             $msg = 'Dein neuer Terminvorschlag wurde erfolgreich übermittelt! Warte auf Bestätigung...';
         } else {
             $subject = "Termin erfolgreich verschoben - $companyName";
@@ -161,7 +172,7 @@ try {
                 </div>
                 <p style='color: #1d1d1f; font-size: 15px; line-height: 1.5; margin-bottom: 25px;'>Wir haben dir eine neue Kalender-Datei (.ics) angehängt, damit du den Termin in dein Handy speichern kannst.</p>
                 <div style='border-top: 1px solid #d2d2d7; padding-top: 20px;'>
-                " . $footerHtml;
+                " . $emailFooter;
             $msg = 'Dein Termin wurde erfolgreich verschoben!';
             $icsData = generateIcsData($eventName, $startTime, $duration);
         }
@@ -213,7 +224,7 @@ try {
                 <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
                     <a href='$cancelLink' style='color: #86868b; font-size: 13px; text-decoration: underline;'>Anfrage zurückziehen</a>
                 </div>
-            " . $footerHtml;
+            " . $emailFooter;
             $msg = 'Termin erfolgreich angefragt! Warte auf Bestätigung...';
         } else {
             $subject = "Terminbestätigung - $companyName";
@@ -236,7 +247,7 @@ try {
                     <p style='color: #86868b; font-size: 13px; margin-bottom: 15px;'>Sollte etwas dazwischenkommen:</p>
                     <a href='$cancelLink' style='display: inline-block; background-color: #ff3b30; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Termin stornieren</a>
                 </div>
-            " . $footerHtml;
+            " . $emailFooter;
             $msg = 'Termin erfolgreich gebucht!';
             $icsData = generateIcsData($eventName, $startTime, $duration);
         }

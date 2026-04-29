@@ -20,17 +20,28 @@ if ($bookingId) {
         // NEU: Status der Buchung auf "Verschiebung angefragt" setzen
         $db->prepare("UPDATE bookings SET status = 'reschedule_requested' WHERE id = ?")->execute([$bookingId]);
 
-        $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+        $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_address FROM settings LIMIT 1");
         $sys = $settingStmt->fetch(PDO::FETCH_ASSOC);
         $companyName = $sys['company_name'] ?? 'Planago Booking';
         $impressumLink = $sys['company_link_impressum'] ?? '';
         $privacyLink = $sys['company_link_privacy'] ?? '';
+        $companyAddress = $sys['company_address'] ?? '';
 
-        $legalLinks = [];
-        if (!empty($impressumLink)) $legalLinks[] = "<a href='$impressumLink' style='color: #86868b; text-decoration: none;'>Impressum</a>";
-        if (!empty($privacyLink)) $legalLinks[] = "<a href='$privacyLink' style='color: #86868b; text-decoration: none;'>Datenschutz</a>";
-        $legalHtml = !empty($legalLinks) ? "<p style='color: #86868b; font-size: 12px; margin-bottom: 10px;'>" . implode(" &nbsp;|&nbsp; ", $legalLinks) . "</p>" : "";
-        $footerHtml = "<div style='margin-top: 30px; text-align: center; border-top: 1px solid #d2d2d7; padding-top: 20px;'>" . $legalHtml . "<p style='color: #d2d2d7; font-size: 11px; margin: 0;'>Smarte Buchungen mit <strong style='color:#d2d2d7;'>Planago</strong></p></div></div>";
+        $footerName = htmlspecialchars($companyName);
+        $footerAddress = nl2br(htmlspecialchars($companyAddress));
+        $footerImpressum = htmlspecialchars($impressumLink ?: '#');
+        $footerPrivacy = htmlspecialchars($privacyLink ?: '#');
+
+        $emailFooter = "
+            <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
+                <strong>$footerName</strong><br>
+                $footerAddress<br><br>
+                <a href='$footerImpressum' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>Impressum</a>
+                <a href='$footerPrivacy' style='color: #86868b; text-decoration: underline;'>Datenschutz</a>
+                <br><br>
+                <span style='color: #d2d2d7;'>Powered by <strong>Planago</strong></span>
+            </div>
+        </div>";
 
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
@@ -52,7 +63,7 @@ if ($bookingId) {
                 <a href='$rescheduleUrl' style='display: inline-block; background-color: #34c759; color: white; padding: 14px 25px; text-decoration: none; border-radius: 10px; font-weight: 600;'>Neuen Termin wählen</a>
             </div>
             <p style='color: #86868b; font-size: 13px; text-align:center;'>Wir bitten um Entschuldigung für die Umstände. Dein ursprünglicher Termin am $formattedDate verfällt hiermit.</p>
-            " . $footerHtml;
+            " . $emailFooter;
 
         sendSystemMail($booking['customer_email'], $subject, $body);
         echo json_encode(['success' => true, 'message' => 'Einladung zum Verschieben wurde gesendet!']);
