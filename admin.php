@@ -103,6 +103,22 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <label>Link zu den AGB (Optional)</label>
                             <input type="text" id="companyLinkAgb" placeholder="https://...">
                         </div>
+                        <div class="form-group full-width">
+                            <label>Unternehmens-Logo</label>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <img id="logoPreview" src="" style="max-height: 60px; display: none; border-radius: 8px; border: 1px solid var(--border);">
+                                <input type="file" id="companyLogoInput" accept="image/*" style="width: auto;">
+                                <button type="button" class="btn-danger btn-icon" id="removeLogoBtn" style="display: none; height: 38px; padding: 0 15px; width: auto;" onclick="removeLogo()">Löschen</button>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Wird im Widget und in den E-Mails angezeigt.</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Akzentfarbe (Kunden-Widget)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="color" id="widgetAccentColor" style="height: 44px; width: 60px; padding: 2px; cursor: pointer; border-radius: 8px;">
+                                <button type="button" style="height: 44px; padding: 0 15px; width: auto; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;" onclick="document.getElementById('widgetAccentColor').value='#34c759';">Standard</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -287,6 +303,35 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             document.getElementById(tabId).style.display = 'block';
             document.getElementById('btn-' + tabId).classList.add('active');
         }
+        
+        // --- LOGO UPLOAD LOGIK ---
+        let logoBase64 = '';
+        let removeLogoFlag = false;
+
+        document.getElementById('companyLogoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    logoBase64 = evt.target.result;
+                    document.getElementById('logoPreview').src = logoBase64;
+                    document.getElementById('logoPreview').style.display = 'block';
+                    document.getElementById('removeLogoBtn').style.display = 'block';
+                    removeLogoFlag = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function removeLogo() {
+            logoBase64 = '';
+            removeLogoFlag = true;
+            document.getElementById('companyLogoInput').value = '';
+            document.getElementById('logoPreview').src = '';
+            document.getElementById('logoPreview').style.display = 'none';
+            document.getElementById('removeLogoBtn').style.display = 'none';
+        }
+
         // 1. Einstellungen beim Laden abrufen
         fetch('api_settings.php')
             .then(r => r.json())
@@ -306,9 +351,15 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 document.getElementById('companyLinkImpressum').value = data.company_link_impressum || '';
                 document.getElementById('companyLinkPrivacy').value = data.company_link_privacy || '';
                 document.getElementById('companyLinkAgb').value = data.company_link_agb || '';
+                document.getElementById('widgetAccentColor').value = data.widget_accent_color || '#34c759';
                 document.getElementById('adminUsername').value = data.admin_username || 'admin';
                 document.getElementById('adminNewPassword').value = '';
                 document.getElementById('adminEmail').value = data.admin_email || '';
+                if (data.company_logo) {
+                    document.getElementById('logoPreview').src = data.company_logo + '?t=' + new Date().getTime(); // Verhindert Caching
+                    document.getElementById('logoPreview').style.display = 'block';
+                    document.getElementById('removeLogoBtn').style.display = 'block';
+                }
             });
 
         // 2. Einstellungen absenden und speichern
@@ -330,6 +381,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 company_link_impressum: document.getElementById('companyLinkImpressum').value,
                 company_link_privacy: document.getElementById('companyLinkPrivacy').value,
                 company_link_agb: document.getElementById('companyLinkAgb').value,
+                widget_accent_color: document.getElementById('widgetAccentColor').value,
+                company_logo_base64: logoBase64,
+                remove_logo: removeLogoFlag,
                 admin_username: document.getElementById('adminUsername').value,
                 admin_new_password: document.getElementById('adminNewPassword').value,
                 admin_email: document.getElementById('adminEmail').value

@@ -20,13 +20,18 @@ if ($bookingId) {
         // NEU: Status der Buchung auf "Verschiebung angefragt" setzen
         $db->prepare("UPDATE bookings SET status = 'reschedule_requested' WHERE id = ?")->execute([$bookingId]);
 
-        $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
+        $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, company_logo FROM settings LIMIT 1");
         $sys = $settingStmt->fetch(PDO::FETCH_ASSOC);
         $companyName = $sys['company_name'] ?? 'Planago Booking';
         $impressumLink = $sys['company_link_impressum'] ?? '';
         $privacyLink = $sys['company_link_privacy'] ?? '';
         $agbLink = $sys['company_link_agb'] ?? '';
         $companyAddress = $sys['company_address'] ?? '';
+        $companyLogo = $sys['company_logo'] ?? '';
+
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+        $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
 
         $footerName = htmlspecialchars($companyName);
         $footerAddress = nl2br(htmlspecialchars($companyAddress));
@@ -35,9 +40,11 @@ if ($bookingId) {
         $footerAgb = htmlspecialchars($agbLink ?: '#');
         
         $agbHtml = !empty($agbLink) ? "<a href='$footerAgb' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>AGB</a>" : "";
+        $logoHtml = !empty($companyLogo) ? "<img src='" . $baseUrl . "/" . $companyLogo . "' alt='$footerName' style='max-height: 40px; margin-bottom: 10px;'><br>" : "";
 
         $emailFooter = "
             <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
+                $logoHtml
                 <strong>$footerName</strong><br>
                 $footerAddress<br><br>
                 $agbHtml
@@ -48,8 +55,6 @@ if ($bookingId) {
             </div>
         </div>";
 
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-        $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
         // Den Token übergeben wir, damit der Kunde autorisiert auf die Website kommt
         $rescheduleUrl = $baseUrl . "/index.php?reschedule=" . $booking['id'] . "&token=" . $booking['cancel_token'];
 

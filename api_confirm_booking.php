@@ -24,13 +24,18 @@ try {
         $booking = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($booking) {
-            $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
+            $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, company_logo FROM settings LIMIT 1");
             $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
             $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
             $impressumLink = $sysSettings['company_link_impressum'] ?? '';
             $privacyLink = $sysSettings['company_link_privacy'] ?? '';
             $agbLink = $sysSettings['company_link_agb'] ?? '';
             $companyAddress = $sysSettings['company_address'] ?? '';
+            $companyLogo = $sysSettings['company_logo'] ?? '';
+
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+            $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+            $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
 
             $footerName = htmlspecialchars($companyName);
             $footerAddress = nl2br(htmlspecialchars($companyAddress));
@@ -39,9 +44,11 @@ try {
             $footerAgb = htmlspecialchars($agbLink ?: '#');
             
             $agbHtml = !empty($agbLink) ? "<a href='$footerAgb' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>AGB</a>" : "";
+            $logoHtml = !empty($companyLogo) ? "<img src='" . $baseUrl . "/" . $companyLogo . "' alt='$footerName' style='max-height: 40px; margin-bottom: 10px;'><br>" : "";
 
             $emailFooter = "
                 <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
+                    $logoHtml
                     <strong>$footerName</strong><br>
                     $footerAddress<br><br>
                     $agbHtml
@@ -52,8 +59,6 @@ try {
                 </div>
             </div>";
 
-            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-            $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
             $cancelLink = $baseUrl . "/cancel.php?token=" . $booking['cancel_token'];
 
             $startTimeObj = new DateTime($booking['start_time']);

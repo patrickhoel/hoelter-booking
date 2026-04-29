@@ -55,13 +55,15 @@ $noticeMinHours = $event['notice_min_hours'] ?? 24;
 $noticeMaxDays = $event['notice_max_days'] ?? 60;
 
 // --- NEU: Impressum & Datenschutz auslesen ---
-$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
+$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo FROM settings LIMIT 1");
 $sysSettings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
 $privacyLink = $sysSettings['company_link_privacy'] ?? '';
 $agbLink = $sysSettings['company_link_agb'] ?? '';
 $companyAddress = $sysSettings['company_address'] ?? '';
+$accentColor = $sysSettings['widget_accent_color'] ?? '#34c759';
+$companyLogo = $sysSettings['company_logo'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -77,10 +79,27 @@ $companyAddress = $sysSettings['company_address'] ?? '';
 
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
+    
+    <style>
+        /* Überschreibt die globalen Variablen mit der gewählten Admin-Farbe */
+        :root {
+            --accent: <?= htmlspecialchars($accentColor) ?>;
+            --accent-hover: <?= htmlspecialchars($accentColor) ?>;
+        }
+        /* Passt den Glow-Schatten dynamisch an (Hex-Farbe + Transparenzwert) */
+        .slot.selected { box-shadow: 0 4px 12px <?= htmlspecialchars($accentColor) ?>4D !important; }
+        button[type="submit"]:hover { box-shadow: 0 4px 12px <?= htmlspecialchars($accentColor) ?>33 !important; filter: brightness(0.95); }
+    </style>
 </head>
 <body>
 
     <div class="container">
+        <?php if (!empty($companyLogo)): ?>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="<?= htmlspecialchars($companyLogo) ?>" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
+            </div>
+        <?php endif; ?>
+
         <?php if ($isRescheduleMode): ?>
             <h2 style="text-align: center;">Neuen Termin wählen</h2>
             <p style="text-align: center; margin-bottom: 20px;">Bitte wähle einen neuen Termin für <strong><?= htmlspecialchars($event['name']) ?></strong>.</p>

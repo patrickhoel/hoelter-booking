@@ -8,13 +8,15 @@ $booking = null;
 $db = getDb();
 
 // Settings für Links auslesen
-$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
+$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo FROM settings LIMIT 1");
 $sysSettings = $sysStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
 $privacyLink = $sysSettings['company_link_privacy'] ?? '';
 $agbLink = $sysSettings['company_link_agb'] ?? '';
 $companyAddress = $sysSettings['company_address'] ?? '';
+$accentColor = $sysSettings['widget_accent_color'] ?? '#34c759';
+$companyLogo = $sysSettings['company_logo'] ?? '';
 
 if ($token) {
     // Buchung anhand des Tokens suchen
@@ -54,6 +56,10 @@ if ($token) {
     <link rel="stylesheet" href="assets/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --accent: <?= htmlspecialchars($accentColor) ?>;
+            --accent-hover: <?= htmlspecialchars($accentColor) ?>;
+        }
         /* Spezifische Anpassungen für die Storno-Seite */
         body {
             background-color: #f5f5f7; /* Leichtes Apple-Grau für die ganze Seite */
@@ -108,6 +114,12 @@ if ($token) {
 <body>
 
 <div class="container cancel-container">
+    <?php if (!empty($companyLogo)): ?>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="<?= htmlspecialchars($companyLogo) ?>" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
+        </div>
+    <?php endif; ?>
+
     <?php if ($message): ?>
         <?= $message ?>
     <?php endif; ?>

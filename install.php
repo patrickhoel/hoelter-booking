@@ -70,7 +70,9 @@ try {
         "ALTER TABLE settings ADD COLUMN smtp_from_name TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN company_link_agb TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN admin_username TEXT DEFAULT 'admin'",
-        "ALTER TABLE settings ADD COLUMN admin_password_hash TEXT DEFAULT ''"
+        "ALTER TABLE settings ADD COLUMN admin_password_hash TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN widget_accent_color TEXT DEFAULT '#34c759'",
+        "ALTER TABLE settings ADD COLUMN company_logo TEXT DEFAULT ''"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
