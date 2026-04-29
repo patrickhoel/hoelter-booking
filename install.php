@@ -67,7 +67,8 @@ try {
         "ALTER TABLE settings ADD COLUMN company_phone TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN company_link_impressum TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN company_link_privacy TEXT DEFAULT ''",
-        "ALTER TABLE settings ADD COLUMN smtp_from_name TEXT DEFAULT ''"
+        "ALTER TABLE settings ADD COLUMN smtp_from_name TEXT DEFAULT ''",
+        "ALTER TABLE settings ADD COLUMN company_link_agb TEXT DEFAULT ''"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

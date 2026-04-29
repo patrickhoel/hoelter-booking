@@ -20,22 +20,27 @@ if ($bookingId) {
         // NEU: Status der Buchung auf "Verschiebung angefragt" setzen
         $db->prepare("UPDATE bookings SET status = 'reschedule_requested' WHERE id = ?")->execute([$bookingId]);
 
-        $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_address FROM settings LIMIT 1");
+        $settingStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
         $sys = $settingStmt->fetch(PDO::FETCH_ASSOC);
         $companyName = $sys['company_name'] ?? 'Planago Booking';
         $impressumLink = $sys['company_link_impressum'] ?? '';
         $privacyLink = $sys['company_link_privacy'] ?? '';
+        $agbLink = $sys['company_link_agb'] ?? '';
         $companyAddress = $sys['company_address'] ?? '';
 
         $footerName = htmlspecialchars($companyName);
         $footerAddress = nl2br(htmlspecialchars($companyAddress));
         $footerImpressum = htmlspecialchars($impressumLink ?: '#');
         $footerPrivacy = htmlspecialchars($privacyLink ?: '#');
+        $footerAgb = htmlspecialchars($agbLink ?: '#');
+        
+        $agbHtml = !empty($agbLink) ? "<a href='$footerAgb' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>AGB</a>" : "";
 
         $emailFooter = "
             <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
                 <strong>$footerName</strong><br>
                 $footerAddress<br><br>
+                $agbHtml
                 <a href='$footerImpressum' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>Impressum</a>
                 <a href='$footerPrivacy' style='color: #86868b; text-decoration: underline;'>Datenschutz</a>
                 <br><br>

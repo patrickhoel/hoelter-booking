@@ -99,6 +99,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <label>Link zum Datenschutz</label>
                             <input type="text" id="companyLinkPrivacy" placeholder="https://...">
                         </div>
+                        <div class="form-group">
+                            <label>Link zu den AGB (Optional)</label>
+                            <input type="text" id="companyLinkAgb" placeholder="https://...">
+                        </div>
                     </div>
                 </div>
 
@@ -280,6 +284,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 document.getElementById('companyAddress').value = data.company_address || '';
                 document.getElementById('companyLinkImpressum').value = data.company_link_impressum || '';
                 document.getElementById('companyLinkPrivacy').value = data.company_link_privacy || '';
+                document.getElementById('companyLinkAgb').value = data.company_link_agb || '';
                 document.getElementById('adminEmail').value = data.admin_email || '';
             });
 
@@ -301,6 +306,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 company_address: document.getElementById('companyAddress').value,
                 company_link_impressum: document.getElementById('companyLinkImpressum').value,
                 company_link_privacy: document.getElementById('companyLinkPrivacy').value,
+                company_link_agb: document.getElementById('companyLinkAgb').value,
                 admin_email: document.getElementById('adminEmail').value
             };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })

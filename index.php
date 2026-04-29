@@ -55,11 +55,13 @@ $noticeMinHours = $event['notice_min_hours'] ?? 24;
 $noticeMaxDays = $event['notice_max_days'] ?? 60;
 
 // --- NEU: Impressum & Datenschutz auslesen ---
-$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
 $sysSettings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
 $privacyLink = $sysSettings['company_link_privacy'] ?? '';
+$agbLink = $sysSettings['company_link_agb'] ?? '';
+$companyAddress = $sysSettings['company_address'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -135,7 +137,11 @@ $privacyLink = $sysSettings['company_link_privacy'] ?? '';
                 <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
                     <input type="checkbox" id="privacyConsent" name="privacyConsent" required style="width: auto; margin-top: 3px; cursor: pointer;">
                     <label for="privacyConsent" style="font-size: 0.8rem; line-height: 1.4; color: var(--text-muted); font-weight: normal; margin: 0;">
-                        Ich habe die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
+                        <?php if (!empty($agbLink)): ?>
+                            Ich habe die <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">AGB</a> und die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
+                        <?php else: ?>
+                            Ich habe die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
+                        <?php endif; ?>
                     </label>
                 </div>
 
@@ -147,17 +153,24 @@ $privacyLink = $sysSettings['company_link_privacy'] ?? '';
         <div id="message"></div>
     </div>
 
-    <!-- NEU: Impressum & Datenschutz Links -->
-    <?php if (!empty($impressumLink) || !empty($privacyLink)): ?>
-        <div style="text-align: center; margin-top: 20px; font-size: 12px;">
-            <?php if (!empty($impressumLink)): ?>
-                <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Impressum</a>
-            <?php endif; ?>
-            <?php if (!empty($privacyLink)): ?>
-                <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Datenschutz</a>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
+    <!-- Eleganter Planago Corporate Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+        <strong><?= htmlspecialchars($companyName) ?></strong><br>
+        <?= nl2br(htmlspecialchars($companyAddress)) ?><br><br>
+        
+        <?php if (!empty($agbLink)): ?>
+            <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">AGB</a>
+        <?php endif; ?>
+        <?php if (!empty($impressumLink)): ?>
+            <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Impressum</a>
+        <?php endif; ?>
+        <?php if (!empty($privacyLink)): ?>
+            <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Datenschutz</a>
+        <?php endif; ?>
+        
+        <br><br>
+        <span style="color: #d2d2d7;">Powered by <strong>Planago</strong></span>
+    </div>
 
     <script>
         const eventId = document.getElementById('eventId').value;

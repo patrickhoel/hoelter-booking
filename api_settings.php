@@ -32,10 +32,11 @@ try {
         $company_address = $data['company_address'] ?? '';
         $company_link_impressum = $data['company_link_impressum'] ?? '';
         $company_link_privacy = $data['company_link_privacy'] ?? '';
+        $company_link_agb = $data['company_link_agb'] ?? '';
         
         if ($start && $end) {
-            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?");
-            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy]);
+            $stmt = $db->prepare("UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?");
+            $stmt->execute([$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb]);
             echo json_encode(['message' => 'Arbeitszeiten erfolgreich gespeichert!']);
         } else {
             http_response_code(400);

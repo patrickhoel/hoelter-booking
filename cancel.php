@@ -8,26 +8,38 @@ $booking = null;
 $db = getDb();
 
 // Settings für Links auslesen
-$sysStmt = $db->query("SELECT company_link_impressum, company_link_privacy FROM settings LIMIT 1");
+$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address FROM settings LIMIT 1");
 $sysSettings = $sysStmt->fetch(PDO::FETCH_ASSOC);
+$companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
 $privacyLink = $sysSettings['company_link_privacy'] ?? '';
+$agbLink = $sysSettings['company_link_agb'] ?? '';
+$companyAddress = $sysSettings['company_address'] ?? '';
 
 if ($token) {
     // Buchung anhand des Tokens suchen
-    $stmt = $db->prepare("SELECT b.*, e.name as event_title FROM bookings b JOIN event_types e ON b.event_type_id = e.id WHERE b.cancel_token = ?");
+    $stmt = $db->prepare("SELECT b.*, e.name as event_title, e.cancel_limit_hours FROM bookings b JOIN event_types e ON b.event_type_id = e.id WHERE b.cancel_token = ?");
     $stmt->execute([$token]);
     $booking = $stmt->fetch();
 
     if (!$booking) {
         $message = "<div class='alert alert-error'>Ungültiger oder bereits verwendeter Link.</div>";
-    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Stornierung durchführen (Status auf 'cancelled' setzen oder löschen)
-        $delStmt = $db->prepare("DELETE FROM bookings WHERE id = ?");
-        $delStmt->execute([$booking['id']]);
+    } else {
+        $limitHours = $booking['cancel_limit_hours'] ?? 24;
+        $bookingTime = strtotime($booking['start_time']);
+        $deadline = $bookingTime - ($limitHours * 3600);
         
-        $message = "<div class='alert alert-success'>Dein Termin wurde erfolgreich storniert.</div>";
-        $booking = null; // Buchung ausblenden, da storniert
+        if (time() > $deadline) {
+            $message = "<div class='alert alert-error'><strong>Zu kurzfristig!</strong><br>Eine Online-Stornierung ist leider nur bis zu {$limitHours} Stunden vor dem Termin möglich. Bitte kontaktiere uns direkt, um eine Lösung zu finden.</div>";
+            $booking = null; // Buchung & Button ausblenden
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Stornierung durchführen (Löschen)
+            $delStmt = $db->prepare("DELETE FROM bookings WHERE id = ?");
+            $delStmt->execute([$booking['id']]);
+            
+            $message = "<div class='alert alert-success'>Dein Termin wurde erfolgreich storniert.</div>";
+            $booking = null; // Buchung ausblenden, da storniert
+        }
     }
 } else {
     $message = "<div class='alert alert-error'>Kein Token übergeben.</div>";
@@ -115,17 +127,24 @@ if ($token) {
     <?php endif; ?>
 </div>
 
-<!-- NEU: Impressum & Datenschutz Links -->
-<?php if (!empty($impressumLink) || !empty($privacyLink)): ?>
-    <div style="text-align: center; margin-top: 20px; font-size: 12px;">
-        <?php if (!empty($impressumLink)): ?>
-            <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Impressum</a>
-        <?php endif; ?>
-        <?php if (!empty($privacyLink)): ?>
-            <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Datenschutz</a>
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
+<!-- Eleganter Planago Corporate Footer -->
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+    <strong><?= htmlspecialchars($companyName) ?></strong><br>
+    <?= nl2br(htmlspecialchars($companyAddress)) ?><br><br>
+    
+    <?php if (!empty($agbLink)): ?>
+        <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">AGB</a>
+    <?php endif; ?>
+    <?php if (!empty($impressumLink)): ?>
+        <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Impressum</a>
+    <?php endif; ?>
+    <?php if (!empty($privacyLink)): ?>
+        <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Datenschutz</a>
+    <?php endif; ?>
+    
+    <br><br>
+    <span style="color: #d2d2d7;">Powered by <strong>Planago</strong></span>
+</div>
 
 </body>
 </html>
