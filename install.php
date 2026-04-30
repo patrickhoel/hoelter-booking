@@ -2,8 +2,17 @@
 // install.php
 require_once 'config.php';
 
-echo "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px;'>";
-echo "<h1 style='color: #0056b3;'>Planago Setup 🚀</h1>";
+// --- AUFRÄUMEN & BEENDEN ---
+if (isset($_POST['finish_installation'])) {
+    @unlink(__DIR__ . '/setup.php');
+    @unlink(__DIR__ . '/temp_install.zip'); // Sicherheitshalber Reste löschen
+    @unlink(__FILE__); // Löscht diese install.php selbst!
+    header("Location: login.php"); // Direkt zum Admin-Login leiten
+    exit;
+}
+
+echo "<div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 40px auto; padding: 40px; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); background: #ffffff;'>";
+echo "<h1 style='color: #1d1d1f; margin-top: 0; text-align: center;'>Planago Setup 🚀</h1>";
 
 // 1. Prüfen, ob der /data/ Ordner existiert, falls nicht, automatisch anlegen
 if (!file_exists(__DIR__ . '/data')) {
@@ -14,7 +23,7 @@ if (!file_exists(__DIR__ . '/data')) {
 try {
     // 2. Datenbankverbindung herstellen (erstellt die .db Datei automatisch, falls sie fehlt)
     $db = getDb();
-    echo "<p>✅ Datenbankverbindung hergestellt.</p>";
+    echo "<p style='color: #86868b; font-size: 14px;'>✅ Datenbankverbindung hergestellt.</p>";
     
     // 3. Tabellen erstellen
     $db->exec("
@@ -40,7 +49,7 @@ try {
             work_end_time TEXT DEFAULT '17:00'
         );
     ");
-    echo "<p>✅ Datenbank-Tabellen wurden eingerichtet.</p>";
+    echo "<p style='color: #86868b; font-size: 14px;'>✅ Datenbank-Tabellen wurden eingerichtet.</p>";
 
     // --- NEU: Datenbank-Updates (Migrationen) für bestehende Installationen ---
     // Fügt die JSON-Spalten sicher hinzu, falls sie noch nicht existieren
@@ -80,7 +89,7 @@ try {
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
     }
-    echo "<p>✅ Datenbank-Struktur wurde für individuelle Zeiten und Formulare aktualisiert.</p>";
+    echo "<p style='color: #86868b; font-size: 14px;'>✅ Datenbank-Struktur erfolgreich aktualisiert.</p>";
 
     // Standard-Passwort 'admin123' als Hash setzen, falls noch keines vorhanden ist
     $db->exec("UPDATE settings SET admin_password_hash = '" . password_hash('admin123', PASSWORD_DEFAULT) . "' WHERE admin_password_hash = '' OR admin_password_hash IS NULL");
@@ -89,8 +98,23 @@ try {
     $db->exec("INSERT INTO event_types (name, duration_minutes) SELECT 'Einzeltraining', 60 WHERE NOT EXISTS (SELECT 1 FROM event_types)");
     $db->exec("INSERT INTO settings (work_start_time, work_end_time) SELECT '09:00', '17:00' WHERE NOT EXISTS (SELECT 1 FROM settings)");
 
-    echo "<h3 style='color: green;'>Installation erfolgreich abgeschlossen! 🎉</h3>";
-    echo "<p>Du kannst diese Datei nun löschen und zur <a href='index.php'>Startseite</a> gehen.</p>";
+    echo "<hr style='border: none; border-top: 1px solid #e5e5ea; margin: 30px 0;'>";
+    echo "<h2 style='color: #34c759; margin-bottom: 15px; text-align: center;'>Installation erfolgreich! 🎉</h2>";
+    
+    // --- DIE ANLEITUNG FÜR DEN KUNDEN ---
+    echo "
+    <div style='background: #f5f5f7; padding: 25px; border-radius: 14px; margin-bottom: 30px;'>
+        <h3 style='margin-top: 0; color: #1d1d1f; font-size: 18px;'>Wie geht es jetzt weiter?</h3>
+        <ol style='line-height: 1.6; color: #1d1d1f; padding-left: 20px; margin-bottom: 0;'>
+            <li style='margin-bottom: 12px;'><strong>Admin-Panel:</strong> Du kannst dein System über die <code>/admin.php</code> verwalten.<br>
+            <em>Standard-Login:</em> Benutzer: <strong>admin</strong> | Passwort: <strong>admin123</strong></li>
+            <li style='margin-bottom: 12px;'><strong>Profil einrichten:</strong> Ändere nach dem ersten Login unbedingt dein Passwort im Dashboard und trage deine Unternehmensdaten (E-Mail, Adresse etc.) ein.</li>
+            <li><strong>WICHTIG (DSGVO):</strong> Planago verarbeitet Namen und E-Mail-Adressen deiner Kunden. Bitte ergänze deine Datenschutzerklärung auf deiner Website um einen entsprechenden Passus, dass du für die Terminbuchung die Software \"Planago\" nutzt.</li>
+        </ol>
+    </div>
+    ";
+    
+    echo "<form method='POST'><p style='font-size: 12px; color: #86868b; text-align: center;'>Mit Klick auf den Button werden alle sensiblen Installations-Dateien aus Sicherheitsgründen restlos von deinem Server gelöscht.</p><button type='submit' name='finish_installation' style='background: #34c759; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(52,199,89,0.3); transition: 0.2s;'>Installation beenden & Tool starten</button></form>";
 
 } catch (PDOException $e) {
     echo "<p style='color:red;'><strong>Fehler bei der Installation:</strong> " . $e->getMessage() . "</p>";
