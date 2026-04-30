@@ -91,12 +91,12 @@ try {
     }
     echo "<p style='color: #86868b; font-size: 14px;'>✅ Datenbank-Struktur erfolgreich aktualisiert.</p>";
 
-    // Standard-Passwort 'admin123' als Hash setzen, falls noch keines vorhanden ist
-    $db->exec("UPDATE settings SET admin_password_hash = '" . password_hash('admin123', PASSWORD_DEFAULT) . "' WHERE admin_password_hash = '' OR admin_password_hash IS NULL");
-
-    // 4. Standard-Werte einfügen (wie in der Python Version)
+    // 1. ZUERST: Standard-Werte einfügen (erschafft die Zeile)
     $db->exec("INSERT INTO event_types (name, duration_minutes) SELECT 'Einzeltraining', 60 WHERE NOT EXISTS (SELECT 1 FROM event_types)");
     $db->exec("INSERT INTO settings (work_start_time, work_end_time) SELECT '09:00', '17:00' WHERE NOT EXISTS (SELECT 1 FROM settings)");
+
+    // 2. DANACH: Standard-Passwort 'admin123' als Hash in diese neue Zeile setzen
+    $db->exec("UPDATE settings SET admin_password_hash = '" . password_hash('admin123', PASSWORD_DEFAULT) . "' WHERE admin_password_hash = '' OR admin_password_hash IS NULL");
 
     echo "<hr style='border: none; border-top: 1px solid #e5e5ea; margin: 30px 0;'>";
     echo "<h2 style='color: #34c759; margin-bottom: 15px; text-align: center;'>Installation erfolgreich! 🎉</h2>";
