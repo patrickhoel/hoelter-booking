@@ -7,7 +7,7 @@ if (isset($_POST['finish_installation'])) {
     @unlink(__DIR__ . '/setup.php');
     @unlink(__DIR__ . '/temp_install.zip'); // Sicherheitshalber Reste löschen
     @unlink(__FILE__); // Löscht diese install.php selbst!
-    header("Location: login.php"); // Direkt zum Admin-Login leiten
+    header("Location: anleitung.php"); // Zur neuen Anleitung weiterleiten
     exit;
 }
 
