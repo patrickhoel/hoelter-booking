@@ -85,7 +85,10 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                             <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
                         </div>
                     </div>
-                    <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Einstellungen speichern</button>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="submit" class="btn-success" style="margin-top: 0; width:auto;">Einstellungen speichern</button>
+                        <button type="button" class="btn-secondary" style="margin-top: 0; width:auto;" onclick="testEmail()">Test-E-Mail senden</button>
+                    </div>
                     <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
                 </div>
             </div>
@@ -582,6 +585,39 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                 document.getElementById('companyLogoInput').value = '';
             });
         });
+
+        function testEmail() {
+            const btn = document.querySelector('button[onclick="testEmail()"]');
+            btn.innerText = "Wird gesendet...";
+            btn.disabled = true;
+
+            // Lese die Felder direkt aus dem Formular aus (ohne vorher speichern zu müssen)
+            const data = {
+                smtp_host: document.getElementById('smtpHost').value,
+                smtp_port: document.getElementById('smtpPort').value,
+                smtp_user: document.getElementById('smtpUser').value,
+                smtp_pass: document.getElementById('smtpPass').value,
+                smtp_from: document.getElementById('smtpFromEmail').value,
+                smtp_from_name: document.getElementById('smtpFromName').value,
+                admin_email: document.getElementById('adminEmail').value
+            };
+
+            fetch('api_test_email.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(res => {
+                alert(res.message || res.error);
+                btn.innerText = "Test-E-Mail senden";
+                btn.disabled = false;
+            }).catch(() => {
+                alert("Netzwerkfehler beim Testen der E-Mail.");
+                btn.innerText = "Test-E-Mail senden";
+                btn.disabled = false;
+            });
+        }
 
         // 3. Trainingsarten abrufen und rendern
         function loadEvents() {

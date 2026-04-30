@@ -120,6 +120,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
             $mail->Password   = $pass;
             $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
+            $mail->Timeout    = 3; // Timeout auf 3 Sekunden reduzieren (verhindert Absturz bei Buchung)
         } else {
             // Fallback auf normale PHP mail() Funktion, falls keine SMTP-Daten hinterlegt sind
             $mail->isMail();
