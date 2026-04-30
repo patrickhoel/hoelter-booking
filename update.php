@@ -8,6 +8,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
+// Lade die Konfiguration, um den Lizenzschlüssel zu erhalten
+require_once 'config.php';
+
 header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'), true);
 
