@@ -84,7 +84,10 @@ try {
         "ALTER TABLE settings ADD COLUMN company_logo TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN google_review_link TEXT DEFAULT ''",
         "ALTER TABLE settings ADD COLUMN enable_review_email INTEGER DEFAULT 0",
-        "ALTER TABLE bookings ADD COLUMN review_email_sent INTEGER DEFAULT 0"
+        "ALTER TABLE bookings ADD COLUMN review_email_sent INTEGER DEFAULT 0",
+        "ALTER TABLE settings ADD COLUMN password_reset_token TEXT DEFAULT NULL",
+        "ALTER TABLE settings ADD COLUMN password_reset_expires DATETIME DEFAULT NULL",
+        "ALTER TABLE settings ADD COLUMN calendar_sync_token TEXT DEFAULT NULL"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

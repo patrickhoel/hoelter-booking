@@ -205,6 +205,18 @@ try {
             sendSystemMail($adminEmail, $adminSubj, $adminBody);
         }
 
+        // --- ZAPIER WEBHOOK SENDEN (für verschobenen Termin) ---
+        $webhookPayload = [
+            'event_name' => $eventName,
+            'customer_name' => $name,
+            'customer_email' => $email,
+            'start_time' => $startTime->format(DateTime::ATOM), // ISO 8601 Format, gut für Zapier
+            'status' => $newStatus,
+            'custom_data' => $data['custom_data'] ?? [],
+            'type' => 'rescheduled' // Zusatzinfo für Zapier
+        ];
+        sendToWebhook($webhookPayload);
+
         echo json_encode(['message' => $msg]);
 
     } else {
@@ -277,6 +289,18 @@ try {
             $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Terminart:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
             sendSystemMail($adminEmail, $adminSubj, $adminBody);
         }
+
+        // --- ZAPIER WEBHOOK SENDEN (für neue Buchung) ---
+        $webhookPayload = [
+            'event_name' => $eventName,
+            'customer_name' => $name,
+            'customer_email' => $email,
+            'start_time' => $startTime->format(DateTime::ATOM), // ISO 8601 Format, gut für Zapier
+            'status' => $status,
+            'custom_data' => $data['custom_data'] ?? [],
+            'type' => 'new_booking' // Zusatzinfo für Zapier
+        ];
+        sendToWebhook($webhookPayload);
 
         echo json_encode(['message' => $msg]);
     }

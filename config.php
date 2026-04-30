@@ -21,6 +21,13 @@ require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 
 define('DB_PATH', __DIR__ . '/data/database.db');
 
+// --- DATENBANK SCHUTZ (CRITICAL) ---
+// Verhindert, dass jemand die Datenbank-Datei direkt über den Browser herunterlädt
+if (is_dir(__DIR__ . '/data') && !file_exists(__DIR__ . '/data/.htaccess')) {
+    @file_put_contents(__DIR__ . '/data/.htaccess', "<Files \"*.db\">\nOrder allow,deny\nDeny from all\nRequire all denied\n</Files>");
+    @file_put_contents(__DIR__ . '/data/index.php', "<?php http_response_code(403); exit; ?>");
+}
+
 // Hilfsfunktion für die Datenbankverbindung
 function getDb() {
     // Stellt die Verbindung zur SQLite-Datenbank her
@@ -59,6 +66,32 @@ function generateIcsData($eventName, $startTimeObj, $durationMinutes) {
     $ics .= "END:VEVENT\r\n";
     $ics .= "END:VCALENDAR\r\n";
     return $ics;
+}
+
+// --- NEU: Webhook-Funktion für Zapier & Co. ---
+function sendToWebhook($payload) {
+    $db = getDb();
+    $stmt = $db->query("SELECT zapier_webhook_url FROM settings LIMIT 1");
+    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!empty($settings['zapier_webhook_url']) && filter_var($settings['zapier_webhook_url'], FILTER_VALIDATE_URL)) {
+        $ch = curl_init($settings['zapier_webhook_url']);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // Wichtig: Kurzer Timeout, damit der Kunde nicht warten muss!
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2); 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Für Kompatibilität
+        
+        // Asynchroner Aufruf, damit der Kunde nicht wartet ("fire and forget")
+        curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500); // Sehr kurzer Timeout in Millisekunden
+
+        curl_exec($ch);
+        curl_close($ch);
+    }
 }
 
 // Globale E-Mail Funktion für das System

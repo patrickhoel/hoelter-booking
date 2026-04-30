@@ -9,6 +9,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
 // Lade Config für die Versionsnummer
 require_once 'config.php';
+
+// Basis-URL für das Widget ermitteln
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -40,6 +45,7 @@ require_once 'config.php';
             <button class="tab-btn" onclick="openTab('tab-process')" id="btn-tab-process">Buchungsprozess</button>
             <button class="tab-btn" onclick="openTab('tab-email')" id="btn-tab-email">E-Mail & SMTP</button>
             <button class="tab-btn" onclick="openTab('tab-company')" id="btn-tab-company">Unternehmensprofil</button>
+            <button class="tab-btn" onclick="openTab('tab-integration')" id="btn-tab-integration">Widget & Kalender</button>
         </div>
         
         <!-- Ein gemeinsames Formular umfasst nun beide Einstellungs-Tabs -->
@@ -173,6 +179,19 @@ require_once 'config.php';
                 </div>
 
                 <div class="card">
+                    <h2>Integrationen & Webhooks</h2>
+                     <div class="form-group full-width">
+                        <label for="zapierWebhookUrl">Webhook URL (Zapier / Make.com) - Optional</label>
+                        <input type="text" id="zapierWebhookUrl" placeholder="https://hooks.zapier.com/hooks/catch/...">
+                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 5px; line-height: 1.5;">Verbinde Planago mit über 5.000 Apps (z.B. über Zapier oder die kostenlose Alternative Make.com). Erstelle dort einen Webhook-Trigger und füge die URL hier ein. Bei jeder Buchung werden die Daten automatisch dorthin gesendet.</p>
+                        <div style="background: rgba(255, 159, 10, 0.1); border: 1px solid rgba(255, 159, 10, 0.3); padding: 10px 15px; border-radius: 8px; margin-top: 10px;">
+                            <strong style="color: #d97706; font-size: 13px;">⚠️ Wichtiger Datenschutz-Hinweis (DSGVO):</strong>
+                            <p style="color: #b45309; font-size: 12px; margin: 5px 0 0 0;">Planago speichert alle Daten zu 100% lokal. <strong>Sobald du hier eine URL einträgst</strong>, werden Kundendaten (Name, E-Mail) bei einer Buchung an externe Anbieter gesendet. Du musst dies zwingend in der Datenschutzerklärung deiner Website angeben!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
                     <h2>Reguläre Arbeitszeiten</h2>
                     <p class="text-muted" style="margin-top:0;">Wann bist du grundsätzlich für Termine verfügbar?</p>
                     <div class="settings-group">
@@ -190,6 +209,42 @@ require_once 'config.php';
                 <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
             </div>
         </form>
+
+        <!-- WIDGET & LINK TAB -->
+        <div id="tab-integration" class="tab-content" style="display: none;">
+            <div class="card">
+                <h2>Links, Widget & Kalender-Sync</h2>
+                <p style="margin-top: 0; color: var(--text-muted);">Wähle hier eine Terminart aus, um den passenden direkten Link oder den HTML-Code für deine Website (z. B. WordPress, Wix) zu generieren. So kannst du Kunden auf deiner Website gezielt zur Buchung dieser spezifischen Leistung leiten.</p>
+
+                <div class="form-group" style="margin-top: 25px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color);">
+                    <label for="widgetEventSelect" style="font-size: 15px; color: var(--text-main);">Für welche Terminart möchtest du den Link/Code erstellen?</label>
+                    <select id="widgetEventSelect" onchange="updateWidgetLinks()" style="max-width: 400px; font-weight: bold; cursor: pointer;">
+                        <option value="">Lade Terminarten...</option>
+                    </select>
+                </div>
+
+                <h3 style="margin-top: 25px;">1. Direkter Link</h3>
+                <p class="text-muted" style="margin-top: 0; font-size: 14px;">Teile diesen Link auf Instagram, WhatsApp oder verlinke ihn auf einem Button deiner Website.</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="directLink" readonly style="flex-grow: 1; font-size: 14px; cursor: text;">
+                    <button type="button" class="btn-secondary" onclick="copyText('directLink')" style="width: auto;">Kopieren</button>
+                </div>
+
+                <h3 style="margin-top: 25px;">2. Widget auf der Website einbinden (iFrame)</h3>
+                <p class="text-muted" style="margin-top: 0; font-size: 14px;">Kopiere diesen HTML-Code und füge ihn auf deiner Website direkt unter der Beschreibung für diese Terminart in einen "HTML" oder "Code" Block ein.</p>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <textarea id="iframeCode" readonly rows="4" style="flex-grow: 1; font-family: monospace; font-size: 13px; resize: none; cursor: text;"></textarea>
+                    <button type="button" class="btn-secondary" onclick="copyText('iframeCode')" style="width: auto;">Kopieren</button>
+                </div>
+
+                <h3 style="margin-top: 25px;">3. Kalender-Synchronisation (Abo-Link)</h3>
+                <p class="text-muted" style="margin-top: 0; font-size: 14px;">Kopiere diesen Link und füge ihn bei <strong>Apple Kalender</strong>, <strong>Google Kalender</strong> oder <strong>Outlook</strong> unter "Kalender abonnieren / Aus URL hinzufügen" ein. Danach erscheinen alle Planago-Buchungen automatisch in deinem Kalender!</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="icalLink" readonly style="flex-grow: 1; font-size: 14px; cursor: text;">
+                    <button type="button" class="btn-secondary" onclick="copyText('icalLink')" style="width: auto;">Kopieren</button>
+                </div>
+            </div>
+        </div>
 
         <div class="card tab-content" id="tab-events" style="display: none;">
             <h2>Terminarten</h2>
@@ -324,6 +379,15 @@ require_once 'config.php';
     </div>
 
     <script>
+        // Copy to Clipboard Funktion
+        function copyText(elementId) {
+            const el = document.getElementById(elementId);
+            el.select();
+            document.execCommand('copy');
+            alert("Erfolgreich kopiert!");
+            window.getSelection().removeAllRanges();
+        }
+
         // Tab-Steuerung
         function openTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -359,7 +423,7 @@ require_once 'config.php';
 
         function checkForUpdates() {
             // Hier fragt die Software deinen zentralen Planago-Server ab!
-            fetch('https://planago.de/update/version.json')
+            fetch('https://planago.de/update/version.json?t=' + new Date().getTime())
                 .then(r => r.json())
                 .then(data => {
                     if (data.version && isNewerVersion(CURRENT_VERSION, data.version)) {
@@ -464,6 +528,12 @@ require_once 'config.php';
                 document.getElementById('enableReviewEmail').checked = data.enable_review_email == 1;
                 document.getElementById('googleReviewLink').value = data.google_review_link || '';
                 document.getElementById('reviewLinkContainer').style.display = data.enable_review_email == 1 ? 'block' : 'none';
+                document.getElementById('zapierWebhookUrl').value = data.zapier_webhook_url || '';
+                
+                if (data.calendar_sync_token) {
+                    const baseUrl = window.location.href.split('?')[0].replace('admin.php', '');
+                    document.getElementById('icalLink').value = baseUrl + "ical_feed.php?token=" + data.calendar_sync_token;
+                }
             });
 
         document.getElementById('enableReviewEmail').addEventListener('change', function() {
@@ -496,7 +566,8 @@ require_once 'config.php';
                 google_review_link: document.getElementById('googleReviewLink').value,
                 admin_username: document.getElementById('adminUsername').value,
                 admin_new_password: document.getElementById('adminNewPassword').value,
-                admin_email: document.getElementById('adminEmail').value
+                admin_email: document.getElementById('adminEmail').value,
+                zapier_webhook_url: document.getElementById('zapierWebhookUrl').value
             };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(r => r.json())
@@ -516,16 +587,44 @@ require_once 'config.php';
         function loadEvents() {
             fetch('api_events.php').then(r => r.json()).then(events => {
                 const tbody = document.getElementById('eventsTableBody'); tbody.innerHTML = '';
-                if(events.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Keine Terminarten gefunden.</td></tr>'; return; }
+                const widgetSelect = document.getElementById('widgetEventSelect');
+                if (widgetSelect) widgetSelect.innerHTML = ''; // Dropdown leeren
+
+                if(events.length === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="6">Keine Terminarten gefunden.</td></tr>'; 
+                    if (widgetSelect) widgetSelect.innerHTML = '<option value="">Keine Terminarten verfügbar</option>';
+                    return; 
+                }
+                
                 const baseUrl = window.location.href.split('?')[0].replace('admin.php', 'index.php');
+                
                 events.forEach(e => {
                     const safeName = escapeHtml(e.name);
                     const eventLink = `${baseUrl}?event_id=${e.id}`;
                     tbody.innerHTML += `<tr><td>${safeName}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly onclick="this.select()" style="width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px;" title="Klicken zum Kopieren"></td><td><button class="btn-edit" style="margin-right: 5px;" onclick="editEvent(${e.id})">Einstellen</button><button class="btn-danger" onclick="deleteEvent(${e.id})">Löschen</button></td></tr>`;
+                    
+                    // Dropdown befüllen
+                    if (widgetSelect) {
+                        const option = document.createElement('option');
+                        option.value = eventLink;
+                        option.text = safeName;
+                        widgetSelect.appendChild(option);
+                    }
                 });
+                
+                // Setzt die Links beim ersten Laden sofort auf die erste Terminart in der Liste
+                if (widgetSelect) updateWidgetLinks();
             });
         }
         loadEvents();
+        
+        function updateWidgetLinks() {
+            const select = document.getElementById('widgetEventSelect');
+            if (!select || !select.value) return;
+            const link = select.value;
+            document.getElementById('directLink').value = link;
+            document.getElementById('iframeCode').value = `<iframe src="${link}" width="100%" height="850" style="border:none; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" allowfullscreen></iframe>`;
+        }
 
         // 4. Neue Trainingsart anlegen
         document.getElementById('eventForm').addEventListener('submit', function(e) {

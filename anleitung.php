@@ -55,6 +55,14 @@ require_once 'config.php';
             </div>
         </div>
 
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h3>Widget auf deiner Website einbinden</h3>
+                <p>Unter dem neuen Menüpunkt <strong>Widget & Link</strong> im Admin-Panel findest du einen fertigen HTML-Code. Diesen kannst du ganz einfach bei WordPress, Wix oder Squarespace in einen "HTML-Block" einfügen. Alternativ kannst du auch den direkten Link für Instagram und Co. verwenden.</p>
+            </div>
+        </div>
+
         <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-color);">
             <a href="login.php" style="display: inline-block; background: var(--accent); color: white; padding: 16px 35px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px var(--accent-glow); transition: 0.2s;">Alles klar, zum Admin-Login!</a>
         </div>
