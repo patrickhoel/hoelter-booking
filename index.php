@@ -55,7 +55,7 @@ $noticeMinHours = $event['notice_min_hours'] ?? 24;
 $noticeMaxDays = $event['notice_max_days'] ?? 60;
 
 // --- NEU: Impressum & Datenschutz auslesen ---
-$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo FROM settings LIMIT 1");
+$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo, theme_mode FROM settings LIMIT 1");
 $sysSettings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
@@ -64,6 +64,7 @@ $agbLink = $sysSettings['company_link_agb'] ?? '';
 $companyAddress = $sysSettings['company_address'] ?? '';
 $accentColor = $sysSettings['widget_accent_color'] ?? '#34c759';
 $companyLogo = $sysSettings['company_logo'] ?? '';
+$themeMode = $sysSettings['theme_mode'] ?? 'auto';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -73,19 +74,78 @@ $companyLogo = $sysSettings['company_logo'] ?? '';
     <title>Planago - Termin buchen</title>
     
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link id="flatpickr-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/de.js"></script>
 
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
     
+    <script>
+        // --- THEME & FLATPICKR LOGIK ---
+        const themeMode = '<?= $themeMode ?>';
+        
+        function updateTheme() {
+            const fpThemeLink = document.getElementById('flatpickr-theme');
+            let isDark = false;
+            if (themeMode === 'dark') {
+                isDark = true;
+            } else if (themeMode === 'light') {
+                isDark = false;
+            } else {
+                isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            
+            // Flatpickr Theme wechseln
+            if (fpThemeLink) {
+                fpThemeLink.href = isDark 
+                    ? "https://npmcdn.com/flatpickr/dist/themes/dark.css" 
+                    : "https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css";
+            }
+            
+            // Falls Auto-Mode: Wir setzen ein Attribut auf den Body, damit wir notfalls CSS steuern können
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        }
+
+        updateTheme();
+        if (themeMode === 'auto' && window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+        }
+    </script>
+
     <style>
         /* Überschreibt die globalen Variablen mit der gewählten Admin-Farbe */
         :root {
             --accent: <?= htmlspecialchars($accentColor) ?>;
             --accent-hover: <?= htmlspecialchars($accentColor) ?>;
         }
+        
+        <?php if ($themeMode === 'light'): ?>
+        /* Erzwungener Light Mode */
+        :root, body, html {
+            color-scheme: light !important;
+            --bg-color: #ffffff !important;
+            --surface-color: #ffffff !important;
+            --text-main: #1d1d1f !important;
+            --text-muted: #86868b !important;
+            --border-color: #e5e5ea !important;
+            --input-bg: #f5f5f7 !important;
+        }
+        body { background-color: var(--bg-color); color: var(--text-main); }
+        <?php elseif ($themeMode === 'dark'): ?>
+        /* Erzwungener Dark Mode */
+        :root, body, html {
+            color-scheme: dark !important;
+            --bg-color: #000000 !important;
+            --surface-color: #1c1c1e !important;
+            --text-main: #f5f5f7 !important;
+            --text-muted: #a1a1a6 !important;
+            --border-color: #38383a !important;
+            --input-bg: #1c1c1e !important; /* Etwas dunkler als Surface für Inputs */
+        }
+        body { background-color: var(--bg-color); color: var(--text-main); }
+        <?php endif; ?>
+
         /* Passt den Glow-Schatten dynamisch an (Hex-Farbe + Transparenzwert) */
         .slot.selected { box-shadow: 0 4px 12px <?= htmlspecialchars($accentColor) ?>4D !important; }
         button[type="submit"]:hover { box-shadow: 0 4px 12px <?= htmlspecialchars($accentColor) ?>33 !important; filter: brightness(0.95); }

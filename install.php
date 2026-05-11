@@ -17,6 +17,7 @@ echo "<h1 style='color: #1d1d1f; margin-top: 0; text-align: center;'>Planago Set
 // 1. Prüfen, ob der /data/ Ordner existiert, falls nicht, automatisch anlegen
 if (!file_exists(__DIR__ . '/data')) {
     mkdir(__DIR__ . '/data', 0777, true);
+    @chmod(__DIR__ . '/data', 0777); // Erzwinge Schreibrechte
     echo "<p>✅ Ordner <strong>/data/</strong> wurde erstellt.</p>";
 }
 
@@ -87,7 +88,8 @@ try {
         "ALTER TABLE bookings ADD COLUMN review_email_sent INTEGER DEFAULT 0",
         "ALTER TABLE settings ADD COLUMN password_reset_token TEXT DEFAULT NULL",
         "ALTER TABLE settings ADD COLUMN password_reset_expires DATETIME DEFAULT NULL",
-        "ALTER TABLE settings ADD COLUMN calendar_sync_token TEXT DEFAULT NULL"
+        "ALTER TABLE settings ADD COLUMN calendar_sync_token TEXT DEFAULT NULL",
+        "ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'auto'"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

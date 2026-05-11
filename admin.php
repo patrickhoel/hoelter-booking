@@ -138,6 +138,14 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                                 <button type="button" style="height: 44px; padding: 0 15px; width: auto; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;" onclick="document.getElementById('widgetAccentColor').value='#34c759';">Standard</button>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label>Widget Design (Hell / Dunkel)</label>
+                            <select id="themeMode" style="cursor: pointer;">
+                                <option value="auto">Auto (Passt sich dem Kunden-Gerät an)</option>
+                                <option value="light">Immer Hell (Empfohlen für helle Websites)</option>
+                                <option value="dark">Immer Dunkel (Empfohlen für dunkle Websites)</option>
+                            </select>
+                        </div>
                         <div class="form-group full-width" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
                             <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main); margin-bottom: 10px;">
                                 <input type="checkbox" id="enableReviewEmail" style="width: auto;">
@@ -473,18 +481,33 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
         document.getElementById('companyLogoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                if (file.size > 2.5 * 1024 * 1024) { // 2.5 MB Limit
-                    alert("Das Bild ist zu groß! Bitte verwende eine Datei unter 2.5 MB.");
-                    this.value = '';
-                    return;
-                }
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    logoBase64 = evt.target.result;
-                    document.getElementById('logoPreview').src = logoBase64;
-                    document.getElementById('logoPreview').style.display = 'block';
-                    document.getElementById('removeLogoBtn').style.display = 'block';
-                    removeLogoFlag = false;
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600;
+                        const MAX_HEIGHT = 600;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                            const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+                            width = width * ratio;
+                            height = height * ratio;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        logoBase64 = canvas.toDataURL('image/png'); // Konvertiert ins PNG Format inkl. Transparenz
+                        document.getElementById('logoPreview').src = logoBase64;
+                        document.getElementById('logoPreview').style.display = 'block';
+                        document.getElementById('removeLogoBtn').style.display = 'block';
+                        removeLogoFlag = false;
+                    };
+                    img.src = evt.target.result;
                 };
                 reader.readAsDataURL(file);
             }
@@ -532,6 +555,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                 document.getElementById('googleReviewLink').value = data.google_review_link || '';
                 document.getElementById('reviewLinkContainer').style.display = data.enable_review_email == 1 ? 'block' : 'none';
                 document.getElementById('zapierWebhookUrl').value = data.zapier_webhook_url || '';
+                document.getElementById('themeMode').value = data.theme_mode || 'auto';
                 
                 if (data.calendar_sync_token) {
                     const baseUrl = window.location.href.split('?')[0].replace('admin.php', '');
@@ -570,7 +594,8 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                 admin_username: document.getElementById('adminUsername').value,
                 admin_new_password: document.getElementById('adminNewPassword').value,
                 admin_email: document.getElementById('adminEmail').value,
-                zapier_webhook_url: document.getElementById('zapierWebhookUrl').value
+                zapier_webhook_url: document.getElementById('zapierWebhookUrl').value,
+                theme_mode: document.getElementById('themeMode').value
             };
             fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(r => r.json())

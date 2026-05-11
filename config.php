@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.0.1');
+define('PLANAGO_VERSION', '1.0.3');
 
 // --- LIZENZSCHLÜSSEL ---
 define('PLANAGO_LICENSE_KEY', 'DEIN_GEHEIMER_LIZENZSCHLUESSEL_12345');
@@ -30,9 +30,21 @@ if (is_dir(__DIR__ . '/data') && !file_exists(__DIR__ . '/data/.htaccess')) {
 
 // Hilfsfunktion für die Datenbankverbindung
 function getDb() {
+    $dbDir = dirname(DB_PATH);
+    
+    // Versuche proaktiv, Schreibrechte zu setzen (wichtig für Ionos & Co.)
+    if (!file_exists($dbDir)) { @mkdir($dbDir, 0777, true); }
+    @chmod($dbDir, 0777);
+    if (file_exists(DB_PATH)) { @chmod(DB_PATH, 0666); }
+
     // Stellt die Verbindung zur SQLite-Datenbank her
     $pdo = new PDO('sqlite:' . DB_PATH);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // SQLite Tuning für Shared Hosting (Verhindert "Database is locked" Fehler extrem effektiv)
+    $pdo->exec('PRAGMA busy_timeout = 5000');
+    $pdo->exec('PRAGMA journal_mode = WAL');
+    
     return $pdo;
 }
 

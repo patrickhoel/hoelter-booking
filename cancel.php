@@ -8,7 +8,7 @@ $booking = null;
 $db = getDb();
 
 // Settings für Links auslesen
-$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo FROM settings LIMIT 1");
+$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo, theme_mode FROM settings LIMIT 1");
 $sysSettings = $sysStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
@@ -17,6 +17,7 @@ $agbLink = $sysSettings['company_link_agb'] ?? '';
 $companyAddress = $sysSettings['company_address'] ?? '';
 $accentColor = $sysSettings['widget_accent_color'] ?? '#34c759';
 $companyLogo = $sysSettings['company_logo'] ?? '';
+$themeMode = $sysSettings['theme_mode'] ?? 'auto';
 
 if ($token) {
     // Buchung anhand des Tokens suchen
@@ -60,15 +61,39 @@ if ($token) {
             --accent: <?= htmlspecialchars($accentColor) ?>;
             --accent-hover: <?= htmlspecialchars($accentColor) ?>;
         }
+        
+        <?php if ($themeMode === 'light'): ?>
+        :root, body, html {
+            color-scheme: light !important;
+            --bg-color: #f5f5f7 !important;
+            --surface-color: #ffffff !important;
+            --text-main: #1d1d1f !important;
+            --text-muted: #86868b !important;
+            --border-color: #e5e5ea !important;
+            --input-bg: #ffffff !important;
+        }
+        <?php elseif ($themeMode === 'dark'): ?>
+        :root, body, html {
+            color-scheme: dark !important;
+            --bg-color: #000000 !important;
+            --surface-color: #1c1c1e !important;
+            --text-main: #f5f5f7 !important;
+            --text-muted: #a1a1a6 !important;
+            --border-color: #38383a !important;
+            --input-bg: #2c2c2e !important;
+        }
+        <?php endif; ?>
+
         /* Spezifische Anpassungen für die Storno-Seite */
         body {
-            background-color: #f5f5f7; /* Leichtes Apple-Grau für die ganze Seite */
+            background-color: var(--bg-color, #f5f5f7); 
+            color: var(--text-main, #1d1d1f);
         }
         .cancel-container {
             text-align: center;
         }
         .event-details {
-            background: var(--input-bg);
+            background: var(--input-bg, #ffffff);
             padding: 15px;
             border-radius: 10px;
             margin: 20px 0;
