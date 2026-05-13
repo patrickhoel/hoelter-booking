@@ -39,7 +39,7 @@ try {
         $smtp_host = $data['smtp_host'] ?? '';
         $smtp_port = $data['smtp_port'] ?? '587';
         $smtp_user = $data['smtp_user'] ?? '';
-        $smtp_pass = $data['smtp_pass'] ?? '';
+        $smtp_pass_input = $data['smtp_pass'] ?? '';
         $company_name = $data['company_name'] ?? 'Planago Booking';
         $admin_email = $data['admin_email'] ?? '';
         $smtp_from_name = $data['smtp_from_name'] ?? '';
@@ -56,15 +56,30 @@ try {
         $zapier_webhook_url = $data['zapier_webhook_url'] ?? '';
         $theme_mode = $data['theme_mode'] ?? 'auto';
         
-        // Aktuelles Logo auslesen
-        $stmtLogo = $db->query("SELECT company_logo FROM settings LIMIT 1");
-        $currentSettings = $stmtLogo->fetch(PDO::FETCH_ASSOC);
+        // Aktuelle sensible Settings auslesen
+        $stmtCurrent = $db->query("SELECT company_logo, smtp_pass FROM settings LIMIT 1");
+        $currentSettings = $stmtCurrent->fetch(PDO::FETCH_ASSOC);
+        
+        // SMTP Passwort verarbeiten
+        if ($smtp_pass_input === '********') {
+            $smtp_pass = $currentSettings['smtp_pass']; // Behalte verschlüsseltes Passwort
+        } else {
+            $smtp_pass = encryptSecret($smtp_pass_input); // Neu verschlüsseln
+        }
+        
         $company_logo = $currentSettings['company_logo'] ?? '';
 
         // Wenn ein neues Logo hochgeladen wurde (Base64)
         if (!empty($data['company_logo_base64'])) {
-            // Wir speichern den Base64-String nun DIREKT und absolut sicher in der Datenbank!
-            $company_logo = $data['company_logo_base64'];
+            $base64data = $data['company_logo_base64'];
+            // Validierung gegen DoS/Abuse: Max ~2MB und nur erlaubte Bildformate
+            if (strlen($base64data) > 2800000) {
+                http_response_code(400); echo json_encode(['error' => 'Logo zu groß (Max. 2MB).']); exit;
+            }
+            if (!preg_match('/^data:image\/(png|jpg|jpeg|gif|webp);base64,/i', $base64data)) {
+                http_response_code(400); echo json_encode(['error' => 'Ungültiges Bildformat.']); exit;
+            }
+            $company_logo = $base64data;
         } elseif (isset($data['remove_logo']) && $data['remove_logo'] === true) {
             $company_logo = '';
         }
@@ -106,6 +121,11 @@ try {
         // Den Base64-String nicht jedes Mal ans Admin-Panel senden (spart enorm Ladezeit & Bandbreite)
         if (isset($settings['company_logo'])) {
             $settings['company_logo'] = !empty($settings['company_logo']) ? true : false;
+        }
+        
+        // Passwort im Frontend maskieren
+        if (!empty($settings['smtp_pass'])) {
+            $settings['smtp_pass'] = '********';
         }
 
         // Kalender-Token generieren, falls dieser noch fehlt (z.B. nach einem Update)

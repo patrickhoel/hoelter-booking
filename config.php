@@ -14,6 +14,15 @@ if (session_status() === PHP_SESSION_NONE) {
     ]);
 }
 
+// --- ENFORCE HTTPS & HSTS ---
+if ((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === "off") && isset($_SERVER['HTTP_HOST'])) {
+    $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: ' . $redirect);
+    exit;
+}
+header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+
 // --- CONTENT SECURITY POLICY (CSP) ---
 header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://npmcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://npmcdn.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://planago.de; frame-src 'self';");
 
@@ -26,6 +35,24 @@ if (empty($licenseKey) && file_exists(__DIR__ . '/.env')) {
     }
 }
 define('PLANAGO_LICENSE_KEY', $licenseKey ?: 'demo-key');
+
+// --- SECRET ENCRYPTION ---
+function encryptSecret($plainText) {
+    if (empty($plainText)) return '';
+    $key = hash('sha256', PLANAGO_LICENSE_KEY, true);
+    $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+    $encrypted = openssl_encrypt($plainText, 'aes-256-cbc', $key, 0, $iv);
+    return base64_encode($iv . '::' . $encrypted);
+}
+
+function decryptSecret($encodedText) {
+    if (empty($encodedText)) return '';
+    $parts = explode('::', base64_decode($encodedText), 2);
+    if (count($parts) !== 2) return $encodedText; // Fallback für alte Klartext-Passwörter
+    $key = hash('sha256', PLANAGO_LICENSE_KEY, true);
+    $decrypted = openssl_decrypt($parts[1], 'aes-256-cbc', $key, 0, $parts[0]);
+    return $decrypted !== false ? $decrypted : $encodedText;
+}
 
 // --- ZEITZONEN-SICHERHEIT ---
 date_default_timezone_set('Europe/Berlin');
@@ -134,7 +161,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
     $host = $settings['smtp_host'] ?? '';
     $port = $settings['smtp_port'] ?? '587';
     $user = $settings['smtp_user'] ?? '';
-    $pass = $settings['smtp_pass'] ?? '';
+    $pass = decryptSecret($settings['smtp_pass'] ?? '');
 
     $mail = new PHPMailer(true);
 

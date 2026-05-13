@@ -27,7 +27,17 @@ $data = json_decode(file_get_contents('php://input'), true);
 $host = $data['smtp_host'] ?? '';
 $port = $data['smtp_port'] ?? '587';
 $user = $data['smtp_user'] ?? '';
-$pass = $data['smtp_pass'] ?? '';
+$pass_input = $data['smtp_pass'] ?? '';
+
+if ($pass_input === '********') {
+    $db = getDb();
+    $stmt = $db->query("SELECT smtp_pass FROM settings LIMIT 1");
+    $dbPass = $stmt->fetchColumn();
+    $pass = decryptSecret($dbPass ?: '');
+} else {
+    $pass = $pass_input;
+}
+
 $from = !empty($data['smtp_from']) ? $data['smtp_from'] : 'noreply@' . $_SERVER['HTTP_HOST'];
 $fromName = !empty($data['smtp_from_name']) ? $data['smtp_from_name'] : 'Planago Test';
 $to = !empty($data['admin_email']) ? $data['admin_email'] : $from;
