@@ -9,3 +9,5 @@ venv/
 # Datenbanken (Wir wollen keine echten Kundendaten auf GitHub hochladen!)
 *.db
 instance/
+
+*.zip

@@ -1,7 +1,0 @@
-# SICHERHEIT: Verhindert das Ausführen von Skripten (z.B. eingeschleuste .php Dateien)
-<FilesMatch "\.(php|php\.|\phtml|pht|phar|sh|cgi|pl|py)$">
-    Order allow,deny
-    Deny from all
-    Require all denied
-</FilesMatch>
-Options -Indexes

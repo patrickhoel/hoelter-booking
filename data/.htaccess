@@ -1,5 +1,0 @@
-# SICHERHEIT: Verhindert den direkten Web-Zugriff auf die SQLite Datenbank
-# Apache 2.2 und 2.4 Direktiven kombiniert
-Order allow,deny
-Deny from all
-Require all denied
