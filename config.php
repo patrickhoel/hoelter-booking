@@ -3,10 +3,29 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.0.3');
+define('PLANAGO_VERSION', '1.0.4');
 
-// --- LIZENZSCHLÜSSEL ---
-define('PLANAGO_LICENSE_KEY', 'DEIN_GEHEIMER_LIZENZSCHLUESSEL_12345');
+// --- SESSION SECURITY ---
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'secure' => true,       // Nur über HTTPS
+        'httponly' => true,     // Nicht für JavaScript zugänglich
+        'samesite' => 'Strict'  // CSRF-Schutz
+    ]);
+}
+
+// --- CONTENT SECURITY POLICY (CSP) ---
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://npmcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://npmcdn.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://planago.de; frame-src 'self';");
+
+// --- LIZENZSCHLÜSSEL (aus Umgebungsvariablen/Datei) ---
+$licenseKey = getenv('PLANAGO_LICENSE_KEY');
+if (empty($licenseKey) && file_exists(__DIR__ . '/.env')) {
+    $envContent = file_get_contents(__DIR__ . '/.env');
+    if (preg_match('/PLANAGO_LICENSE_KEY\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
+        $licenseKey = trim($matches[1]);
+    }
+}
+define('PLANAGO_LICENSE_KEY', $licenseKey ?: 'demo-key');
 
 // --- ZEITZONEN-SICHERHEIT ---
 date_default_timezone_set('Europe/Berlin');
@@ -25,26 +44,27 @@ define('DB_PATH', __DIR__ . '/data/database.db');
 // Verhindert, dass jemand die Datenbank-Datei direkt über den Browser herunterlädt
 if (is_dir(__DIR__ . '/data') && !file_exists(__DIR__ . '/data/.htaccess')) {
     @file_put_contents(__DIR__ . '/data/.htaccess', "<Files \"*.db\">\nOrder allow,deny\nDeny from all\nRequire all denied\n</Files>");
+    @chmod(__DIR__ . '/data/.htaccess', 0644);
     @file_put_contents(__DIR__ . '/data/index.php', "<?php http_response_code(403); exit; ?>");
+    @chmod(__DIR__ . '/data/index.php', 0644);
 }
 
-// Hilfsfunktion für die Datenbankverbindung
 function getDb() {
     $dbDir = dirname(DB_PATH);
-    
-    // Versuche proaktiv, Schreibrechte zu setzen (wichtig für Ionos & Co.)
-    if (!file_exists($dbDir)) { @mkdir($dbDir, 0777, true); }
-    @chmod($dbDir, 0777);
-    if (file_exists(DB_PATH)) { @chmod(DB_PATH, 0666); }
+
+    // Erstelle Verzeichnis mit sicheren Berechtigungen
+    if (!file_exists($dbDir)) { @mkdir($dbDir, 0755, true); }
+    @chmod($dbDir, 0755);
+    if (file_exists(DB_PATH)) { @chmod(DB_PATH, 0644); }
 
     // Stellt die Verbindung zur SQLite-Datenbank her
     $pdo = new PDO('sqlite:' . DB_PATH);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
+
     // SQLite Tuning für Shared Hosting (Verhindert "Database is locked" Fehler extrem effektiv)
     $pdo->exec('PRAGMA busy_timeout = 5000');
     $pdo->exec('PRAGMA journal_mode = WAL');
-    
+
     return $pdo;
 }
 
@@ -59,7 +79,7 @@ function generateIcsData($eventName, $startTimeObj, $durationMinutes) {
     $dtStart = $startUtc->format('Ymd\THis\Z');
     $dtEnd = $endUtc->format('Ymd\THis\Z');
     $now = gmdate('Ymd\THis\Z');
-    $uid = md5(uniqid(mt_rand(), true)) . "@planago.local";
+    $uid = bin2hex(random_bytes(16)) . "@planago.local";
 
     $ics = "BEGIN:VCALENDAR\r\n";
     $ics .= "VERSION:2.0\r\n";
@@ -92,14 +112,10 @@ function sendToWebhook($payload) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // Wichtig: Kurzer Timeout, damit der Kunde nicht warten muss!
-        curl_setopt($ch, CURLOPT_TIMEOUT, 2); 
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Für Kompatibilität
-        
-        // Asynchroner Aufruf, damit der Kunde nicht wartet ("fire and forget")
         curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500); // Sehr kurzer Timeout in Millisekunden
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
 
         curl_exec($ch);
         curl_close($ch);
@@ -111,7 +127,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
     $db = getDb();
     $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_from_name, company_name FROM settings LIMIT 1");
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     $from = !empty($settings['smtp_from']) ? $settings['smtp_from'] : 'noreply@' . $_SERVER['HTTP_HOST'];
     $company = !empty($settings['company_name']) ? $settings['company_name'] : 'Planago Booking';
     $fromName = !empty($settings['smtp_from_name']) ? $settings['smtp_from_name'] : $company;
@@ -119,9 +135,9 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
     $port = $settings['smtp_port'] ?? '587';
     $user = $settings['smtp_user'] ?? '';
     $pass = $settings['smtp_pass'] ?? '';
-    
+
     $mail = new PHPMailer(true);
-    
+
     try {
         // Server-Einstellungen
         if (!empty($host) && !empty($user) && !empty($pass)) {
@@ -132,31 +148,48 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
             $mail->Password   = $pass;
             $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
-            $mail->Timeout    = 3; // Timeout auf 3 Sekunden reduzieren (verhindert Absturz bei Buchung)
+            $mail->Timeout    = 3;
         } else {
-            // Fallback auf normale PHP mail() Funktion, falls keine SMTP-Daten hinterlegt sind
             $mail->isMail();
         }
-        
+
         // Absender und Empfänger
         $mail->setFrom($from, $fromName);
         $mail->addAddress($to);
-        
+
         // Inhalt
         $mail->CharSet = 'UTF-8';
         $mail->isHTML(true);
         $mail->Subject = $subject;
         $mail->Body    = $body;
-        
+
         // iCal Datei anhängen
         if ($icsData) {
             $mail->addStringAttachment($icsData, 'termin.ics', 'base64', 'text/calendar');
         }
-        
+
         $mail->send();
     } catch (Exception $e) {
-        // Fehler stumm ignorieren oder ins Log schreiben
         error_log("PHPMailer Fehler: {$mail->ErrorInfo}");
     }
+}
+
+// --- CSRF TOKEN FUNCTIONS ---
+function initCsrfToken() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function getCsrfToken() {
+    return $_SESSION['csrf_token'] ?? '';
+}
+
+function validateCsrfToken($token) {
+    return hash_equals($_SESSION['csrf_token'] ?? '', $token ?? '');
 }
 ?>

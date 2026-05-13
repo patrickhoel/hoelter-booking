@@ -29,8 +29,10 @@ if ($token) {
 
 if ($validToken && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $newPassword = $_POST['new_password'] ?? '';
-    if (strlen($newPassword) < 6) {
-        $error = "Das Passwort muss mindestens 6 Zeichen lang sein.";
+    if (strlen($newPassword) < 12) {
+        $error = "Das Passwort muss mindestens 12 Zeichen lang sein.";
+    } elseif (!preg_match('/[A-Z]/', $newPassword) || !preg_match('/[a-z]/', $newPassword) || !preg_match('/[0-9]/', $newPassword)) {
+        $error = "Das Passwort muss Groß-, Kleinbuchstaben und Zahlen enthalten.";
     } else {
         $hash = password_hash($newPassword, PASSWORD_DEFAULT);
         $db->prepare("UPDATE settings SET admin_password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE password_reset_token = ?")->execute([$hash, $token]);
@@ -56,8 +58,8 @@ if ($validToken && $_SERVER['REQUEST_METHOD'] === 'POST') {
             <div style="text-align: center; margin-top: 15px;"><a href="login.php" style="display: inline-block; background: var(--accent); color: white; padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: 600;">Zum Login</a></div>
         <?php endif; ?>
         <?php if ($validToken): ?>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Gib ein neues sicheres Passwort für deinen Admin-Zugang ein.</p>
-            <form method="POST"><input type="password" name="new_password" placeholder="Neues Passwort (min. 6 Zeichen)" required autofocus><button type="submit">Passwort speichern</button></form>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Gib ein neues sicheres Passwort (min. 12 Zeichen, inkl. Groß-/Kleinbuchstaben & Zahlen) für deinen Admin-Zugang ein.</p>
+            <form method="POST"><input type="password" name="new_password" placeholder="Neues Passwort (min. 12 Zeichen)" required autofocus><button type="submit">Passwort speichern</button></form>
         <?php endif; ?>
         <?php if (!$message && !$validToken): ?><div style="text-align: center; margin-top: 15px;"><a href="login.php" style="font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">&larr; Zurück zum Login</a></div><?php endif; ?>
     </div>

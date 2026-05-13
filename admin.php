@@ -14,6 +14,8 @@ require_once 'config.php';
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
 $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
+
+$csrfToken = initCsrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -25,6 +27,9 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
 </head>
 <body>
     <div class="admin-container">
+        <!-- Globaler CSRF Token für JS Fetch-Requests -->
+        <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
+
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <!-- Update Banner (wird per JS eingeblendet, wenn Update verfügbar) -->
@@ -171,6 +176,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                         <div class="form-group">
                             <label>Neues Passwort (leer lassen, um es beizubehalten)</label>
                             <input type="password" id="adminNewPassword" placeholder="***">
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Mindestens 12 Zeichen, inkl. Groß-, Kleinbuchstaben und Zahlen.</p>
                         </div>
                     </div>
                 </div>
@@ -399,6 +405,11 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
             window.getSelection().removeAllRanges();
         }
 
+        function getAuthHeaders() {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            return { 'Content-Type': 'application/json', 'X-CSRF-Token': token };
+        }
+
         // Tab-Steuerung
         function openTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -455,7 +466,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
 
             fetch('update.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ zip_url: latestUpdateUrl })
             })
             .then(r => r.json())
@@ -597,7 +608,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                 zapier_webhook_url: document.getElementById('zapierWebhookUrl').value,
                 theme_mode: document.getElementById('themeMode').value
             };
-            fetch('api_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            fetch('api_settings.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) })
             .then(r => r.json())
             .then(result => {
                 document.querySelectorAll('.settingsMessage').forEach(msg => {
@@ -629,7 +640,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
 
             fetch('api_test_email.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(data)
             })
             .then(r => r.json())
@@ -668,7 +679,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                     if (widgetSelect) {
                         const option = document.createElement('option');
                         option.value = eventLink;
-                        option.text = safeName;
+                        option.text = e.name; // .text wird automatisch sicher als Text verarbeitet, safeName würde hier zu doppeltem Escaping führen
                         widgetSelect.appendChild(option);
                     }
                 });
@@ -691,7 +702,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
         document.getElementById('eventForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const data = { name: document.getElementById('eventName').value, duration_minutes: document.getElementById('eventDuration').value };
-            fetch('api_events.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            fetch('api_events.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) })
             .then(r => r.json())
             .then(result => {
                 const msg = document.getElementById('eventMessage');
@@ -759,7 +770,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
             currentCustomFields.forEach((field, index) => {
                 container.innerHTML += `
                     <div class="custom-field-row">
-                        <input type="text" placeholder="Feld-Name (z.B. Telefonnummer)" value="${field.label}" onchange="updateField(${index}, 'label', this.value)" required>
+                        <input type="text" placeholder="Feld-Name (z.B. Telefonnummer)" value="${escapeHtml(field.label)}" onchange="updateField(${index}, 'label', this.value)" required>
                         <select onchange="updateField(${index}, 'type', this.value)">
                             <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text (Kurz)</option>
                             <option value="textarea" ${field.type === 'textarea' ? 'selected' : ''}>Text (Lang)</option>
@@ -792,7 +803,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
                 cancel_limit_hours: document.getElementById('modalCancelLimit').value
             };
             
-            fetch('api_event_settings.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            fetch('api_event_settings.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) })
                 .then(r => r.json()).then(res => { if(res.error) alert(res.error); else { alert("Erfolgreich gespeichert!"); closeModal(); } });
         }
 
@@ -864,7 +875,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
             if(confirm("Möchtest du diesen Termin bestätigen? Der Kunde erhält nun eine E-Mail.")) {
                 fetch('api_confirm_booking.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ id: id })
                 }).then(() => loadBookings()); // Tabelle nach dem Bestätigen neu laden
             }
@@ -875,7 +886,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
             if(confirm("Möchtest du dem Kunden eine E-Mail schicken und ihn bitten, einen neuen Termin zu wählen?")) {
                 fetch('api_reschedule_invite.php', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ id: bookingId })
                 })
                 .then(res => res.json())
@@ -889,7 +900,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
             if(confirm("Möchtest du diese Terminart wirklich löschen? ACHTUNG: Alle bestehenden Buchungen für diese Terminart werden ebenfalls gelöscht!")) {
                 fetch('api_delete_event.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ id: id })
                 }).then(() => { loadEvents(); loadBookings(); }); // Tabellen aktualisieren
             }
@@ -900,7 +911,7 @@ $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
             if(confirm("Möchtest du diesen Termin wirklich absagen und löschen?")) {
                 fetch('api_delete_booking.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ id: id })
                 }).then(() => loadBookings()); // Tabelle nach dem Löschen sofort neu laden
             }

@@ -11,6 +11,12 @@ if (!class_exists('ZipArchive')) {
     die("<p style='color:red;'><strong>Fehler:</strong> Die PHP ZipArchive Erweiterung ist nicht aktiviert. Bitte aktiviere <code>extension=zip</code> in deiner php.ini (XAMPP Config) und starte Apache neu.</p></div>");
 }
 
+// NEU: Wir definieren den Zielordner (Einen Ordner hoch, dann in 3_software_releases)
+$releaseDir = __DIR__ . '/../3_software_releases/';
+if (!is_dir($releaseDir)) {
+    die("<p style='color:red;'><strong>Fehler:</strong> Der Zielordner <code>3_software_releases</code> wurde nicht gefunden. Bitte prüfe deine Ordnerstruktur.</p></div>");
+}
+
 echo "<h2>🚀 Starte Build-Prozess für Planago v{$version}...</h2>";
 
 // Welche Dateien sollen zwingend gepackt werden?
@@ -42,33 +48,37 @@ function addFilesToZip($zip, $files, $directories) {
     }
 }
 
+// Dateinamen für diese Version
+$updateFileName = "planago_v{$version}.zip";
+$installFileName = "planago_INSTALL_v{$version}.zip";
+
 // 1. UPDATE ZIP ERSTELLEN (ohne install.php - damit keine Kundendaten überschrieben werden)
-$updateZipName = "planago_v{$version}.zip";
+$updateZipPath = $releaseDir . $updateFileName;
 $updateZip = new ZipArchive();
-if ($updateZip->open($updateZipName, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+if ($updateZip->open($updateZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
     addFilesToZip($updateZip, $baseFiles, $directories);
     $updateZip->close();
-    echo "<p>✅ Update-ZIP erstellt: <strong>{$updateZipName}</strong></p>";
+    echo "<p>✅ Update-ZIP erstellt: <strong>{$updateFileName}</strong> (Gespeichert in 3_software_releases)</p>";
 }
 
 // 2. VOLLSTÄNDIGE INSTALLATIONS-ZIP ERSTELLEN (inkl. install.php für Neukunden)
-$installZipName = "planago_INSTALL_v{$version}.zip";
+$installZipPath = $releaseDir . $installFileName;
 $installZip = new ZipArchive();
-if ($installZip->open($installZipName, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+if ($installZip->open($installZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
     addFilesToZip($installZip, array_merge($baseFiles, ['install.php', 'setup.php']), $directories);
     $installZip->close();
-    echo "<p>✅ Kunden-Installations-ZIP erstellt: <strong>{$installZipName}</strong></p>";
+    echo "<p>✅ Kunden-Installations-ZIP erstellt: <strong>{$installFileName}</strong> (Gespeichert in 3_software_releases)</p>";
 }
 
 // 3. VERSION.JSON AUTOMATISCH GENERIEREN
 $versionJson = [ 
     "version" => $version, 
-    "zip_url" => "https://planago.de/software_releases/{$updateZipName}",
-    "install_zip_url" => "https://planago.de/software_releases/{$installZipName}"
+    "zip_url" => "https://planago.de/software_releases/{$updateFileName}",
+    "install_zip_url" => "https://planago.de/software_releases/{$installFileName}"
 ];
-file_put_contents('version.json', json_encode($versionJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-echo "<p>✅ <strong>version.json</strong> generiert.</p>";
+file_put_contents($releaseDir . 'version.json', json_encode($versionJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+echo "<p>✅ <strong>version.json</strong> aktualisiert.</p>";
 
-echo "<hr><p>🎉 <strong>Fertig!</strong> Lade nun die beiden ZIPs und die <code>version.json</code> auf deinen Server in den Ordner <strong>software_releases</strong> hoch.</p>";
+echo "<hr><p>🎉 <strong>Build erfolgreich!</strong><br><br>👉 Gehe jetzt in VS Code, klicke mit der <b>rechten Maustaste auf den Ordner '3_software_releases'</b> und wähle <b>'Upload'</b>. Die neue Version ist dann sofort online!</p>";
 echo "</div>";
 ?>

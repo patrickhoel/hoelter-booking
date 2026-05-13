@@ -109,5 +109,6 @@ try {
 
 } catch (Exception $e) {
     http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
+    error_log("Availability API Error: " . $e->getMessage());
+    echo json_encode(['error' => 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.']);
 }

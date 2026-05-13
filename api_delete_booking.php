@@ -13,6 +13,15 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 try {
+    // CSRF Token Validierung
+    $headers = getallheaders();
+    $clientToken = $headers['X-CSRF-Token'] ?? '';
+    if (!validateCsrfToken($clientToken)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);
+        exit;
+    }
+
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
     

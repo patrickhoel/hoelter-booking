@@ -14,6 +14,15 @@ try {
     $db = getDb();
     
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // CSRF Token Validierung
+        $headers = getallheaders();
+        $clientToken = $headers['X-CSRF-Token'] ?? '';
+        if (!validateCsrfToken($clientToken)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);
+            exit;
+        }
+
         // Einstellungen abspeichern
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
@@ -27,6 +36,13 @@ try {
         $notice_max = isset($data['notice_max_days']) ? (int)$data['notice_max_days'] : 60;
         $cancel_limit = isset($data['cancel_limit_hours']) ? (int)$data['cancel_limit_hours'] : 24;
         
+        // Min/Max Input-Validierung zur Sicherheit
+        $max_capacity = max(1, min(1000, $max_capacity));
+        $buffer_minutes = max(0, min(1440, $buffer_minutes));
+        $notice_min = max(0, min(8760, $notice_min));
+        $notice_max = max(1, min(1825, $notice_max));
+        $cancel_limit = max(0, min(8760, $cancel_limit));
+
         if ($id) {
             $stmt = $db->prepare("UPDATE event_types SET schedule_json = ?, form_fields_json = ?, max_capacity = ?, buffer_minutes = ?, notice_min_hours = ?, notice_max_days = ?, cancel_limit_hours = ? WHERE id = ?");
             $stmt->execute([$schedule_json, $form_fields_json, $max_capacity, $buffer_minutes, $notice_min, $notice_max, $cancel_limit, $id]);

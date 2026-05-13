@@ -2,9 +2,22 @@
 // api_book.php
 
 require_once 'config.php';
+// Session für CSRF starten, falls noch nicht geschehen
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 header('Content-Type: application/json');
 
 try {
+    // CSRF Token Validierung
+    $headers = getallheaders();
+    $clientToken = $headers['X-CSRF-Token'] ?? '';
+    if (!validateCsrfToken($clientToken)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);
+        exit;
+    }
+
     $db = getDb();
 
     // 1. Daten aus dem Frontend (als JSON gesendet) empfangen
@@ -31,6 +44,11 @@ try {
 
     if (!$eventId || !$name || !$email || !$startTimeStr) {
         throw new Exception("Bitte alle Felder ausfüllen.");
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        throw new Exception("Bitte eine gültige E-Mail-Adresse eingeben.");
     }
 
     $startTime = new DateTime($startTimeStr);

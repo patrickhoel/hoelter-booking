@@ -16,8 +16,8 @@ echo "<h1 style='color: #1d1d1f; margin-top: 0; text-align: center;'>Planago Set
 
 // 1. Prüfen, ob der /data/ Ordner existiert, falls nicht, automatisch anlegen
 if (!file_exists(__DIR__ . '/data')) {
-    mkdir(__DIR__ . '/data', 0777, true);
-    @chmod(__DIR__ . '/data', 0777); // Erzwinge Schreibrechte
+    mkdir(__DIR__ . '/data', 0755, true);
+    @chmod(__DIR__ . '/data', 0755); // Sichere Schreibrechte
     echo "<p>✅ Ordner <strong>/data/</strong> wurde erstellt.</p>";
 }
 
@@ -89,7 +89,8 @@ try {
         "ALTER TABLE settings ADD COLUMN password_reset_token TEXT DEFAULT NULL",
         "ALTER TABLE settings ADD COLUMN password_reset_expires DATETIME DEFAULT NULL",
         "ALTER TABLE settings ADD COLUMN calendar_sync_token TEXT DEFAULT NULL",
-        "ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'auto'"
+        "ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'auto'",
+        "ALTER TABLE settings ADD COLUMN force_password_change INTEGER DEFAULT 1"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
@@ -100,8 +101,10 @@ try {
     $db->exec("INSERT INTO event_types (name, duration_minutes) SELECT 'Einzeltraining', 60 WHERE NOT EXISTS (SELECT 1 FROM event_types)");
     $db->exec("INSERT INTO settings (work_start_time, work_end_time) SELECT '09:00', '17:00' WHERE NOT EXISTS (SELECT 1 FROM settings)");
 
-    // 2. DANACH: Standard-Passwort 'admin123' als Hash in diese neue Zeile setzen
-    $db->exec("UPDATE settings SET admin_password_hash = '" . password_hash('admin123', PASSWORD_DEFAULT) . "' WHERE admin_password_hash = '' OR admin_password_hash IS NULL");
+    // 2. DANACH: Sicheres, temporäres Zufallspasswort generieren anstatt 'admin123'
+    $tempPassword = bin2hex(random_bytes(6)); // Generiert 12 Zeichen
+    $stmt = $db->prepare("UPDATE settings SET admin_password_hash = ?, force_password_change = 1 WHERE admin_password_hash = '' OR admin_password_hash IS NULL");
+    $stmt->execute([password_hash($tempPassword, PASSWORD_DEFAULT)]);
 
     echo "<hr style='border: none; border-top: 1px solid #e5e5ea; margin: 30px 0;'>";
     echo "<h2 style='color: #34c759; margin-bottom: 15px; text-align: center;'>Installation erfolgreich! 🎉</h2>";
@@ -112,7 +115,8 @@ try {
         <h3 style='margin-top: 0; color: #1d1d1f; font-size: 18px;'>Wie geht es jetzt weiter?</h3>
         <ol style='line-height: 1.6; color: #1d1d1f; padding-left: 20px; margin-bottom: 0;'>
             <li style='margin-bottom: 12px;'><strong>Admin-Panel:</strong> Du kannst dein System über die <code>/admin.php</code> verwalten.<br>
-            <em>Standard-Login:</em> Benutzer: <strong>admin</strong> | Passwort: <strong>admin123</strong></li>
+            <em>Standard-Login:</em> Benutzer: <strong>admin</strong> | Passwort: <strong style='background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;'>" . htmlspecialchars($tempPassword) . "</strong><br>
+            <span style='color: #d9534f; font-size: 13px;'>⚠️ Bitte ändere dieses temporäre Passwort sofort nach dem ersten Login!</span></li>
             <li style='margin-bottom: 12px;'><strong>Profil einrichten:</strong> Ändere nach dem ersten Login unbedingt dein Passwort im Dashboard und trage deine Unternehmensdaten (E-Mail, Adresse etc.) ein.</li>
             <li><strong>WICHTIG (DSGVO):</strong> Planago verarbeitet Namen und E-Mail-Adressen deiner Kunden. Bitte ergänze deine Datenschutzerklärung auf deiner Website um einen entsprechenden Passus, dass du für die Terminbuchung die Software \"Planago\" nutzt.</li>
         </ol>

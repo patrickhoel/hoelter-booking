@@ -13,6 +13,15 @@ use PHPMailer\PHPMailer\Exception;
 
 header('Content-Type: application/json');
 
+// CSRF Token Validierung
+$headers = getallheaders();
+$clientToken = $headers['X-CSRF-Token'] ?? '';
+if (!validateCsrfToken($clientToken)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 
 $host = $data['smtp_host'] ?? '';

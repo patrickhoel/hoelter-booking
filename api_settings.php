@@ -17,8 +17,18 @@ try {
     try { $db->exec("ALTER TABLE settings ADD COLUMN zapier_webhook_url TEXT DEFAULT ''"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN calendar_sync_token TEXT DEFAULT NULL"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'auto'"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE settings ADD COLUMN force_password_change INTEGER DEFAULT 0"); } catch (Exception $e) {}
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // CSRF Token Validierung
+        $headers = getallheaders();
+        $clientToken = $headers['X-CSRF-Token'] ?? '';
+        if (!validateCsrfToken($clientToken)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);
+            exit;
+        }
+
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         
@@ -60,11 +70,24 @@ try {
         }
 
         if ($start && $end) {
+            // Passwort-Validierung
+            if (!empty($admin_new_password)) {
+                if (strlen($admin_new_password) < 12) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Das neue Passwort muss mindestens 12 Zeichen lang sein.']);
+                    exit;
+                } elseif (!preg_match('/[A-Z]/', $admin_new_password) || !preg_match('/[a-z]/', $admin_new_password) || !preg_match('/[0-9]/', $admin_new_password)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Das neue Passwort muss Groß-, Kleinbuchstaben und Zahlen enthalten.']);
+                    exit;
+                }
+            }
+
             $sql = "UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?, admin_username = ?, widget_accent_color = ?, company_logo = ?, google_review_link = ?, enable_review_email = ?, zapier_webhook_url = ?, theme_mode = ?";
             $params = [$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb, $admin_username, $widget_accent_color, $company_logo, $google_review_link, $enable_review_email, $zapier_webhook_url, $theme_mode];
             
             if (!empty($admin_new_password)) {
-                $sql .= ", admin_password_hash = ?";
+                $sql .= ", admin_password_hash = ?, force_password_change = 0";
                 $params[] = password_hash($admin_new_password, PASSWORD_DEFAULT);
             }
             

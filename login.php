@@ -21,6 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     
     if ($username === $adminUser && password_verify($password, $adminHash)) {
+        // --- SCHUTZ VOR SESSION-FIXATION ---
+        session_regenerate_id(true); // Generiert nach erfolgreichem Login eine neue sichere Session-ID
+        
         $_SESSION['logged_in'] = true;
         $_SESSION['username'] = $adminUser;
         header('Location: admin.php');

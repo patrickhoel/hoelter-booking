@@ -7,6 +7,15 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 require_once 'config.php';
 header('Content-Type: application/json');
 
+// CSRF Token Validierung
+$headers = getallheaders();
+$clientToken = $headers['X-CSRF-Token'] ?? '';
+if (!validateCsrfToken($clientToken)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 $bookingId = $data['id'] ?? null;
 

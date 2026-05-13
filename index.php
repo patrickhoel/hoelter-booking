@@ -3,6 +3,9 @@
 require_once 'config.php';
 $db = getDb();
 
+// Session und CSRF für die öffentliche Buchungsseite aktivieren
+$csrfToken = initCsrfToken();
+
 // --- NEU: Logik für den "Umbuchen"-Modus ---
 $rescheduleId = filter_input(INPUT_GET, 'reschedule', FILTER_VALIDATE_INT);
 $rescheduleToken = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
@@ -73,6 +76,9 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planago - Termin buchen</title>
     
+    <!-- Globaler CSRF Token für JS Fetch-Requests -->
+    <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
+
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
     <link id="flatpickr-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -360,7 +366,10 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             // Wir senden die Daten per POST an unsere API
             fetch('api_book.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
                 body: JSON.stringify(data)
             })
             .then(response => response.json())
