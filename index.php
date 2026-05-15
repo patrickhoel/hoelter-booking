@@ -80,9 +80,9 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
 
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
-    <link id="flatpickr-theme" rel="stylesheet" href="assets/flatpickr/flatpickr.min.css?v=2">
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js?v=2"></script>
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js?v=2"></script>
+    <link id="flatpickr-theme" rel="stylesheet" href="assets/flatpickr/flatpickr.min.css?v=<?= time() ?>">
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js?v=<?= time() ?>"></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js?v=<?= time() ?>"></script>
 
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
@@ -114,8 +114,8 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             // Flatpickr Theme wechseln
             if (fpThemeLink) {
                 fpThemeLink.href = isDark 
-                    ? "assets/flatpickr/dark.css" 
-                    : "assets/flatpickr/flatpickr.min.css";
+                    ? "assets/flatpickr/dark.css?v=<?= time() ?>" 
+                    : "assets/flatpickr/flatpickr.min.css?v=<?= time() ?>";
             }
             
             // Falls Auto-Mode: Wir setzen ein Attribut auf den Body, damit wir notfalls CSS steuern können
