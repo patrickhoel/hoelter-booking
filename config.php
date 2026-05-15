@@ -262,6 +262,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
 }
 
 // --- RATE LIMITING ---
+// --- RATE LIMITING ---
 function getClientIp() {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) { 
@@ -275,6 +276,11 @@ function getClientIp() {
 
 function checkRateLimit($action, $maxRequests, $timeWindowSeconds) {
     $db = getDb();
+    
+    // --- DER MAGISCHE UPDATE-FIX ---
+    // Erstellt die Tabelle vollautomatisch, falls sie in einer alten Datenbank noch fehlt
+    $db->exec("CREATE TABLE IF NOT EXISTS rate_limits (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, action TEXT, timestamp DATETIME)");
+
     $ip = getClientIp();
     
     // Alte Einträge aufräumen, damit die Datenbank-Tabelle schlank bleibt
