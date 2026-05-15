@@ -21,6 +21,11 @@ try {
         exit;
     }
 
+    if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE) {
+        echo json_encode(['error' => 'In der Demo-Version können keine Änderungen vorgenommen werden.']);
+        exit;
+    }
+
     $data = json_decode(file_get_contents('php://input'), true);
     
     if (isset($data['id'])) {

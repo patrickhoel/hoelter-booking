@@ -50,6 +50,12 @@ $csrfToken = initCsrfToken();
             <a href="logout.php" class="btn-logout">Logout</a>
         </div>
         
+        <?php if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE): ?>
+            <div class="warning-box mb-20 mt-0 text-center">
+                <strong class="warning-text fs-15">⚠️ Demo-Ansicht: Änderungen (Speichern, Löschen etc.) sind in dieser Version deaktiviert.</strong>
+            </div>
+        <?php endif; ?>
+
         <div class="tabs tabs-container">
             <button class="tab-btn active" id="btn-tab-bookings">Buchungen</button>
             <button class="tab-btn" id="btn-tab-events">Terminarten</button>

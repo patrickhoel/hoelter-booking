@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.0.8'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.0.9'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -41,13 +41,18 @@ if (in_array($currentScript, $strictPages)) {
 
 // --- LIZENZSCHLÜSSEL (aus Umgebungsvariablen/Datei) ---
 $licenseKey = getenv('PLANAGO_LICENSE_KEY');
+$demoMode = false;
 if (empty($licenseKey) && file_exists(__DIR__ . '/.env')) {
     $envContent = file_get_contents(__DIR__ . '/.env');
     if (preg_match('/PLANAGO_LICENSE_KEY\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
         $licenseKey = trim($matches[1]);
     }
+    if (preg_match('/PLANAGO_DEMO_MODE\s*=\s*true/i', $envContent)) {
+        $demoMode = true;
+    }
 }
 define('PLANAGO_LICENSE_KEY', $licenseKey ?: 'demo-key');
+define('PLANAGO_DEMO_MODE', $demoMode);
 
 // --- SECRET ENCRYPTION ---
 function encryptSecret($plainText) {
