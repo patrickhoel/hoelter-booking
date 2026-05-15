@@ -212,7 +212,20 @@ function sendToWebhook($payload) {
 // Globale E-Mail Funktion für das System
 function sendSystemMail($to, $subject, $body, $icsData = null) {
     $db = getDb();
-    $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_from_name, company_name FROM settings LIMIT 1");
+
+    // --- DEMO-MODUS SCHUTZ ---
+    if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE) {
+        // Wir erlauben E-Mails zum Testen, blockieren aber "E-Mail-Bombing" an fremde Opfer!
+        // Max. 3 E-Mails pro Stunde an exakt DIESELBE Empfänger-Adresse.
+        $stmt = $db->prepare("SELECT COUNT(*) FROM rate_limits WHERE action = ? AND timestamp > datetime('now', '-3600 seconds')");
+        $stmt->execute(['demo_mail_' . $to]);
+        if ($stmt->fetchColumn() >= 3) {
+            return; // Zu viele Mails an diese Adresse -> Leise abbrechen
+        }
+        $db->prepare("INSERT INTO rate_limits (ip, action, timestamp) VALUES (?, ?, datetime('now'))")->execute([getClientIp(), 'demo_mail_' . $to]);
+    }
+
+    $stmt = $db->query("SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_from_name, company_name, company_logo FROM settings LIMIT 1");
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $from = !empty($settings['smtp_from']) ? $settings['smtp_from'] : 'noreply@' . $_SERVER['HTTP_HOST'];
@@ -233,7 +246,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
             $mail->SMTPAuth   = true;
             $mail->Username   = $user;
             $mail->Password   = $pass;
-            $mail->SMTPSecure = ($port == 587) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
             $mail->Timeout    = 15;
         } else {
@@ -243,6 +256,20 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
         // Absender und Empfänger
         $mail->setFrom($from, $fromName);
         $mail->addAddress($to);
+
+        // --- LOGO ALS INLINE-BILD ANHÄNGEN ---
+        if (!empty($settings['company_logo']) && strpos($body, 'logo.php') !== false) {
+            $base64 = $settings['company_logo'];
+            $commaPos = strpos($base64, ',');
+            if ($commaPos !== false) {
+                $imgData = base64_decode(substr($base64, $commaPos + 1));
+                $mimeInfo = substr($base64, 5, $commaPos - 5);
+                $mime = str_replace(';base64', '', $mimeInfo);
+                
+                $mail->addStringEmbeddedImage($imgData, 'company_logo', 'logo.png', 'base64', $mime);
+                $body = preg_replace('/src=[\'"]([^\'"]*logo\.php[^\'"]*)[\'"]/', 'src="cid:company_logo"', $body);
+            }
+        }
 
         // Inhalt
         $mail->CharSet = 'UTF-8';
