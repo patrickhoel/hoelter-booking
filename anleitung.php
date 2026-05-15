@@ -1,6 +1,12 @@
 <?php
 // anleitung.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once 'config.php';
+
+$tempPassword = $_SESSION['temp_admin_password'] ?? 'Dein generiertes Passwort';
+unset($_SESSION['temp_admin_password']); // Nur einmalig für diese Ansicht speichern
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -28,8 +34,8 @@ require_once 'config.php';
             <div class="step-number">1</div>
             <div class="step-content">
                 <h3>Einloggen & Profil einrichten</h3>
-                <p>Klicke unten auf den Button, um zum Dashboard zu gelangen. Logge dich mit dem Benutzernamen <strong>admin</strong> und dem Passwort <strong>admin123</strong> ein.<br><br>
-                Gehe danach direkt in den Tab <strong>Unternehmensprofil</strong>, ändere aus Sicherheitsgründen sofort dein Passwort und lade dein Logo hoch!</p>
+                <p>Klicke unten auf den Button, um zum Dashboard zu gelangen. Logge dich mit dem Benutzernamen <strong>admin</strong> und dem automatisch generierten Passwort <strong style="background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;"><?= htmlspecialchars($tempPassword) ?></strong> ein.<br><br>
+                <span style="color: #d9534f; font-weight: 600;">⚠️ Wichtig:</span> Das System wird dich beim ersten Login zwingen, dieses Passwort zu ändern. Gehe danach direkt in den Tab <strong>Unternehmensprofil</strong> und lade dein Logo hoch!</p>
             </div>
         </div>
 

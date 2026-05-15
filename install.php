@@ -4,6 +4,8 @@ require_once 'config.php';
 
 // --- AUFRÄUMEN & BEENDEN ---
 if (isset($_POST['finish_installation'])) {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    $_SESSION['temp_admin_password'] = $_POST['temp_pwd'] ?? '';
     @unlink(__DIR__ . '/setup.php');
     @unlink(__DIR__ . '/temp_install.zip'); // Sicherheitshalber Reste löschen
     @unlink(__FILE__); // Löscht diese install.php selbst!
@@ -132,7 +134,7 @@ try {
     </div>
     ";
     
-    echo "<form method='POST'><p style='font-size: 12px; color: #86868b; text-align: center;'>Mit Klick auf den Button werden alle sensiblen Installations-Dateien aus Sicherheitsgründen restlos von deinem Server gelöscht.</p><button type='submit' name='finish_installation' style='background: #34c759; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(52,199,89,0.3); transition: 0.2s;'>Installation beenden & Tool starten</button></form>";
+    echo "<form method='POST'><input type='hidden' name='temp_pwd' value='" . htmlspecialchars($tempPassword) . "'><p style='font-size: 12px; color: #86868b; text-align: center;'>Mit Klick auf den Button werden alle sensiblen Installations-Dateien aus Sicherheitsgründen restlos von deinem Server gelöscht.</p><button type='submit' name='finish_installation' style='background: #34c759; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(52,199,89,0.3); transition: 0.2s;'>Installation beenden & Tool starten</button></form>";
 
 } catch (PDOException $e) {
     echo "<p style='color:red;'><strong>Fehler bei der Installation:</strong> " . $e->getMessage() . "</p>";
