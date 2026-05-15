@@ -10,28 +10,33 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once 'config.php';
-    $db = getDb();
     
-    $stmt = $db->query("SELECT admin_username, admin_password_hash FROM settings LIMIT 1");
-    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
-    $adminUser = $settings['admin_username'] ?? 'admin';
-    $adminHash = $settings['admin_password_hash'] ?? '';
-    
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
-    
-    if ($username === $adminUser && password_verify($password, $adminHash)) {
-        // --- SCHUTZ VOR SESSION-FIXATION ---
-        session_regenerate_id(true); // Generiert nach erfolgreichem Login eine neue sichere Session-ID
-        
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $adminUser;
-        header('Location: admin.php');
-        exit;
+    if (!checkRateLimit('login', 5, 300)) {
+        $error = 'Zu viele Fehlversuche! Aus Sicherheitsgründen für 5 Minuten gesperrt.';
     } else {
-        // Künstliche Verzögerung gegen Brute-Force-Attacken (Sicherheit)
-        sleep(1);
-        $error = 'Falscher Benutzername oder Passwort!';
+        $db = getDb();
+        
+        $stmt = $db->query("SELECT admin_username, admin_password_hash FROM settings LIMIT 1");
+        $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+        $adminUser = $settings['admin_username'] ?? 'admin';
+        $adminHash = $settings['admin_password_hash'] ?? '';
+        
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+        
+        if ($username === $adminUser && password_verify($password, $adminHash)) {
+            // --- SCHUTZ VOR SESSION-FIXATION ---
+            session_regenerate_id(true); // Generiert nach erfolgreichem Login eine neue sichere Session-ID
+            
+            $_SESSION['logged_in'] = true;
+            $_SESSION['username'] = $adminUser;
+            header('Location: admin.php');
+            exit;
+        } else {
+            // Künstliche Verzögerung gegen Brute-Force-Attacken (Sicherheit)
+            sleep(1);
+            $error = 'Falscher Benutzername oder Passwort!';
+        }
     }
 }
 ?>

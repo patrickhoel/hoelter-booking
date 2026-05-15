@@ -234,6 +234,39 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
     }
 }
 
+// --- RATE LIMITING ---
+function getClientIp() {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) { 
+        $ip = $_SERVER['HTTP_CLIENT_IP']; 
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) { 
+        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $ip = trim($ipList[0]);
+    }
+    return $ip;
+}
+
+function checkRateLimit($action, $maxRequests, $timeWindowSeconds) {
+    $db = getDb();
+    $ip = getClientIp();
+    
+    // Alte Einträge aufräumen, damit die Datenbank-Tabelle schlank bleibt
+    $db->exec("DELETE FROM rate_limits WHERE timestamp < datetime('now', '-1 day')");
+    
+    // Versuche innerhalb des Zeitfensters zählen
+    $stmt = $db->prepare("SELECT COUNT(*) FROM rate_limits WHERE ip = ? AND action = ? AND timestamp > datetime('now', ?)");
+    $stmt->execute([$ip, $action, "-$timeWindowSeconds seconds"]);
+    
+    if ($stmt->fetchColumn() >= $maxRequests) {
+        return false; // Limit überschritten!
+    }
+    
+    // Erlaubten Request speichern
+    $stmt = $db->prepare("INSERT INTO rate_limits (ip, action, timestamp) VALUES (?, ?, datetime('now'))");
+    $stmt->execute([$ip, $action]);
+    return true;
+}
+
 // --- CSRF TOKEN FUNCTIONS ---
 function initCsrfToken() {
     if (session_status() === PHP_SESSION_NONE) {

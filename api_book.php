@@ -18,6 +18,13 @@ try {
         exit;
     }
 
+    // --- RATE LIMITING (Spamschutz) ---
+    if (!checkRateLimit('booking', 5, 600)) {
+        http_response_code(429); // 429 Too Many Requests
+        echo json_encode(['error' => 'Zu viele Buchungsversuche. Bitte warte einen Moment.']);
+        exit;
+    }
+
     $db = getDb();
 
     // 1. Daten aus dem Frontend (als JSON gesendet) empfangen
