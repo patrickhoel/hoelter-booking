@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.2.0'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.2.2'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -219,7 +219,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
     $company = !empty($settings['company_name']) ? $settings['company_name'] : 'Planago Booking';
     $fromName = !empty($settings['smtp_from_name']) ? $settings['smtp_from_name'] : $company;
     $host = $settings['smtp_host'] ?? '';
-    $port = !empty($settings['smtp_port']) ? $settings['smtp_port'] : 465;
+    $port = !empty($settings['smtp_port']) ? $settings['smtp_port'] : 587;
     $user = $settings['smtp_user'] ?? '';
     $pass = decryptSecret($settings['smtp_pass'] ?? '');
 
@@ -233,7 +233,7 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
             $mail->SMTPAuth   = true;
             $mail->Username   = $user;
             $mail->Password   = $pass;
-            $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPSecure = ($port == 587) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
             $mail->Timeout    = 15;
         } else {

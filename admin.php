@@ -96,7 +96,7 @@ $csrfToken = initCsrfToken();
                         </div>
                         <div class="form-group">
                             <label>SMTP Port</label>
-                            <input type="text" id="smtpPort" placeholder="465">
+                            <input type="text" id="smtpPort" placeholder="587">
                         </div>
                         <div class="form-group">
                             <label>Benutzername</label>
@@ -609,7 +609,7 @@ $csrfToken = initCsrfToken();
                 document.getElementById('smtpFromEmail').value = data.smtp_from || '';
                 document.getElementById('smtpFromName').value = data.smtp_from_name || '';
                 document.getElementById('smtpHost').value = data.smtp_host || '';
-                document.getElementById('smtpPort').value = data.smtp_port || '465';
+                document.getElementById('smtpPort').value = data.smtp_port || '587';
                 document.getElementById('smtpUser').value = data.smtp_user || '';
                 document.getElementById('smtpPass').value = data.smtp_pass || '';
                 document.getElementById('companyName').value = data.company_name || 'Planago Booking';
