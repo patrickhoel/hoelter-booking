@@ -32,16 +32,32 @@ $baseFiles = [
 $directories = ['assets', 'PHPMailer'];
 
 function addFilesToZip($zip, $files, $directories) {
+    // 1. Basis-Dateien im Hauptordner
     foreach ($files as $file) {
-        if (file_exists($file)) $zip->addFile($file, $file);
+        if (file_exists($file)) {
+            // Sichert auch hier ab, dass immer Vorwärts-Slashes genutzt werden
+            $zipName = ltrim(str_replace(['\\', '/'], '/', $file), '/');
+            $zip->addFile($file, $zipName);
+        }
     }
+    
+    // 2. Ganze Ordner (wie PHPMailer und assets) rekursiv durchlaufen
     foreach ($directories as $dir) {
         if (is_dir($dir)) {
             $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
             foreach ($iterator as $file) {
                 if (!$file->isDir()) {
-                    $localPath = substr($file->getPathname(), strlen(__DIR__) + 1);
-                    $zip->addFile($file->getPathname(), str_replace('\\', '/', $localPath));
+                    // Der absolute Dateipfad auf deinem Laptop (z.B. C:\xampp\...)
+                    $absolutePath = $file->getPathname();
+                    
+                    // Schneidet den lokalen Projektordner-Pfad vorne komplett ab
+                    $localPath = str_replace(__DIR__, '', $absolutePath);
+                    
+                    // DER IDIOTENSICHERE FIX: 
+                    // Wandelt z.B. "\PHPMailer\src\SMTP.php" streng um in "PHPMailer/src/SMTP.php"
+                    $zipPath = ltrim(str_replace(['\\', '/'], '/', $localPath), '/');
+                    
+                    $zip->addFile($absolutePath, $zipPath);
                 }
             }
         }
@@ -70,14 +86,15 @@ if ($installZip->open($installZipPath, ZipArchive::CREATE | ZipArchive::OVERWRIT
     echo "<p>✅ Kunden-Installations-ZIP erstellt: <strong>{$installFileName}</strong> (Gespeichert in 3_software_releases)</p>";
 }
 
-// 3. VERSION.JSON AUTOMATISCH GENERIEREN
+// 3. VERSION.PHP (mit CORS Header) AUTOMATISCH GENERIEREN
 $versionJson = [ 
     "version" => $version, 
     "zip_url" => "https://planago.de/software_releases/{$updateFileName}",
     "install_zip_url" => "https://planago.de/software_releases/{$installFileName}"
 ];
-file_put_contents($releaseDir . 'version.json', json_encode($versionJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-echo "<p>✅ <strong>version.json</strong> aktualisiert.</p>";
+$phpContent = "<?php\nheader('Access-Control-Allow-Origin: *');\nheader('Content-Type: application/json');\n?>\n" . json_encode($versionJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+file_put_contents($releaseDir . 'version.php', $phpContent);
+echo "<p>✅ <strong>version.php</strong> (mit CORS-Support) aktualisiert.</p>";
 
 echo "<hr><p>🎉 <strong>Build erfolgreich!</strong><br><br>👉 Gehe jetzt in VS Code, klicke mit der <b>rechten Maustaste auf den Ordner '3_software_releases'</b> und wähle <b>'Upload'</b>. Die neue Version ist dann sofort online!</p>";
 echo "</div>";

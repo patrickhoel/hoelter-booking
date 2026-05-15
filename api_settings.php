@@ -21,8 +21,8 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // CSRF Token Validierung
-        $headers = getallheaders();
-        $clientToken = $headers['X-CSRF-Token'] ?? '';
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $clientToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $headers['X-CSRF-Token'] ?? $headers['X-Csrf-Token'] ?? '';
         if (!validateCsrfToken($clientToken)) {
             http_response_code(403);
             echo json_encode(['error' => 'Ungültiger CSRF-Token. Bitte die Seite neu laden.']);

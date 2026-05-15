@@ -1,6 +1,12 @@
 <?php
 session_start();
 
+// --- UPDATE-CLEANUP ---
+// Löscht veraltete Dateileichen (.old.php), die beim Update-Vorgang auf Windows/XAMPP-Servern entstehen.
+foreach (glob(__DIR__ . '/*.old.php') as $oldFile) {
+    @unlink($oldFile);
+}
+
 // Login-Schutz: Wer nicht eingeloggt ist, fliegt raus!
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: login.php');
@@ -445,15 +451,18 @@ $csrfToken = initCsrfToken();
 
         function checkForUpdates() {
             // Hier fragt die Software deinen zentralen Planago-Server ab!
-            fetch('https://planago.de/update/version.json?t=' + new Date().getTime())
+            fetch('https://planago.de/software_releases/version.php?t=' + new Date().getTime())
                 .then(r => r.json())
                 .then(data => {
+                    console.log("🚀 Update-Check Antwort vom Server:", data);
+                    console.log("💻 Installierte Version:", CURRENT_VERSION);
+
                     if (data.version && isNewerVersion(CURRENT_VERSION, data.version)) {
                         document.getElementById('newVersionNumber').innerText = data.version;
-                        latestUpdateUrl = data.zip_url;
+                        latestUpdateUrl = data.update_zip_url || data.zip_url || data.install_zip_url;
                         document.getElementById('updateBanner').style.display = 'flex';
                     }
-                }).catch(e => console.log('Keine Verbindung zum Update-Server.'));
+                }).catch(e => console.error('Fehler beim Update-Check (Falsche URL oder Datei nicht erreichbar):', e));
         }
         
         function startUpdate() {
@@ -478,7 +487,8 @@ $csrfToken = initCsrfToken();
                     btn.disabled = false;
                 } else {
                     alert(res.message);
-                    location.reload();
+                    // Cache-Buster: Zwingt den Browser, das HTML frisch zu laden
+                    window.location.href = window.location.pathname + '?updated=' + new Date().getTime();
                 }
             }).catch(() => alert("Kritischer Fehler bei der Verbindung."));
         }
