@@ -176,6 +176,13 @@ try {
         $updateStmt = $db->prepare("UPDATE bookings SET start_time = ?, status = ?, custom_data_json = ? WHERE id = ?");
         $updateStmt->execute([$startTime->format('Y-m-d H:i:s'), $newStatus, $customData, $rescheduleId]);
 
+        // Transaktion beenden, BEVOR externe Netzwerkanfragen (E-Mails, Webhooks) gestartet werden,
+        // um "Database is locked" Fehler zu vermeiden!
+        if (isset($inTransaction) && $inTransaction) {
+            $db->exec('COMMIT');
+            $inTransaction = false;
+        }
+
         // 3. Bestätigungs-E-Mail für den *neuen* Termin senden
         $formattedDateStr = $startTime->format('d.m.Y');
         $formattedTimeStr = $startTime->format('H:i');
@@ -267,11 +274,6 @@ try {
         ];
         sendToWebhook($webhookPayload);
 
-        if (isset($inTransaction) && $inTransaction) {
-            $db->exec('COMMIT');
-            $inTransaction = false;
-        }
-
         echo json_encode(['message' => $msg]);
 
     } else {
@@ -280,6 +282,13 @@ try {
         // 4. Alles OK -> Buchung in die Datenbank schreiben
         $insertStmt = $db->prepare("INSERT INTO bookings (event_type_id, customer_name, customer_email, start_time, custom_data_json, status, cancel_token) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $insertStmt->execute([$eventId, $name, $email, $startTime->format('Y-m-d H:i:s'), $customData, $status, $cancelToken]);
+
+        // Transaktion beenden, BEVOR externe Netzwerkanfragen (E-Mails, Webhooks) gestartet werden,
+        // um "Database is locked" Fehler zu vermeiden!
+        if (isset($inTransaction) && $inTransaction) {
+            $db->exec('COMMIT');
+            $inTransaction = false;
+        }
 
         // 5. Automatische E-Mail an den Kunden versenden
         $formattedDate = $startTime->format('d.m.Y \u\m H:i') . ' Uhr';
@@ -378,11 +387,6 @@ try {
             'type' => 'new_booking' // Zusatzinfo für Zapier
         ];
         sendToWebhook($webhookPayload);
-
-        if (isset($inTransaction) && $inTransaction) {
-            $db->exec('COMMIT');
-            $inTransaction = false;
-        }
 
         echo json_encode(['message' => $msg]);
     }
