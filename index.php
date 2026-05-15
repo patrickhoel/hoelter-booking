@@ -81,8 +81,8 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
 
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
     <link id="flatpickr-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/de.js"></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
 
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
@@ -114,7 +114,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             // Flatpickr Theme wechseln
             if (fpThemeLink) {
                 fpThemeLink.href = isDark 
-                    ? "https://npmcdn.com/flatpickr/dist/themes/dark.css" 
+                    ? "https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" 
                     : "https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css";
             }
             
@@ -244,7 +244,11 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             
             <div class="form-group">
                 <label for="datePicker">Wähle ein Datum</label>
-                <input type="text" id="datePicker" placeholder="Datum auswählen..." required>
+                <input type="text" id="datePicker" placeholder="Datum auswählen..." 
+                    data-activedays="<?= htmlspecialchars(json_encode($activeDays)) ?>"
+                    data-minhours="<?= $noticeMinHours ?>"
+                    data-maxdays="<?= $noticeMaxDays ?>"
+                    required>
             </div>
             
             <!-- Hier laden wir die freien Uhrzeiten rein -->
@@ -325,14 +329,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
         <span class="powered-by">Powered by <strong>Planago</strong></span>
     </footer>
 
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
-        // Wir übergeben die aktiven Tage aus PHP an JavaScript
-        const activeDays = <?= json_encode($activeDays) ?>;
-        // Vorlaufzeit und maximaler Zeitraum berechnen
-        const now = new Date();
-        const minAllowedDate = new Date(now.getTime() + (<?= $noticeMinHours ?> * 60 * 60 * 1000));
-        const maxAllowedDate = new Date(now.getTime() + (<?= $noticeMaxDays ?> * 24 * 60 * 60 * 1000));
-    </script>
-    <script src="assets/booking.js" defer></script>
+    <!-- Cache-Buster im Script-Tag erzwingt das Neuladen der booking.js -->
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/booking.js?v=<?= time() ?>" defer></script>
 </body>
 </html>

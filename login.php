@@ -7,10 +7,10 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     exit;
 }
 
+require_once 'config.php';
+
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once 'config.php';
-    
     if (!checkRateLimit('login', 5, 300)) {
         $error = 'Zu viele Fehlversuche! Aus Sicherheitsgründen für 5 Minuten gesperrt.';
     } else {
@@ -55,8 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
         <form method="POST">
-            <input type="text" name="username" placeholder="Benutzername..." required autofocus>
-            <input type="password" name="password" placeholder="Passwort..." required>
+            <?php $isDemo = defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE; ?>
+            <input type="text" name="username" placeholder="Benutzername..." required <?= $isDemo ? 'value="admin" readonly' : 'autofocus' ?>>
+            <input type="password" name="password" placeholder="Passwort..." required <?= $isDemo ? 'value="Admin1234567" readonly' : '' ?>>
             <button type="submit">Einloggen</button>
         </form>
         <div class="text-center mt-15">

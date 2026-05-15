@@ -1,13 +1,14 @@
 const eventId = document.getElementById('eventId').value;
-// Wir übergeben die aktiven Tage aus PHP an JavaScript
-// Diese Variable wird jetzt direkt im HTML gesetzt, siehe index.php
-// const activeDays = <?= json_encode($activeDays) ?>;
 
-// Vorlaufzeit und maximaler Zeitraum berechnen
-// Diese Variablen werden jetzt direkt im HTML gesetzt, siehe index.php
-// const now = new Date();
-// const minAllowedDate = new Date(now.getTime() + (<?= $noticeMinHours ?> * 60 * 60 * 1000));
-// const maxAllowedDate = new Date(now.getTime() + (<?= $noticeMaxDays ?> * 24 * 60 * 60 * 1000));
+// Dynamische Parameter (Puffer/Tage) direkt aus dem Input-Feld (data-Attribute) auslesen
+const datePickerEl = document.getElementById('datePicker');
+const activeDays = JSON.parse(datePickerEl.getAttribute('data-activedays') || "[1,2,3,4,5,6]");
+const noticeMinHours = parseInt(datePickerEl.getAttribute('data-minhours') || "24");
+const noticeMaxDays = parseInt(datePickerEl.getAttribute('data-maxdays') || "60");
+
+const now = new Date();
+const minAllowedDate = new Date(now.getTime() + (noticeMinHours * 60 * 60 * 1000));
+const maxAllowedDate = new Date(now.getTime() + (noticeMaxDays * 24 * 60 * 60 * 1000));
 
 // Flatpickr initialisieren
 flatpickr("#datePicker", {
