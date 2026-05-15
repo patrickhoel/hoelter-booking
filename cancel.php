@@ -8,7 +8,7 @@ $booking = null;
 $db = getDb();
 
 // Settings für Links auslesen
-$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo, theme_mode FROM settings LIMIT 1");
+$sysStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo, theme_mode, admin_email FROM settings LIMIT 1");
 $sysSettings = $sysStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
@@ -36,9 +36,65 @@ if ($token) {
             $message = "<div class='alert alert-error'><strong>Zu kurzfristig!</strong><br>Eine Online-Stornierung ist leider nur bis zu {$limitHours} Stunden vor dem Termin möglich. Bitte kontaktiere uns direkt, um eine Lösung zu finden.</div>";
             $booking = null; // Buchung & Button ausblenden
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Stornierung durchführen (Löschen)
-            $delStmt = $db->prepare("DELETE FROM bookings WHERE id = ?");
+            // Stornierung durchführen (Status auf storniert setzen, damit es im Admin-Panel sichtbar bleibt)
+            $delStmt = $db->prepare("UPDATE bookings SET status = 'cancelled_by_customer' WHERE id = ?");
             $delStmt->execute([$booking['id']]);
+            
+            // --- E-MAIL AN ADMIN SENDEN ---
+            $adminEmail = $sysSettings['admin_email'] ?? '';
+            if (!empty($adminEmail)) {
+                $startObj = new DateTime($booking['start_time']);
+                $formattedDateStr = $startObj->format('d.m.Y');
+                $formattedTimeStr = $startObj->format('H:i');
+                
+                $adminSubj = "Termin storniert: {$booking['event_title']} am {$formattedDateStr}";
+                
+                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+                $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+                $baseUrl = rtrim($protocol . "://" . $_SERVER['HTTP_HOST'] . $basePath, '/');
+                
+                $emailFooter = "
+                <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>
+                    " . (!empty($companyLogo) ? "<img src='{$baseUrl}/logo.php?v=" . md5($companyLogo) . "' alt='" . htmlspecialchars($companyName) . "' style='max-height: 40px; margin-bottom: 10px;'><br>" : "") . "
+                    <strong>" . htmlspecialchars($companyName) . "</strong><br>
+                    " . nl2br(htmlspecialchars($companyAddress)) . "<br><br>
+                    <span style='color: #d2d2d7;'>Powered by <a href='https://planago.de' target='_blank' style='color: inherit; text-decoration: none;'><strong>Planago</strong></a></span>
+                </div></div>";
+                
+                $adminBody = "
+                <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                    <div style='text-align: center; margin-bottom: 25px;'>
+                        <h1 style='color: #ff3b30; font-size: 24px; margin-bottom: 5px;'>Termin storniert</h1>
+                        <p style='color: #86868b; font-size: 16px;'>Ein Kunde hat seinen Termin online abgesagt.</p>
+                    </div>
+                    <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                        <table style='width: 100%; border-collapse: collapse;'>
+                            <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Kunde</td></tr>
+                            <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>{$booking['customer_name']} <br><a href='mailto:{$booking['customer_email']}' style='color: #34c759; font-size: 14px; text-decoration: none;'>{$booking['customer_email']}</a></td></tr>
+                            <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                            <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>{$booking['event_title']}</td></tr>
+                            <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Wann</td></tr>
+                            <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>{$formattedDateStr} um {$formattedTimeStr} Uhr</td></tr>
+                        </table>
+                    </div>
+                    <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                        <a href='{$baseUrl}/admin.php' style='display: inline-block; background-color: #007aff; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Zum Admin-Dashboard</a>
+                    </div>
+                " . $emailFooter;
+                
+                sendSystemMail($adminEmail, $adminSubj, $adminBody);
+            }
+
+            // --- ZAPIER WEBHOOK SENDEN ---
+            $webhookPayload = [
+                'event_name' => $booking['event_title'],
+                'customer_name' => $booking['customer_name'],
+                'customer_email' => $booking['customer_email'],
+                'start_time' => (new DateTime($booking['start_time']))->format(DateTime::ATOM),
+                'status' => 'cancelled_by_customer',
+                'type' => 'cancelled'
+            ];
+            sendToWebhook($webhookPayload);
             
             $message = "<div class='alert alert-success'>Dein Termin wurde erfolgreich storniert.</div>";
             $booking = null; // Buchung ausblenden, da storniert

@@ -95,7 +95,7 @@ try {
         SELECT b.start_time, e.duration_minutes, e.buffer_minutes 
         FROM bookings b 
         JOIN event_types e ON b.event_type_id = e.id 
-        WHERE DATE(b.start_time) = ?
+        WHERE DATE(b.start_time) = ? AND b.status != 'cancelled_by_customer'
     ");
     $bookingStmt->execute([$startTime->format('Y-m-d')]);
     $existingBookings = $bookingStmt->fetchAll(PDO::FETCH_ASSOC);

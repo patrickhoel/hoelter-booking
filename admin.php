@@ -923,6 +923,11 @@ $csrfToken = initCsrfToken();
                                 <button class="btn-danger btn-icon" data-action="delete-booking" data-id="${b.id}">Ablehnen</button>
                             </div>`;
                     } 
+                    else if (b.status === 'cancelled_by_customer') {
+                        baseStatus = '<span style="color: #ff3b30;" class="font-bold">Storniert</span>';
+                        statusText = '<br><span class="status-badge" style="background: rgba(255,59,48,0.1); color: #ff3b30; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-top: 5px; display: inline-block;">❌ Vom Kunden abgesagt</span>';
+                        actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" data-action="delete-booking" data-id="${b.id}">Endgültig löschen</button></div>`;
+                    }
                     else {
                         let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" data-action="confirm-booking" data-id="${b.id}">Bestätigen</button>` : '';
                         if (isPast) {
