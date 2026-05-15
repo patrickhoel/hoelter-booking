@@ -328,7 +328,7 @@ $csrfToken = initCsrfToken();
             </table>
         </div>
 
-        <div class="card tab-content d-none" id="tab-bookings">
+        <div class="card tab-content" id="tab-bookings">
             <div class="flex-between-center border-bottom pb-12 mb-24">
                 <h2 class="m-0 border-none p-0">Buchungen</h2>
                 <select id="bookingFilter" class="w-auto cursor-pointer" style="padding: 8px 15px; border-radius: 8px; font-weight: 600;">
