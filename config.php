@@ -8,9 +8,9 @@ define('PLANAGO_VERSION', '1.1.9'); // WICHTIG: Bei jedem Update anpassen!
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
-        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on', // Dynamisch: Erlaubt lokales HTTP-Testing, erzwingt SSL live
+        'secure' => true,       // ZWINGEND true für iFrames! (Erzwingt HTTPS)
         'httponly' => true,     // Nicht für JavaScript zugänglich
-        'samesite' => 'Strict'  // CSRF-Schutz
+        'samesite' => 'None'    // WICHTIG: 'None' erlaubt, dass das Widget im iFrame funktioniert
     ]);
 }
 

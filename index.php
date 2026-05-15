@@ -80,9 +80,9 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
 
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
-    <link id="flatpickr-theme" rel="stylesheet" href="assets/flatpickr/flatpickr.min.css?v=<?= time() ?>">
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js?v=<?= time() ?>"></script>
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js?v=<?= time() ?>"></script>
+    <link id="flatpickr-theme" rel="stylesheet" href="assets/flatpickr/flatpickr.min.css?v=<?= PLANAGO_VERSION ?>">
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js?v=<?= PLANAGO_VERSION ?>"></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js?v=<?= PLANAGO_VERSION ?>"></script>
 
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
@@ -114,8 +114,8 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             // Flatpickr Theme wechseln
             if (fpThemeLink) {
                 fpThemeLink.href = isDark 
-                    ? "assets/flatpickr/dark.css?v=<?= time() ?>" 
-                    : "assets/flatpickr/flatpickr.min.css?v=<?= time() ?>";
+                    ? "assets/flatpickr/dark.css?v=<?= PLANAGO_VERSION ?>" 
+                    : "assets/flatpickr/flatpickr.min.css?v=<?= PLANAGO_VERSION ?>";
             }
             
             // Falls Auto-Mode: Wir setzen ein Attribut auf den Body, damit wir notfalls CSS steuern können
@@ -330,6 +330,6 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     </footer>
 
     <!-- Cache-Buster im Script-Tag erzwingt das Neuladen der booking.js -->
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/booking.js?v=<?= time() ?>" defer></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/booking.js?v=<?= PLANAGO_VERSION ?>" defer></script>
 </body>
 </html>
