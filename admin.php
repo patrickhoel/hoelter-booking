@@ -30,6 +30,23 @@ $csrfToken = initCsrfToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planago - Admin Panel</title>
     <link rel="stylesheet" href="assets/admin_style.css">
+    <?php if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE): ?>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
+        function syncDemoTheme() {
+            const theme = localStorage.getItem('planago-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        }
+        syncDemoTheme();
+        window.addEventListener('storage', (e) => { if (e.key === 'planago-theme') syncDemoTheme(); });
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'theme-change') {
+                localStorage.setItem('planago-theme', e.data.theme); syncDemoTheme();
+            }
+        });
+    </script>
+    <?php endif; ?>
 </head>
 <body>
     <div class="admin-container">
