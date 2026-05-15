@@ -54,11 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" name="password" placeholder="Passwort..." required>
             <button type="submit">Einloggen</button>
         </form>
-        <div style="text-align: center; margin-top: 15px;">
-            <a href="forgot.php" style="font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">Passwort vergessen?</a>
+        <div class="text-center mt-15">
+            <a href="forgot.php" class="fs-13 text-muted" style="text-decoration: none;">Passwort vergessen?</a>
         </div>
-        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
-            Powered by <a href="https://planago.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Planago</a>
+        <div class="powered-by">
+            Powered by <a href="https://planago.de" target="_blank">Planago</a>
         </div>
     </div>
 </body>

@@ -87,7 +87,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
     
-    <script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         // --- THEME & FLATPICKR LOGIK ---
         const themeMode = '<?= $themeMode ?>';
         
@@ -119,7 +119,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
         }
     </script>
 
-    <style>
+    <style nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         /* Überschreibt die globalen Variablen mit der gewählten Admin-Farbe */
         :root {
             --accent: <?= htmlspecialchars($accentColor) ?>;
@@ -191,7 +191,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             <div class="form-group">
                 <label>Verfügbare Zeiten</label>
                 <div id="time-slots">
-                    <p style="font-size: 13px; grid-column: span 3;">Bitte wähle zuerst ein Datum aus.</p>
+                    <p class="slot-placeholder">Bitte wähle zuerst ein Datum aus.</p>
                 </div>
             </div>
             
@@ -225,9 +225,9 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
                     </div>
                 <?php endforeach; ?>
 
-                <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
-                    <input type="checkbox" id="privacyConsent" name="privacyConsent" required style="width: auto; margin-top: 3px; cursor: pointer;">
-                    <label for="privacyConsent" style="font-size: 0.8rem; line-height: 1.4; color: var(--text-muted); font-weight: normal; margin: 0;">
+                <div class="form-group privacy-consent-group">
+                    <input type="checkbox" id="privacyConsent" name="privacyConsent" required>
+                    <label for="privacyConsent" class="privacy-consent-label">
                         <?php if (!empty($agbLink)): ?>
                             Ich habe die <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">AGB</a> und die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
                         <?php else: ?>
@@ -245,150 +245,34 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     </div>
 
     <!-- Eleganter Planago Corporate Footer -->
-    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+    <footer class="main-footer">
         <strong><?= htmlspecialchars($companyName) ?></strong><br>
         <?= nl2br(htmlspecialchars($companyAddress)) ?><br><br>
         
-        <?php if (!empty($agbLink)): ?>
-            <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">AGB</a>
-        <?php endif; ?>
-        <?php if (!empty($impressumLink)): ?>
-            <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Impressum</a>
-        <?php endif; ?>
-        <?php if (!empty($privacyLink)): ?>
-            <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--text-muted); text-decoration: none; margin: 0 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Datenschutz</a>
-        <?php endif; ?>
+        <div class="footer-links">
+            <?php if (!empty($agbLink)): ?>
+                <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank">AGB</a>
+            <?php endif; ?>
+            <?php if (!empty($impressumLink)): ?>
+                <a href="<?= htmlspecialchars($impressumLink) ?>" target="_blank">Impressum</a>
+            <?php endif; ?>
+            <?php if (!empty($privacyLink)): ?>
+                <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank">Datenschutz</a>
+            <?php endif; ?>
+        </div>
         
         <br><br>
-        <span style="color: #d2d2d7;">Powered by <strong>Planago</strong></span>
-    </div>
+        <span class="powered-by">Powered by <strong>Planago</strong></span>
+    </footer>
 
-    <script>
-        const eventId = document.getElementById('eventId').value;
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         // Wir übergeben die aktiven Tage aus PHP an JavaScript
         const activeDays = <?= json_encode($activeDays) ?>;
-        
         // Vorlaufzeit und maximaler Zeitraum berechnen
         const now = new Date();
         const minAllowedDate = new Date(now.getTime() + (<?= $noticeMinHours ?> * 60 * 60 * 1000));
         const maxAllowedDate = new Date(now.getTime() + (<?= $noticeMaxDays ?> * 24 * 60 * 60 * 1000));
-
-        // Flatpickr initialisieren
-        flatpickr("#datePicker", {
-            locale: "de", // Auf Deutsch stellen
-            minDate: minAllowedDate, // Man kann keine Termine in der Vergangenheit / Vorlaufzeit buchen
-            maxDate: maxAllowedDate, // Maximaler Buchungszeitraum
-            disable: [
-                function(date) {
-                    // Deaktiviere alle Tage, die NICHT in unserer activeDays Liste sind
-                    return !activeDays.includes(date.getDay());
-                }
-            ],
-            onChange: function(selectedDates, dateStr, instance) {
-                // Wenn ein Datum angeklickt wird: Lade freie Termine
-                fetch(`api_availability.php?event_id=${eventId}&date=${dateStr}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        const container = document.getElementById('time-slots');
-                        container.innerHTML = ''; // Vorherige löschen
-                        document.getElementById('selectedTime').value = ''; // Auswahl zurücksetzen
-                        document.getElementById('userDetailsForm').style.display = 'none'; // Formular ausblenden
-                        
-                        if (data.available_slots.length === 0) {
-                            container.innerHTML = '<p style="color: red; grid-column: span 3;">Keine freien Termine an diesem Tag.</p>';
-                            return;
-                        }
-                        
-                        data.available_slots.forEach(slot => {
-                            const div = document.createElement('div');
-                            div.className = 'slot';
-                            
-                            // Zusatztext "10/10 frei" anzeigen, wenn es ein Gruppentraining ist
-                            if (slot.max_capacity > 1) {
-                                div.innerHTML = `${slot.time}<br><span style="font-size:11px; font-weight:normal; color: var(--text-muted);">(${slot.spots_left}/${slot.max_capacity} frei)</span>`;
-                            } else {
-                                div.innerHTML = `${slot.time} Uhr`;
-                            }
-                            
-                            div.onclick = function() {
-                                document.querySelectorAll('.slot').forEach(el => el.classList.remove('selected'));
-                                div.classList.add('selected');
-                                document.getElementById('selectedTime').value = slot.time; // Uhrzeit merken
-                                
-                                // Formular einblenden und hinscrollen
-                                const userForm = document.getElementById('userDetailsForm');
-                                userForm.style.display = 'block';
-                                userForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            };
-                            container.appendChild(div);
-                        });
-                    });
-            }
-        });
-
-        // Wenn jemand auf "Buchen" klickt: Schicke die Daten an unser Backend
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // Verhindert das Neuladen der Seite
-            
-            const time = document.getElementById('selectedTime').value;
-            if (!time) {
-                alert("Bitte wähle eine Uhrzeit aus!");
-                return;
-            }
-
-            // Datum und Uhrzeit zusammensetzen für unser Backend (Format: YYYY-MM-DDTHH:MM:00)
-            const date = document.getElementById('datePicker').value;
-            const finalDateTime = `${date}T${time}:00`;
-
-            // Benutzerdefinierte Felder sammeln
-            const customData = {};
-            document.querySelectorAll('.custom-input').forEach(input => {
-                customData[input.getAttribute('data-label')] = input.value;
-            });
-
-            // Wir sammeln die Eingaben aus den Feldern
-            const data = {
-                event_type_id: parseInt(document.getElementById('eventId').value),
-                customer_name: document.getElementById('name').value,
-                customer_email: document.getElementById('email').value,
-                start_time: finalDateTime,
-                custom_data: customData,
-                honeypot: document.getElementById('fax_number_hp').value
-            };
-
-            // Füge Umbuchungs-Infos hinzu, falls vorhanden
-            const rescheduleIdInput = document.getElementById('rescheduleId');
-            if (rescheduleIdInput) {
-                data.reschedule_id = parseInt(rescheduleIdInput.value);
-                data.reschedule_token = document.getElementById('rescheduleToken').value;
-            }
-
-            // Wir senden die Daten per POST an unsere API
-            fetch('api_book.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                const msgDiv = document.getElementById('message');
-                if(result.error) {
-                    msgDiv.style.color = 'red';
-                    msgDiv.innerText = result.error;
-                } else {
-                    msgDiv.style.color = 'green';
-                    msgDiv.innerText = result.message;
-                    document.getElementById('bookingForm').style.display = 'none'; // Komplettes Formular ausblenden
-                }
-            });
-        });
-
-        // --- HINTERGRUND-AUFGABEN (Automatisierte Bewertungs-E-Mails etc.) ---
-        // Wird unsichtbar ausgeführt, ohne das Kundenerlebnis zu verlangsamen
-        setTimeout(() => fetch('cron.php').catch(() => {}), 2500);
     </script>
+    <script src="assets/booking.js" defer></script>
 </body>
 </html>

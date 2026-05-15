@@ -53,6 +53,11 @@ try {
 
     $startTime = new DateTime($startTimeStr);
 
+    // --- SICHERHEITS-FIX: Race Condition bei Buchungen (Locking) ---
+    // Startet eine Transaktion mit exklusivem Schreibzugriff.
+    $db->exec('BEGIN IMMEDIATE TRANSACTION');
+    $inTransaction = true;
+
     // 3. Doppelbuchungs-Check (wie in der Availability-API)
     $stmt = $db->prepare("SELECT name, duration_minutes, max_capacity, buffer_minutes, notice_min_hours, notice_max_days FROM event_types WHERE id = ?");
     $stmt->execute([$eventId]);
@@ -235,6 +240,11 @@ try {
         ];
         sendToWebhook($webhookPayload);
 
+        if (isset($inTransaction) && $inTransaction) {
+            $db->exec('COMMIT');
+            $inTransaction = false;
+        }
+
         echo json_encode(['message' => $msg]);
 
     } else {
@@ -320,10 +330,18 @@ try {
         ];
         sendToWebhook($webhookPayload);
 
+        if (isset($inTransaction) && $inTransaction) {
+            $db->exec('COMMIT');
+            $inTransaction = false;
+        }
+
         echo json_encode(['message' => $msg]);
     }
 
 } catch (Exception $e) {
+    if (isset($inTransaction) && $inTransaction) {
+        $db->exec('ROLLBACK');
+    }
     if (http_response_code() === 200) { // Wenn kein spezifischer Fehlercode gesetzt wurde
         http_response_code(400); // Bad Request
     }

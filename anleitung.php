@@ -9,18 +9,20 @@ require_once 'config.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planago - Erste Schritte</title>
     <link rel="stylesheet" href="assets/admin_style.css">
-    <style>
+    <style nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         .guide-container { max-width: 700px; margin: 5vh auto; padding: 40px; background: var(--surface-color); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border-color); }
         .step { display: flex; gap: 20px; margin-bottom: 30px; }
         .step-number { background: var(--accent); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; box-shadow: 0 4px 10px var(--accent-glow); }
         .step-content h3 { margin-top: 0; margin-bottom: 8px; color: var(--text-main); font-size: 1.2rem; }
         .step-content p { margin-top: 0; color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
+        .guide-btn { display: inline-block; background: var(--accent); color: white; padding: 16px 35px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px var(--accent-glow); transition: 0.2s; }
+        .guide-btn:hover { background: var(--accent-bright); transform: translateY(-1px); }
     </style>
 </head>
 <body>
     <div class="guide-container">
-        <h1 style="text-align: center; color: var(--text-main); margin-bottom: 10px;">Willkommen bei Planago! 🎉</h1>
-        <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px; font-size: 16px;">Deine Installation war erfolgreich. Hier sind die wichtigsten ersten Schritte, um dein neues Buchungssystem startklar zu machen.</p>
+        <h1 class="text-center text-main mb-10 mt-0">Willkommen bei Planago! 🎉</h1>
+        <p class="text-center text-muted mb-20 fs-15">Deine Installation war erfolgreich. Hier sind die wichtigsten ersten Schritte, um dein neues Buchungssystem startklar zu machen.</p>
 
         <div class="step">
             <div class="step-number">1</div>
@@ -63,8 +65,8 @@ require_once 'config.php';
             </div>
         </div>
 
-        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-color);">
-            <a href="login.php" style="display: inline-block; background: var(--accent); color: white; padding: 16px 35px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px var(--accent-glow); transition: 0.2s;">Alles klar, zum Admin-Login!</a>
+        <div class="text-center mt-20 pt-15 border-top">
+            <a href="login.php" class="guide-btn">Alles klar, zum Admin-Login!</a>
         </div>
     </div>
 </body>

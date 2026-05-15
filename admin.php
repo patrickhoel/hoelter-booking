@@ -36,34 +36,34 @@ $csrfToken = initCsrfToken();
         <!-- Globaler CSRF Token für JS Fetch-Requests -->
         <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
 
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="flex-between-center">
             <div>
                 <!-- Update Banner (wird per JS eingeblendet, wenn Update verfügbar) -->
-                <div id="updateBanner" style="display: none; background: linear-gradient(135deg, #007aff, #0056b3); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">
+                <div id="updateBanner" class="update-banner d-none flex-between-center">
                     <div><strong>🚀 Neues Planago-Update verfügbar!</strong> Version <span id="newVersionNumber"></span> ist da.</div>
-                    <button onclick="startUpdate()" id="updateBtn" style="background: white; color: #007aff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">Jetzt updaten</button>
+                    <button id="updateBtn" class="btn-update">Jetzt updaten</button>
                 </div>
 
                 <h1>Admin Dashboard</h1>
-                <p style="margin-top: -15px; color: #666;">Eingeloggt als: <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></p>
+                <p class="admin-subtitle">Eingeloggt als: <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></p>
             </div>
-            <a href="logout.php" style="padding: 8px 16px; border: 1px solid var(--danger); color: var(--danger); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: 0.2s;" onmouseover="this.style.backgroundColor='rgba(220, 53, 69, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">Logout</a>
+            <a href="logout.php" class="btn-logout">Logout</a>
         </div>
         
-        <div class="tabs" style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto;">
-            <button class="tab-btn active" onclick="openTab('tab-bookings')" id="btn-tab-bookings">Buchungen</button>
-            <button class="tab-btn" onclick="openTab('tab-events')" id="btn-tab-events">Terminarten</button>
-            <button class="tab-btn" onclick="openTab('tab-process')" id="btn-tab-process">Buchungsprozess</button>
-            <button class="tab-btn" onclick="openTab('tab-email')" id="btn-tab-email">E-Mail & SMTP</button>
-            <button class="tab-btn" onclick="openTab('tab-company')" id="btn-tab-company">Unternehmensprofil</button>
-            <button class="tab-btn" onclick="openTab('tab-integration')" id="btn-tab-integration">Widget & Kalender</button>
+        <div class="tabs tabs-container">
+            <button class="tab-btn active" id="btn-tab-bookings">Buchungen</button>
+            <button class="tab-btn" id="btn-tab-events">Terminarten</button>
+            <button class="tab-btn" id="btn-tab-process">Buchungsprozess</button>
+            <button class="tab-btn" id="btn-tab-email">E-Mail & SMTP</button>
+            <button class="tab-btn" id="btn-tab-company">Unternehmensprofil</button>
+            <button class="tab-btn" id="btn-tab-integration">Widget & Kalender</button>
         </div>
         
         <!-- Ein gemeinsames Formular umfasst nun beide Einstellungs-Tabs -->
         <form id="settingsForm">
             
             <!-- E-MAIL TAB -->
-            <div id="tab-email" class="tab-content" style="display: none;">
+            <div id="tab-email" class="tab-content d-none">
                 <div class="card">
                     <h2>E-Mail & SMTP</h2>
                     <div class="settings-group">
@@ -96,16 +96,16 @@ $csrfToken = initCsrfToken();
                             <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button type="submit" class="btn-success" style="margin-top: 0; width:auto;">Einstellungen speichern</button>
-                        <button type="button" class="btn-secondary" style="margin-top: 0; width:auto;" onclick="testEmail()">Test-E-Mail senden</button>
+                    <div class="gap-10 mt-20">
+                        <button type="submit" class="btn-success mt-0 w-auto">Einstellungen speichern</button>
+                        <button type="button" class="btn-secondary mt-0 w-auto" id="btn-test-email">Test-E-Mail senden</button>
                     </div>
-                    <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
+                    <div class="settingsMessage settings-msg"></div>
                 </div>
             </div>
 
             <!-- UNTERNEHMENS-TAB -->
-            <div id="tab-company" class="tab-content" style="display: none;">
+            <div id="tab-company" class="tab-content d-none">
                 <div class="card">
                     <h2>Unternehmensdaten</h2>
                     <div class="settings-group">
@@ -135,36 +135,36 @@ $csrfToken = initCsrfToken();
                         </div>
                         <div class="form-group full-width">
                             <label>Unternehmens-Logo</label>
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <img id="logoPreview" src="" style="max-height: 60px; display: none; border-radius: 8px; border: 1px solid var(--border);">
-                                <input type="file" id="companyLogoInput" accept="image/*" style="width: auto;">
-                                <button type="button" class="btn-danger btn-icon" id="removeLogoBtn" style="display: none; height: 38px; padding: 0 15px; width: auto;" onclick="removeLogo()">Löschen</button>
+                            <div class="gap-15 align-center">
+                                <img id="logoPreview" src="" class="logo-preview">
+                                <input type="file" id="companyLogoInput" accept="image/*" class="w-auto">
+                                <button type="button" class="btn-danger btn-icon d-none w-auto" id="removeLogoBtn" style="height: 38px; padding: 0 15px;">Löschen</button>
                             </div>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Wird im Widget und in den E-Mails angezeigt.</p>
+                            <p class="fs-12 text-muted mt-5">Wird im Widget und in den E-Mails angezeigt.</p>
                         </div>
                         <div class="form-group">
                             <label>Akzentfarbe (Kunden-Widget)</label>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input type="color" id="widgetAccentColor" style="height: 44px; width: 60px; padding: 2px; cursor: pointer; border-radius: 8px;">
-                                <button type="button" style="height: 44px; padding: 0 15px; width: auto; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;" onclick="document.getElementById('widgetAccentColor').value='#34c759';">Standard</button>
+                            <div class="gap-10 align-center">
+                                <input type="color" id="widgetAccentColor" class="color-picker">
+                                <button type="button" id="btn-reset-color" class="btn-color-reset">Standard</button>
                             </div>
                         </div>
                         <div class="form-group">
                             <label>Widget Design (Hell / Dunkel)</label>
-                            <select id="themeMode" style="cursor: pointer;">
+                            <select id="themeMode" class="cursor-pointer">
                                 <option value="auto">Auto (Passt sich dem Kunden-Gerät an)</option>
                                 <option value="light">Immer Hell (Empfohlen für helle Websites)</option>
                                 <option value="dark">Immer Dunkel (Empfohlen für dunkle Websites)</option>
                             </select>
                         </div>
-                        <div class="form-group full-width" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
-                            <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main); margin-bottom: 10px;">
-                                <input type="checkbox" id="enableReviewEmail" style="width: auto;">
+                        <div class="form-group full-width mt-15 pt-15 border-top">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableReviewEmail" class="w-auto">
                                 <strong>Automatische Google-Bewertungs-E-Mail aktivieren</strong>
                             </label>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 15px;">Sendet deinen Kunden 24 Stunden nach ihrem abgeschlossenen Termin automatisch eine freundliche E-Mail mit der Bitte um eine Bewertung.</p>
+                            <p class="fs-12 text-muted mt-0 mb-15">Sendet deinen Kunden 24 Stunden nach ihrem abgeschlossenen Termin automatisch eine freundliche E-Mail mit der Bitte um eine Bewertung.</p>
                             
-                            <div id="reviewLinkContainer" style="display: none;">
+                            <div id="reviewLinkContainer" class="d-none">
                                 <label>Dein Google Bewertungs-Link (Kurz-URL)</label>
                                 <input type="text" id="googleReviewLink" placeholder="https://g.page/r/...">
                             </div>
@@ -182,21 +182,21 @@ $csrfToken = initCsrfToken();
                         <div class="form-group">
                             <label>Neues Passwort (leer lassen, um es beizubehalten)</label>
                             <input type="password" id="adminNewPassword" placeholder="***">
-                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Mindestens 12 Zeichen, inkl. Groß-, Kleinbuchstaben und Zahlen.</p>
+                            <p class="fs-12 text-muted mt-5">Mindestens 12 Zeichen, inkl. Groß-, Kleinbuchstaben und Zahlen.</p>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Unternehmensprofil speichern</button>
-                <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
+                <button type="submit" class="btn-success mt-20 w-auto">Unternehmensprofil speichern</button>
+                <div class="settingsMessage settings-msg"></div>
             </div>
 
             <!-- BUCHUNGSPROZESS TAB -->
-            <div id="tab-process" class="tab-content" style="display: none;">
+            <div id="tab-process" class="tab-content d-none">
                 <div class="card">
                     <h2>Buchungs-Ablauf</h2>
-                    <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; font-weight: normal; color: var(--text-main);">
-                        <input type="checkbox" id="requireManualConf" style="width: auto;">
+                    <label class="checkbox-label mb-0">
+                        <input type="checkbox" id="requireManualConf" class="w-auto">
                         <strong>Zwei-Wege-Bestätigung (Manuelle Bestätigung durch Admin erforderlich)</strong>
                     </label>
                 </div>
@@ -206,17 +206,17 @@ $csrfToken = initCsrfToken();
                      <div class="form-group full-width">
                         <label for="zapierWebhookUrl">Webhook URL (Zapier / Make.com) - Optional</label>
                         <input type="text" id="zapierWebhookUrl" placeholder="https://hooks.zapier.com/hooks/catch/...">
-                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 5px; line-height: 1.5;">Verbinde Planago mit über 5.000 Apps (z.B. über Zapier oder die kostenlose Alternative Make.com). Erstelle dort einen Webhook-Trigger und füge die URL hier ein. Bei jeder Buchung werden die Daten automatisch dorthin gesendet.</p>
-                        <div style="background: rgba(255, 159, 10, 0.1); border: 1px solid rgba(255, 159, 10, 0.3); padding: 10px 15px; border-radius: 8px; margin-top: 10px;">
-                            <strong style="color: #d97706; font-size: 13px;">⚠️ Wichtiger Datenschutz-Hinweis (DSGVO):</strong>
-                            <p style="color: #b45309; font-size: 12px; margin: 5px 0 0 0;">Planago speichert alle Daten zu 100% lokal. <strong>Sobald du hier eine URL einträgst</strong>, werden Kundendaten (Name, E-Mail) bei einer Buchung an externe Anbieter gesendet. Du musst dies zwingend in der Datenschutzerklärung deiner Website angeben!</p>
+                        <p class="fs-13 text-muted mt-5" style="line-height: 1.5;">Verbinde Planago mit über 5.000 Apps (z.B. über Zapier oder die kostenlose Alternative Make.com). Erstelle dort einen Webhook-Trigger und füge die URL hier ein. Bei jeder Buchung werden die Daten automatisch dorthin gesendet.</p>
+                        <div class="warning-box">
+                            <strong class="warning-text">⚠️ Wichtiger Datenschutz-Hinweis (DSGVO):</strong>
+                            <p class="warning-subtext">Planago speichert alle Daten zu 100% lokal. <strong>Sobald du hier eine URL einträgst</strong>, werden Kundendaten (Name, E-Mail) bei einer Buchung an externe Anbieter gesendet. Du musst dies zwingend in der Datenschutzerklärung deiner Website angeben!</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
                     <h2>Reguläre Arbeitszeiten</h2>
-                    <p class="text-muted" style="margin-top:0;">Wann bist du grundsätzlich für Termine verfügbar?</p>
+                    <p class="text-muted mt-0">Wann bist du grundsätzlich für Termine verfügbar?</p>
                     <div class="settings-group">
                         <div class="form-group">
                             <label for="startTime">Startzeit</label>
@@ -228,67 +228,67 @@ $csrfToken = initCsrfToken();
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-success" style="margin-top:20px; width:auto;">Prozess & Zeiten speichern</button>
-                <div class="settingsMessage" style="font-weight: bold; margin-top: 10px;"></div>
+                <button type="submit" class="btn-success mt-20 w-auto">Prozess & Zeiten speichern</button>
+                <div class="settingsMessage settings-msg"></div>
             </div>
         </form>
 
         <!-- WIDGET & LINK TAB -->
-        <div id="tab-integration" class="tab-content" style="display: none;">
+        <div id="tab-integration" class="tab-content d-none">
             <div class="card">
                 <h2>Links, Widget & Kalender-Sync</h2>
-                <p style="margin-top: 0; color: var(--text-muted);">Wähle hier eine Terminart aus, um den passenden direkten Link oder den HTML-Code für deine Website (z. B. WordPress, Wix) zu generieren. So kannst du Kunden auf deiner Website gezielt zur Buchung dieser spezifischen Leistung leiten.</p>
+                <p class="mt-0 text-muted">Wähle hier eine Terminart aus, um den passenden direkten Link oder den HTML-Code für deine Website (z. B. WordPress, Wix) zu generieren. So kannst du Kunden auf deiner Website gezielt zur Buchung dieser spezifischen Leistung leiten.</p>
 
-                <div class="form-group" style="margin-top: 25px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color);">
-                    <label for="widgetEventSelect" style="font-size: 15px; color: var(--text-main);">Für welche Terminart möchtest du den Link/Code erstellen?</label>
-                    <select id="widgetEventSelect" onchange="updateWidgetLinks()" style="max-width: 400px; font-weight: bold; cursor: pointer;">
+                <div class="form-group mt-25 pb-15 border-bottom-dashed">
+                    <label for="widgetEventSelect" class="fs-15 text-main">Für welche Terminart möchtest du den Link/Code erstellen?</label>
+                    <select id="widgetEventSelect" class="max-w-400 font-bold cursor-pointer">
                         <option value="">Lade Terminarten...</option>
                     </select>
                 </div>
 
-                <h3 style="margin-top: 25px;">1. Direkter Link</h3>
-                <p class="text-muted" style="margin-top: 0; font-size: 14px;">Teile diesen Link auf Instagram, WhatsApp oder verlinke ihn auf einem Button deiner Website.</p>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="directLink" readonly style="flex-grow: 1; font-size: 14px; cursor: text;">
-                    <button type="button" class="btn-secondary" onclick="copyText('directLink')" style="width: auto;">Kopieren</button>
+                <h3 class="mt-25">1. Direkter Link</h3>
+                <p class="text-muted mt-0 fs-14">Teile diesen Link auf Instagram, WhatsApp oder verlinke ihn auf einem Button deiner Website.</p>
+                <div class="gap-10">
+                    <input type="text" id="directLink" readonly class="copy-input">
+                    <button type="button" class="btn-secondary w-auto" id="btn-copy-direct">Kopieren</button>
                 </div>
 
-                <h3 style="margin-top: 25px;">2. Widget auf der Website einbinden (iFrame)</h3>
-                <p class="text-muted" style="margin-top: 0; font-size: 14px;">Kopiere diesen HTML-Code und füge ihn auf deiner Website direkt unter der Beschreibung für diese Terminart in einen "HTML" oder "Code" Block ein.</p>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <textarea id="iframeCode" readonly rows="4" style="flex-grow: 1; font-family: monospace; font-size: 13px; resize: none; cursor: text;"></textarea>
-                    <button type="button" class="btn-secondary" onclick="copyText('iframeCode')" style="width: auto;">Kopieren</button>
+                <h3 class="mt-25">2. Widget auf der Website einbinden (iFrame)</h3>
+                <p class="text-muted mt-0 fs-14">Kopiere diesen HTML-Code und füge ihn auf deiner Website direkt unter der Beschreibung für diese Terminart in einen "HTML" oder "Code" Block ein.</p>
+                <div class="gap-10 align-start">
+                    <textarea id="iframeCode" readonly rows="4" class="iframe-textarea"></textarea>
+                    <button type="button" class="btn-secondary w-auto" id="btn-copy-iframe">Kopieren</button>
                 </div>
 
-                <h3 style="margin-top: 25px;">3. Kalender-Synchronisation (Abo-Link)</h3>
-                <p class="text-muted" style="margin-top: 0; font-size: 14px;">Kopiere diesen Link und füge ihn bei <strong>Apple Kalender</strong>, <strong>Google Kalender</strong> oder <strong>Outlook</strong> unter "Kalender abonnieren / Aus URL hinzufügen" ein. Danach erscheinen alle Planago-Buchungen automatisch in deinem Kalender!</p>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="icalLink" readonly style="flex-grow: 1; font-size: 14px; cursor: text;">
-                    <button type="button" class="btn-secondary" onclick="copyText('icalLink')" style="width: auto;">Kopieren</button>
+                <h3 class="mt-25">3. Kalender-Synchronisation (Abo-Link)</h3>
+                <p class="text-muted mt-0 fs-14">Kopiere diesen Link und füge ihn bei <strong>Apple Kalender</strong>, <strong>Google Kalender</strong> oder <strong>Outlook</strong> unter "Kalender abonnieren / Aus URL hinzufügen" ein. Danach erscheinen alle Planago-Buchungen automatisch in deinem Kalender!</p>
+                <div class="gap-10">
+                    <input type="text" id="icalLink" readonly class="copy-input">
+                    <button type="button" class="btn-secondary w-auto" id="btn-copy-ical">Kopieren</button>
                 </div>
             </div>
         </div>
 
-        <div class="card tab-content" id="tab-events" style="display: none;">
+        <div class="card tab-content d-none" id="tab-events">
             <h2>Terminarten</h2>
             <form id="eventForm">
-                <div style="display: flex; gap: 20px; align-items: flex-end;">
+                <div class="gap-20 align-end">
                     <div class="form-group">
                         <label for="eventName">Name (z.B. Erstgespräch)</label>
                         <input type="text" id="eventName" required>
                     </div>
                     <div class="form-group">
                         <label for="eventDuration">Dauer (Minuten)</label>
-                        <input type="number" id="eventDuration" value="60" required style="width: 100px;">
+                        <input type="number" id="eventDuration" value="60" required class="w-100px">
                     </div>
                     <div class="form-group">
                         <button type="submit">Hinzufügen</button>
                     </div>
                 </div>
-                <div id="eventMessage" style="font-weight: bold; color: green; margin-top: 10px;"></div>
+                <div id="eventMessage" class="font-bold text-success mt-10"></div>
             </form>
             
-            <table style="margin-top: 20px;">
+            <table class="mt-20">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -305,10 +305,10 @@ $csrfToken = initCsrfToken();
             </table>
         </div>
 
-        <div class="card tab-content" id="tab-bookings">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 24px;">
-                <h2 style="margin: 0; border: none; padding: 0;">Buchungen</h2>
-                <select id="bookingFilter" onchange="loadBookings()" style="width: auto; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-main); font-weight: 600; cursor: pointer; outline: none;">
+        <div class="card tab-content d-none" id="tab-bookings">
+            <div class="flex-between-center border-bottom pb-12 mb-24">
+                <h2 class="m-0 border-none p-0">Buchungen</h2>
+                <select id="bookingFilter" class="w-auto cursor-pointer" style="padding: 8px 15px; border-radius: 8px; font-weight: 600;">
                     <option value="upcoming">Zukünftige Termine</option>
                     <option value="past">Vergangene Termine</option>
                     <option value="all">Alle Termine</option>
@@ -330,78 +330,111 @@ $csrfToken = initCsrfToken();
                 </tbody>
             </table>
         </div>
-        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
-            Powered by <a href="https://planago.de" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Planago</a>
+        <div class="powered-by">
+            Powered by <a href="https://planago.de" target="_blank">Planago</a>
         </div>
     </div>
     
     <!-- EINSTELLUNGEN MODAL (Unsichtbar bis man auf "Einstellen" klickt) -->
     <div id="eventSettingsModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalEventName" style="margin-top: 0; color: var(--accent);">Einstellungen</h2>
+            <span class="close" id="btnCloseModal">&times;</span>
+            <h2 id="modalEventName" class="mt-0" style="color: var(--accent);">Einstellungen</h2>
 
-            <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">Kapazität & Puffer</h3>
-                <div style="display: flex; gap: 15px;">
-                    <label style="font-weight:normal;">Plätze (Max): <input type="number" id="modalCapacity" style="width: 80px; padding: 5px;"></label>
-                    <label style="font-weight:normal;">Pufferzeit (Min): <input type="number" id="modalBuffer" style="width: 80px; padding: 5px;"></label>
+            <div class="card card-no-shadow">
+                <h3 class="mt-0">Kapazität & Puffer</h3>
+                <div class="gap-15">
+                    <label class="font-normal">Plätze (Max): <input type="number" id="modalCapacity" class="w-80 p-5"></label>
+                    <label class="font-normal">Pufferzeit (Min): <input type="number" id="modalBuffer" class="w-80 p-5"></label>
                 </div>
             </div>
 
-            <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">Buchungszeitraum</h3>
-                <div style="display: flex; gap: 15px;">
-                    <label style="font-weight:normal;">Vorlaufzeit (Stunden): <input type="number" id="modalMinNotice" style="width: 80px; padding: 5px;" title="Wie viele Stunden im Voraus muss mindestens gebucht werden?"></label>
-                    <label style="font-weight:normal;">Max. im Voraus (Tage): <input type="number" id="modalMaxNotice" style="width: 80px; padding: 5px;" title="Wie viele Tage in die Zukunft können Termine maximal gebucht werden?"></label>
+            <div class="card card-no-shadow">
+                <h3 class="mt-0">Buchungszeitraum</h3>
+                <div class="gap-15">
+                    <label class="font-normal">Vorlaufzeit (Stunden): <input type="number" id="modalMinNotice" class="w-80 p-5" title="Wie viele Stunden im Voraus muss mindestens gebucht werden?"></label>
+                    <label class="font-normal">Max. im Voraus (Tage): <input type="number" id="modalMaxNotice" class="w-80 p-5" title="Wie viele Tage in die Zukunft können Termine maximal gebucht werden?"></label>
                 </div>
             </div>
 
-            <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">Stornierungsbedingungen</h3>
-                <div style="display: flex; gap: 15px;">
-                    <label style="font-weight:normal;">Bis wie viele Stunden vor dem Termin darf der Kunde absagen?<br> 
-                    <input type="number" id="modalCancelLimit" style="width: 80px; padding: 5px; margin-top: 5px;" title="Stunden"> Stunden</label>
+            <div class="card card-no-shadow">
+                <h3 class="mt-0">Stornierungsbedingungen</h3>
+                <div class="gap-15">
+                    <label class="font-normal">Bis wie viele Stunden vor dem Termin darf der Kunde absagen?<br> 
+                    <input type="number" id="modalCancelLimit" class="w-80 p-5 mt-5" title="Stunden"> Stunden</label>
                 </div>
             </div>
 
-            <div class="card" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 15px;">
-                <h3 style="margin-top:0;">Buchungszeiten</h3>
-                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" id="useGlobalSchedule" onchange="toggleScheduleOptions()" style="width: auto;">
+            <div class="card card-no-shadow">
+                <h3 class="mt-0">Buchungszeiten</h3>
+                <label class="checkbox-label mb-0">
+                    <input type="checkbox" id="useGlobalSchedule" class="w-auto">
                     <strong>Globale Öffnungszeiten für diese Terminart übernehmen</strong>
                 </label>
-                <div id="customScheduleOptions" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                    <p style="margin-top:0; font-size: 14px; color: #666;">An welchen Tagen findet dieser Termin statt?</p>
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="1"> Mo</label>
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="2"> Di</label>
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="3"> Mi</label>
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="4"> Do</label>
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="5"> Fr</label>
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="6"> Sa</label>
-                        <label style="font-weight:normal; cursor:pointer;"><input type="checkbox" class="day-checkbox" value="0"> So</label>
+                <div id="customScheduleOptions" class="d-none mt-15 pt-15 border-top-dashed">
+                    <p class="mt-0 fs-14 text-muted">An welchen Tagen findet dieser Termin statt?</p>
+                    <div class="gap-10 mb-15 flex-wrap">
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="1"> Mo</label>
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="2"> Di</label>
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="3"> Mi</label>
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="4"> Do</label>
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="5"> Fr</label>
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="6"> Sa</label>
+                        <label class="font-normal cursor-pointer"><input type="checkbox" class="day-checkbox" value="0"> So</label>
                     </div>
-                    <p style="margin-top:0; font-size: 14px; color: #666;">Uhrzeit für diese Tage:</p>
-                    <div style="display: flex; gap: 15px;">
-                        <label style="font-weight:normal;">Startzeit: <input type="time" id="customStartTime"></label>
-                        <label style="font-weight:normal;">Endzeit: <input type="time" id="customEndTime"></label>
+                    <p class="mt-0 fs-14 text-muted">Uhrzeit für diese Tage:</p>
+                    <div class="gap-15">
+                        <label class="font-normal">Startzeit: <input type="time" id="customStartTime"></label>
+                        <label class="font-normal">Endzeit: <input type="time" id="customEndTime"></label>
                     </div>
                 </div>
             </div>
 
-            <div class="card" style="box-shadow: none; border: 1px solid #eee;">
-                <h3 style="margin-top:0;">Kunden-Daten abfragen</h3>
-                <p style="font-size: 13px; color: #666;"><strong>Name</strong> und <strong>E-Mail</strong> sind globale Pflichtfelder und werden immer abgefragt. Hier kannst du optionale oder verpflichtende Zusatzfelder für diese Terminart anlegen (z.B. Telefonnummer, Geburtsdatum).</p>
+            <div class="card card-no-shadow">
+                <h3 class="mt-0">Kunden-Daten abfragen</h3>
+                <p class="fs-13 text-muted"><strong>Name</strong> und <strong>E-Mail</strong> sind globale Pflichtfelder und werden immer abgefragt. Hier kannst du optionale oder verpflichtende Zusatzfelder für diese Terminart anlegen (z.B. Telefonnummer, Geburtsdatum).</p>
                 <div id="customFieldsContainer"></div>
-                <button type="button" class="btn-secondary" onclick="addCustomField()" style="margin-top: 10px;">+ Weiteres Feld hinzufügen</button>
+                <button type="button" class="btn-secondary mt-10" id="btnAddCustomField">+ Weiteres Feld hinzufügen</button>
             </div>
 
-            <button type="button" class="btn-success" onclick="saveEventSettings()">Einstellungen speichern</button>
+            <button type="button" class="btn-success" id="btnSaveEventSettings">Einstellungen speichern</button>
         </div>
     </div>
 
-    <script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
+        // --- CSP EVENT LISTENERS (Keine Inline-Events mehr!) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('updateBtn')?.addEventListener('click', startUpdate);
+            document.getElementById('btn-test-email')?.addEventListener('click', testEmail);
+            document.getElementById('removeLogoBtn')?.addEventListener('click', removeLogo);
+            document.getElementById('btn-reset-color')?.addEventListener('click', () => { document.getElementById('widgetAccentColor').value='#34c759'; });
+            document.getElementById('widgetEventSelect')?.addEventListener('change', updateWidgetLinks);
+            document.getElementById('btn-copy-direct')?.addEventListener('click', () => copyText('directLink'));
+            document.getElementById('btn-copy-iframe')?.addEventListener('click', () => copyText('iframeCode'));
+            document.getElementById('btn-copy-ical')?.addEventListener('click', () => copyText('icalLink'));
+            document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
+            document.getElementById('useGlobalSchedule')?.addEventListener('change', toggleScheduleOptions);
+            document.getElementById('btnAddCustomField')?.addEventListener('click', addCustomField);
+            document.getElementById('btnSaveEventSettings')?.addEventListener('click', saveEventSettings);
+            document.getElementById('bookingFilter')?.addEventListener('change', loadBookings);
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => openTab(e.target.id.replace('btn-', ''))));
+            
+            // Event-Delegation für dynamisch geladene Buttons in den Tabellen
+            document.addEventListener('click', (e) => {
+                if (e.target.matches('[data-action="edit-event"]')) editEvent(e.target.getAttribute('data-id'));
+                if (e.target.matches('[data-action="delete-event"]')) deleteEvent(e.target.getAttribute('data-id'));
+                if (e.target.matches('[data-action="delete-booking"]')) deleteBooking(e.target.getAttribute('data-id'));
+                if (e.target.matches('[data-action="confirm-booking"]')) confirmBooking(e.target.getAttribute('data-id'));
+                if (e.target.matches('[data-action="offer-alternative"]')) offerAlternative(e.target.getAttribute('data-id'));
+                if (e.target.matches('[data-action="select-text"]')) e.target.select();
+                if (e.target.matches('[data-action="remove-field"]')) removeField(e.target.getAttribute('data-index'));
+            });
+            document.addEventListener('change', (e) => {
+                if (e.target.matches('[data-action="update-field"]')) updateField(e.target.getAttribute('data-index'), e.target.getAttribute('data-key'), e.target.type === 'checkbox' ? e.target.checked : e.target.value);
+            });
+        });
+
         // Copy to Clipboard Funktion
         function copyText(elementId) {
             const el = document.getElementById(elementId);
@@ -418,9 +451,9 @@ $csrfToken = initCsrfToken();
 
         // Tab-Steuerung
         function openTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('d-none'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).style.display = 'block';
+            document.getElementById(tabId).classList.remove('d-none');
             document.getElementById('btn-' + tabId).classList.add('active');
         }
         
@@ -460,7 +493,7 @@ $csrfToken = initCsrfToken();
                     if (data.version && isNewerVersion(CURRENT_VERSION, data.version)) {
                         document.getElementById('newVersionNumber').innerText = data.version;
                         latestUpdateUrl = data.update_zip_url || data.zip_url || data.install_zip_url;
-                        document.getElementById('updateBanner').style.display = 'flex';
+                        document.getElementById('updateBanner').classList.remove('d-none');
                     }
                 }).catch(e => console.error('Fehler beim Update-Check (Falsche URL oder Datei nicht erreichbar):', e));
         }
@@ -524,8 +557,8 @@ $csrfToken = initCsrfToken();
                         
                         logoBase64 = canvas.toDataURL('image/png'); // Konvertiert ins PNG Format inkl. Transparenz
                         document.getElementById('logoPreview').src = logoBase64;
-                        document.getElementById('logoPreview').style.display = 'block';
-                        document.getElementById('removeLogoBtn').style.display = 'block';
+                        document.getElementById('logoPreview').classList.remove('d-none');
+                        document.getElementById('removeLogoBtn').classList.remove('d-none');
                         removeLogoFlag = false;
                     };
                     img.src = evt.target.result;
@@ -539,8 +572,8 @@ $csrfToken = initCsrfToken();
             removeLogoFlag = true;
             document.getElementById('companyLogoInput').value = '';
             document.getElementById('logoPreview').src = '';
-            document.getElementById('logoPreview').style.display = 'none';
-            document.getElementById('removeLogoBtn').style.display = 'none';
+            document.getElementById('logoPreview').classList.add('d-none');
+            document.getElementById('removeLogoBtn').classList.add('d-none');
         }
 
         // 1. Einstellungen beim Laden abrufen
@@ -568,13 +601,15 @@ $csrfToken = initCsrfToken();
                 document.getElementById('adminEmail').value = data.admin_email || '';
                 if (data.company_logo) {
                     document.getElementById('logoPreview').src = 'logo.php?t=' + new Date().getTime(); // Lädt direkt aus der Datenbank
-                    document.getElementById('logoPreview').style.display = 'block';
-                    document.getElementById('removeLogoBtn').style.display = 'block';
+                    document.getElementById('logoPreview').classList.remove('d-none');
+                    document.getElementById('removeLogoBtn').classList.remove('d-none');
                 }
                 
                 document.getElementById('enableReviewEmail').checked = data.enable_review_email == 1;
                 document.getElementById('googleReviewLink').value = data.google_review_link || '';
-                document.getElementById('reviewLinkContainer').style.display = data.enable_review_email == 1 ? 'block' : 'none';
+                
+                if (data.enable_review_email == 1) document.getElementById('reviewLinkContainer').classList.remove('d-none');
+                else document.getElementById('reviewLinkContainer').classList.add('d-none');
                 document.getElementById('zapierWebhookUrl').value = data.zapier_webhook_url || '';
                 document.getElementById('themeMode').value = data.theme_mode || 'auto';
                 
@@ -585,7 +620,8 @@ $csrfToken = initCsrfToken();
             });
 
         document.getElementById('enableReviewEmail').addEventListener('change', function() {
-            document.getElementById('reviewLinkContainer').style.display = this.checked ? 'block' : 'none';
+            if (this.checked) document.getElementById('reviewLinkContainer').classList.remove('d-none');
+            else document.getElementById('reviewLinkContainer').classList.add('d-none');
         });
 
         // 2. Einstellungen absenden und speichern
@@ -683,7 +719,7 @@ $csrfToken = initCsrfToken();
                 events.forEach(e => {
                     const safeName = escapeHtml(e.name);
                     const eventLink = `${baseUrl}?event_id=${e.id}`;
-                    tbody.innerHTML += `<tr><td>${safeName}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly onclick="this.select()" style="width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px;" title="Klicken zum Kopieren"></td><td><button class="btn-edit" style="margin-right: 5px;" onclick="editEvent(${e.id})">Einstellen</button><button class="btn-danger" onclick="deleteEvent(${e.id})">Löschen</button></td></tr>`;
+                    tbody.innerHTML += `<tr><td>${safeName}</td><td>${e.duration_minutes} Min.</td><td>${e.max_capacity}</td><td>${e.buffer_minutes} Min.</td><td><input type="text" value="${eventLink}" readonly data-action="select-text" class="readonly-link" title="Klicken zum Kopieren"></td><td><div class="action-cell"><button class="btn-edit mr-5" data-action="edit-event" data-id="${e.id}">Einstellen</button><button class="btn-danger" data-action="delete-event" data-id="${e.id}">Löschen</button></div></td></tr>`;
                     
                     // Dropdown befüllen
                     if (widgetSelect) {
@@ -771,8 +807,14 @@ $csrfToken = initCsrfToken();
                 });
         }
 
-        function closeModal() { document.getElementById('eventSettingsModal').style.display = 'none'; }
-        function toggleScheduleOptions() { document.getElementById('customScheduleOptions').style.display = document.getElementById('useGlobalSchedule').checked ? 'none' : 'block'; }
+        function closeModal() { document.getElementById('eventSettingsModal').style.display = 'none'; } // Inline style override is fine here because it overrides the css .modal class
+        function toggleScheduleOptions() { 
+            if (document.getElementById('useGlobalSchedule').checked) {
+                document.getElementById('customScheduleOptions').classList.add('d-none');
+            } else {
+                document.getElementById('customScheduleOptions').classList.remove('d-none');
+            }
+        }
 
         function renderCustomFields() {
             const container = document.getElementById('customFieldsContainer');
@@ -780,16 +822,16 @@ $csrfToken = initCsrfToken();
             currentCustomFields.forEach((field, index) => {
                 container.innerHTML += `
                     <div class="custom-field-row">
-                        <input type="text" placeholder="Feld-Name (z.B. Telefonnummer)" value="${escapeHtml(field.label)}" onchange="updateField(${index}, 'label', this.value)" required>
-                        <select onchange="updateField(${index}, 'type', this.value)">
+                        <input type="text" placeholder="Feld-Name (z.B. Telefonnummer)" value="${escapeHtml(field.label)}" data-action="update-field" data-index="${index}" data-key="label" required>
+                        <select data-action="update-field" data-index="${index}" data-key="type">
                             <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text (Kurz)</option>
                             <option value="textarea" ${field.type === 'textarea' ? 'selected' : ''}>Text (Lang)</option>
                             <option value="number" ${field.type === 'number' ? 'selected' : ''}>Zahl</option>
                         </select>
-                        <label style="display:flex; align-items:center; margin:0; font-size:13px; font-weight:normal; cursor:pointer;">
-                            <input type="checkbox" ${field.required ? 'checked' : ''} onchange="updateField(${index}, 'required', this.checked)"> Pflichtfeld
+                        <label class="checkbox-label mb-0 fs-13">
+                            <input type="checkbox" ${field.required ? 'checked' : ''} data-action="update-field" data-index="${index}" data-key="required"> Pflichtfeld
                         </label>
-                        <button type="button" class="btn-danger btn-icon" onclick="removeField(${index})">X</button>
+                        <button type="button" class="btn-danger btn-icon" data-action="remove-field" data-index="${index}">X</button>
                     </div>
                 `;
             });
@@ -836,44 +878,44 @@ $csrfToken = initCsrfToken();
                     if (b.custom_data_json) {
                         try {
                             const parsed = JSON.parse(b.custom_data_json);
-                            customDataHtml = Object.entries(parsed).map(([key, val]) => `<div style="margin-bottom:3px;"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(val)}</div>`).join('');
+                            customDataHtml = Object.entries(parsed).map(([key, val]) => `<div class="mb-5"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(val)}</div>`).join('');
                         } catch(e) {}
                     }
                     
-                    let baseStatus = b.status === 'pending' ? '<span style="color: #f59e0b; font-weight: 600;">Ausstehend</span>' : '<span style="color: var(--success); font-weight: 600;">Bestätigt</span>';
+                    let baseStatus = b.status === 'pending' ? '<span class="text-warning font-bold">Ausstehend</span>' : '<span class="text-success font-bold">Bestätigt</span>';
                     let statusText = '';
                     let actionButtons = '';
 
                     if (b.status === 'reschedule_requested') {
-                        baseStatus = '<span style="color: #a855f7; font-weight: 600;">Verschiebung</span>';
+                        baseStatus = '<span class="text-purple font-bold">Verschiebung</span>';
                         statusText = '<br><span class="status-badge status-pending">⏳ Alternativtermin angefragt</span>';
-                        actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Absagen</button></div>`;
+                        actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" data-action="delete-booking" data-id="${b.id}">Absagen</button></div>`;
                     } 
                     else if (b.status === 'rescheduled_by_customer') {
-                        baseStatus = '<span style="color: #f59e0b; font-weight: 600;">Angefragt</span>';
+                        baseStatus = '<span class="text-warning font-bold">Angefragt</span>';
                         statusText = '<br><span class="status-badge status-new-proposal">✉️ Neuer Terminvorschlag!</span>';
                         actionButtons = `
                             <div class="action-cell">
-                                <button class="btn-success btn-icon" onclick="confirmBooking(${b.id})">Bestätigen</button>
-                                <button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Ablehnen</button>
+                                <button class="btn-success btn-icon" data-action="confirm-booking" data-id="${b.id}">Bestätigen</button>
+                                <button class="btn-danger btn-icon" data-action="delete-booking" data-id="${b.id}">Ablehnen</button>
                             </div>`;
                     } 
                     else {
-                        let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" onclick="confirmBooking(${b.id})">Bestätigen</button>` : '';
+                        let confirmBtn = b.status === 'pending' ? `<button class="btn-success btn-icon" data-action="confirm-booking" data-id="${b.id}">Bestätigen</button>` : '';
                         if (isPast) {
-                            actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Löschen</button></div>`;
-                            baseStatus = '<span style="color: var(--text-muted); font-weight: 600;">Abgeschlossen</span>';
+                            actionButtons = `<div class="action-cell"><button class="btn-danger btn-icon" data-action="delete-booking" data-id="${b.id}">Löschen</button></div>`;
+                            baseStatus = '<span class="text-muted font-bold">Abgeschlossen</span>';
                         } else {
                             actionButtons = `
                                 <div class="action-cell">
                                     ${confirmBtn}
-                                    <button class="btn-edit btn-icon" onclick="offerAlternative(${b.id})">Verschieben</button>
-                                    <button class="btn-danger btn-icon" onclick="deleteBooking(${b.id})">Stornieren</button>
+                                    <button class="btn-edit btn-icon" data-action="offer-alternative" data-id="${b.id}">Verschieben</button>
+                                    <button class="btn-danger btn-icon" data-action="delete-booking" data-id="${b.id}">Stornieren</button>
                                 </div>`;
                         }
                     }
 
-                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${safeEvent}</td><td>${safeCustomer}<br><a href="mailto:${safeEmail}" style="font-size: 12px; color: var(--accent);">${safeEmail}</a></td><td>${baseStatus}${statusText}</td><td style="font-size: 13px;">${customDataHtml}</td><td>${actionButtons}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>${dateString} Uhr</td><td>${safeEvent}</td><td>${safeCustomer}<br><a href="mailto:${safeEmail}" class="text-accent fs-12">${safeEmail}</a></td><td>${baseStatus}${statusText}</td><td class="fs-13">${customDataHtml}</td><td>${actionButtons}</td></tr>`;
                 });
             });
         }

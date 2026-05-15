@@ -34,6 +34,21 @@ if (empty($data['zip_url'])) {
 $zipUrl = $data['zip_url'];
 $tempZipPath = __DIR__ . '/temp_update.zip';
 
+// --- SICHERHEITS-FIX: RCE via bösartiger ZIP-URL verhindern ---
+$parsedUrl = parse_url($zipUrl);
+$allowedHosts = ['planago.de', 'www.planago.de'];
+
+if (!$parsedUrl || !isset($parsedUrl['scheme']) || !isset($parsedUrl['host'])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Ungültige Update-URL.']);
+    exit;
+}
+if (strtolower($parsedUrl['scheme']) !== 'https' || !in_array(strtolower($parsedUrl['host']), $allowedHosts)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Updates sind aus Sicherheitsgründen nur über vertrauenswürdige Planago-Server erlaubt.']);
+    exit;
+}
+
 // 3. ZIP-Datei sicher vom Agentur-Server herunterladen (mit Lizenzschlüssel)
 $options = [
     'http' => [
