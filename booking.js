@@ -10,6 +10,10 @@ const now = new Date();
 const minAllowedDate = new Date(now.getTime() + (noticeMinHours * 60 * 60 * 1000));
 const maxAllowedDate = new Date(now.getTime() + (noticeMaxDays * 24 * 60 * 60 * 1000));
 
+if (typeof flatpickr === 'undefined') {
+    alert("Kritischer Fehler: Der Kalender konnte nicht geladen werden! Die lokalen Flatpickr-Dateien fehlen vermutlich. Bitte lade die Seite neu oder installiere das Update erneut.");
+} else {
+
 // Flatpickr initialisieren
 flatpickr("#datePicker", {
     locale: "de", // Auf Deutsch stellen
@@ -67,6 +71,7 @@ flatpickr("#datePicker", {
             });
     }
 });
+}
 
 // Wenn jemand auf "Buchen" klickt: Schicke die Daten an unser Backend
 document.getElementById('bookingForm').addEventListener('submit', function(e) {

@@ -80,9 +80,9 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
 
     <!-- Flatpickr CSS & Deutsche Sprache laden -->
-    <link id="flatpickr-theme" rel="stylesheet" href="assets/flatpickr/flatpickr.min.css">
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js"></script>
-    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js"></script>
+    <link id="flatpickr-theme" rel="stylesheet" href="assets/flatpickr/flatpickr.min.css?v=2">
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js?v=2"></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js?v=2"></script>
 
     <!-- Planago "Apple Vibe" Stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
