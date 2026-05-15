@@ -1,4 +1,4 @@
-# Python Cache
+# Python Cache (Kann bleiben, stört nicht)
 __pycache__/
 *.py[cod]
 
@@ -6,8 +6,10 @@ __pycache__/
 .venv/
 venv/
 
-# Datenbanken (Wir wollen keine echten Kundendaten auf GitHub hochladen!)
+# Datenbanken & Sicherheit
 *.db
 instance/
+.env
 
+# Build-Dateien
 *.zip
