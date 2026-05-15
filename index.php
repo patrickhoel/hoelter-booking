@@ -154,47 +154,53 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
         /* Erzwungener Light Mode */
         :root, body, html {
             color-scheme: light !important;
-            --bg-color: #ffffff !important;
-            --surface-color: #ffffff !important;
+            --bg-body: transparent !important;
+            --card-bg: #ffffff !important;
             --text-main: #1d1d1f !important;
             --text-muted: #86868b !important;
-            --border-color: #e5e5ea !important;
+            --border: #e5e5ea !important;
             --input-bg: #f5f5f7 !important;
+            --slot-bg: #ffffff !important;
+            --slot-hover: #f2fbf4 !important;
         }
-        body { background-color: var(--bg-color); color: var(--text-main); }
         <?php elseif ($themeMode === 'dark'): ?>
         /* Erzwungener Dark Mode */
         :root, body, html {
             color-scheme: dark !important;
-            --bg-color: #000000 !important;
-            --surface-color: #1c1c1e !important;
+            --bg-body: transparent !important;
+            --card-bg: #1c1c1e !important;
             --text-main: #f5f5f7 !important;
             --text-muted: #a1a1a6 !important;
-            --border-color: #38383a !important;
+            --border: #38383a !important;
             --input-bg: #1c1c1e !important; /* Etwas dunkler als Surface für Inputs */
+            --slot-bg: #1c1c1e !important;
+            --slot-hover: #2c2c2e !important;
         }
-        body { background-color: var(--bg-color); color: var(--text-main); }
         <?php endif; ?>
         
         <?php if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE): ?>
         /* --- DEMO MODE THEME OVERRIDES --- */
         :root[data-theme="light"], body[data-theme="light"], html[data-theme="light"] {
             color-scheme: light !important;
-            --bg-color: #ffffff !important;
-            --surface-color: #ffffff !important;
+            --bg-body: transparent !important;
+            --card-bg: #ffffff !important;
             --text-main: #1d1d1f !important;
             --text-muted: #86868b !important;
-            --border-color: #e5e5ea !important;
+            --border: #e5e5ea !important;
             --input-bg: #f5f5f7 !important;
+            --slot-bg: #ffffff !important;
+            --slot-hover: #f2fbf4 !important;
         }
         :root[data-theme="dark"], body[data-theme="dark"], html[data-theme="dark"] {
             color-scheme: dark !important;
-            --bg-color: #000000 !important;
-            --surface-color: #1c1c1e !important;
+            --bg-body: transparent !important;
+            --card-bg: #1c1c1e !important;
             --text-main: #f5f5f7 !important;
             --text-muted: #a1a1a6 !important;
-            --border-color: #38383a !important;
+            --border: #38383a !important;
             --input-bg: #1c1c1e !important;
+            --slot-bg: #1c1c1e !important;
+            --slot-hover: #2c2c2e !important;
         }
         <?php endif; ?>
 

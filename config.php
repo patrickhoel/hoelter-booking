@@ -32,8 +32,8 @@ $currentScript = basename($_SERVER['SCRIPT_NAME']);
 $strictPages = ['index.php', 'admin.php', 'login.php', 'anleitung.php'];
 
 if (in_array($currentScript, $strictPages)) {
-    // Strikte CSP (Maximaler XSS-Schutz - verbietet Inline-Scripts und Inline-Styles komplett)
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-" . CSP_NONCE . "' https://cdn.jsdelivr.net https://npmcdn.com; style-src 'self' 'nonce-" . CSP_NONCE . "' https://fonts.googleapis.com https://cdn.jsdelivr.net https://npmcdn.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://planago.de; frame-src 'self';");
+    // Strikte CSP (Erlaubt Inline-Styles für UI-Bibliotheken wie Flatpickr, verbietet aber Inline-Scripts strikt)
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-" . CSP_NONCE . "' https://cdn.jsdelivr.net https://npmcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://npmcdn.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://planago.de; frame-src 'self';");
 } else {
     // Fallback für Install-Bereich: Erlaubt Inlines vorübergehend, damit das Setup-Design funktioniert
     header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://npmcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://npmcdn.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://planago.de; frame-src 'self';");
