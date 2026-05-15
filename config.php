@@ -42,6 +42,8 @@ if (in_array($currentScript, $strictPages)) {
 // --- LIZENZSCHLÜSSEL (aus Umgebungsvariablen/Datei) ---
 $licenseKey = getenv('PLANAGO_LICENSE_KEY');
 $demoMode = false;
+$appSecret = getenv('PLANAGO_APP_SECRET');
+
 if (empty($licenseKey) && file_exists(__DIR__ . '/.env')) {
     $envContent = file_get_contents(__DIR__ . '/.env');
     if (preg_match('/PLANAGO_LICENSE_KEY\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
@@ -50,14 +52,27 @@ if (empty($licenseKey) && file_exists(__DIR__ . '/.env')) {
     if (preg_match('/PLANAGO_DEMO_MODE\s*=\s*true/i', $envContent)) {
         $demoMode = true;
     }
+    if (preg_match('/PLANAGO_APP_SECRET\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
+        $appSecret = trim($matches[1]);
+    }
 }
+
+// Automatisches Generieren des APP_SECRETs für bestehende Installationen
+if (empty($appSecret)) {
+    $appSecret = bin2hex(random_bytes(32));
+    $envAppend = "\nPLANAGO_APP_SECRET=" . $appSecret . "\n";
+    @file_put_contents(__DIR__ . '/.env', $envAppend, FILE_APPEND);
+    @chmod(__DIR__ . '/.env', 0600);
+}
+
 define('PLANAGO_LICENSE_KEY', $licenseKey ?: 'demo-key');
 define('PLANAGO_DEMO_MODE', $demoMode);
+define('PLANAGO_APP_SECRET', $appSecret);
 
 // --- SECRET ENCRYPTION ---
 function encryptSecret($plainText) {
     if (empty($plainText)) return '';
-    $key = hash('sha256', PLANAGO_LICENSE_KEY, true);
+    $key = hash('sha256', PLANAGO_APP_SECRET, true);
     $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
     $encrypted = openssl_encrypt($plainText, 'aes-256-cbc', $key, 0, $iv);
     return base64_encode($iv . '::' . $encrypted);
@@ -67,9 +82,16 @@ function decryptSecret($encodedText) {
     if (empty($encodedText)) return '';
     $parts = explode('::', base64_decode($encodedText), 2);
     if (count($parts) !== 2) return $encodedText; // Fallback für alte Klartext-Passwörter
-    $key = hash('sha256', PLANAGO_LICENSE_KEY, true);
+    
+    // 1. Zuerst mit dem neuen, sicheren APP_SECRET versuchen
+    $key = hash('sha256', PLANAGO_APP_SECRET, true);
     $decrypted = openssl_decrypt($parts[1], 'aes-256-cbc', $key, 0, $parts[0]);
-    return $decrypted !== false ? $decrypted : $encodedText;
+    if ($decrypted !== false) return $decrypted;
+    
+    // 2. Fallback: Mit dem alten Lizenzschlüssel versuchen (Migration für bestehende Systeme)
+    $oldKey = hash('sha256', PLANAGO_LICENSE_KEY, true);
+    $oldDecrypted = openssl_decrypt($parts[1], 'aes-256-cbc', $oldKey, 0, $parts[0]);
+    return $oldDecrypted !== false ? $oldDecrypted : $encodedText;
 }
 
 // --- ZEITZONEN-SICHERHEIT ---
