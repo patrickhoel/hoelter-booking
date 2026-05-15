@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.2.4'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.2.6'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -266,8 +266,15 @@ function sendSystemMail($to, $subject, $body, $icsData = null) {
                 $mimeInfo = substr($base64, 5, $commaPos - 5);
                 $mime = str_replace(';base64', '', $mimeInfo);
                 
-                $mail->addStringEmbeddedImage($imgData, 'company_logo', 'logo.png', 'base64', $mime);
-                $body = preg_replace('/src=[\'"]([^\'"]*logo\.php[^\'"]*)[\'"]/', 'src="cid:company_logo"', $body);
+                // Dateiendung dynamisch ermitteln (Gmail/Outlook blockieren Bilder, wenn MIME-Type & Endung nicht passen)
+                $ext = 'png';
+                if (preg_match('#image/([a-z0-9]+)#i', $mime, $m)) {
+                    $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+                }
+                $cid = 'logo_' . uniqid();
+                
+                $mail->addStringEmbeddedImage($imgData, $cid, 'logo.' . $ext, PHPMailer::ENCODING_BASE64, $mime);
+                $body = preg_replace('/src=[\'"]([^\'"]*logo\.php[^\'"]*)[\'"]/i', 'src="cid:' . $cid . '"', $body);
             }
         }
 
