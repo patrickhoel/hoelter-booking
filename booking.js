@@ -31,12 +31,12 @@ flatpickr("#datePicker", {
                 document.getElementById('userDetailsForm').style.display = 'none'; // Formular ausblenden
                 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: red; grid-column: span 3;">${data.error}</p>`;
+                    container.innerHTML = `<p class="error-text">${data.error}</p>`;
                     return;
                 }
 
                 if (data.available_slots.length === 0) {
-                    container.innerHTML = '<p style="color: red; grid-column: span 3;">Keine freien Termine an diesem Tag.</p>';
+                    container.innerHTML = '<p class="error-text">Keine freien Termine an diesem Tag.</p>';
                     return;
                 }
                 

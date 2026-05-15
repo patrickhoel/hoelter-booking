@@ -155,23 +155,31 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
         /* Passt den Glow-Schatten dynamisch an (Hex-Farbe + Transparenzwert) */
         .slot.selected { box-shadow: 0 4px 12px <?= htmlspecialchars($accentColor) ?>4D !important; }
         button[type="submit"]:hover { box-shadow: 0 4px 12px <?= htmlspecialchars($accentColor) ?>33 !important; filter: brightness(0.95); }
+        
+        /* CSP-sichere Helfer-Klassen */
+        .text-center { text-align: center; }
+        .mb-20 { margin-bottom: 20px; }
+        .company-logo { max-height: 80px; max-width: 100%; border-radius: 8px; }
+        .sr-only { position: absolute; left: -9999px; }
+        .link-accent { color: var(--accent); text-decoration: none; }
+        .error-text { color: red; grid-column: 1 / -1; margin: 0; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <?php if (!empty($companyLogo)): ?>
-            <div style="text-align: center; margin-bottom: 20px;">
-                <img src="logo.php" alt="<?= htmlspecialchars($companyName) ?>" style="max-height: 80px; max-width: 100%; border-radius: 8px;">
+            <div class="text-center mb-20">
+                <img src="logo.php" alt="<?= htmlspecialchars($companyName) ?>" class="company-logo">
             </div>
         <?php endif; ?>
 
         <?php if ($isRescheduleMode): ?>
-            <h2 style="text-align: center;">Neuen Termin wählen</h2>
-            <p style="text-align: center; margin-bottom: 20px;">Bitte wähle einen neuen Termin für <strong><?= htmlspecialchars($event['name']) ?></strong>.</p>
+            <h2 class="text-center">Neuen Termin wählen</h2>
+            <p class="text-center mb-20">Bitte wähle einen neuen Termin für <strong><?= htmlspecialchars($event['name']) ?></strong>.</p>
         <?php else: ?>
-            <h2 style="text-align: center;"><?= htmlspecialchars($event['name']) ?></h2>
-            <p style="text-align: center; margin-bottom: 20px;">Dauer: <?= $event['duration_minutes'] ?> Minuten</p>
+            <h2 class="text-center"><?= htmlspecialchars($event['name']) ?></h2>
+            <p class="text-center mb-20">Dauer: <?= $event['duration_minutes'] ?> Minuten</p>
         <?php endif; ?>
         
         <form id="bookingForm">
@@ -198,7 +206,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             <!-- Dieser Teil wird erst nach Auswahl eines Slots sichtbar -->
             <div id="userDetailsForm" class="booking-form">
                 <!-- Honeypot-Feld gegen Spam-Bots (für normale Nutzer unsichtbar) -->
-                <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                <div class="sr-only" aria-hidden="true">
                     <label for="fax_number_hp">Faxnummer</label>
                     <input type="text" id="fax_number_hp" tabindex="-1" autocomplete="off">
                 </div>
@@ -229,9 +237,9 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
                     <input type="checkbox" id="privacyConsent" name="privacyConsent" required>
                     <label for="privacyConsent" class="privacy-consent-label">
                         <?php if (!empty($agbLink)): ?>
-                            Ich habe die <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">AGB</a> und die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
+                            Ich habe die <a href="<?= htmlspecialchars($agbLink) ?>" target="_blank" class="link-accent">AGB</a> und die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" class="link-accent">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
                         <?php else: ?>
-                            Ich habe die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" style="color: var(--accent); text-decoration: none;">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
+                            Ich habe die <a href="<?= htmlspecialchars($privacyLink) ?>" target="_blank" class="link-accent">Datenschutzerklärung</a> zur Kenntnis genommen und stimme der Verarbeitung meiner Daten für die Terminbuchung zu.
                         <?php endif; ?>
                     </label>
                 </div>
