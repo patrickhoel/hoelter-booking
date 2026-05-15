@@ -675,7 +675,7 @@ $csrfToken = initCsrfToken();
         });
 
         function testEmail() {
-            const btn = document.querySelector('button[onclick="testEmail()"]');
+            const btn = document.getElementById('btn-test-email');
             btn.innerText = "Wird gesendet...";
             btn.disabled = true;
 

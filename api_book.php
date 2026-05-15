@@ -141,7 +141,7 @@ try {
     $footerAgb = htmlspecialchars($agbLink ?: '#');
     
     $agbHtml = !empty($agbLink) ? "<a href='$footerAgb' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>AGB</a>" : "";
-    $logoHtml = !empty($companyLogo) ? "<img src='" . $baseUrl . "/logo.php' alt='$footerName' style='max-height: 40px; margin-bottom: 10px;'><br>" : "";
+    $logoHtml = !empty($companyLogo) ? "<img src='" . $baseUrl . "/logo.php?v=" . md5($companyLogo) . "' alt='$footerName' style='max-height: 40px; margin-bottom: 10px;'><br>" : "";
 
     $emailFooter = "
         <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5ea; text-align: center; color: #86868b; font-size: 11px; line-height: 1.6;'>

@@ -170,7 +170,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
     <div class="container">
         <?php if (!empty($companyLogo)): ?>
             <div class="text-center mb-20">
-                <img src="logo.php" alt="<?= htmlspecialchars($companyName) ?>" class="company-logo">
+                <img src="logo.php?v=<?= md5($companyLogo) ?>" alt="<?= htmlspecialchars($companyName) ?>" class="company-logo">
             </div>
         <?php endif; ?>
 
