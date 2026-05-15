@@ -58,7 +58,7 @@ try {
         $mail->Password   = $pass;
         $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = $port;
-        $mail->Timeout    = 5; // Für den dedizierten Test geben wir ihm etwas mehr Zeit (5 Sek)
+        $mail->Timeout    = 20; // Großzügiges Timeout für den Test bei blockierenden Firewalls
     } else {
         $mail->isMail();
     }
