@@ -326,7 +326,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
         </div>
         
         <br><br>
-        <span class="powered-by">Powered by <strong>Planago</strong></span>
+        <span class="powered-by">Powered by <a href="https://planago.de" target="_blank" style="color: inherit; text-decoration: none;"><strong>Planago</strong></a></span>
     </footer>
 
     <!-- Cache-Buster im Script-Tag erzwingt das Neuladen der booking.js -->

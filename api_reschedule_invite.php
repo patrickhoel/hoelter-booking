@@ -60,7 +60,7 @@ if ($bookingId) {
                 <a href='$footerImpressum' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>Impressum</a>
                 <a href='$footerPrivacy' style='color: #86868b; text-decoration: underline;'>Datenschutz</a>
                 <br><br>
-                <span style='color: #d2d2d7;'>Powered by <strong>Planago</strong></span>
+                <span style='color: #d2d2d7;'>Powered by <a href='https://planago.de' target='_blank' style='color: inherit; text-decoration: none;'><strong>Planago</strong></a></span>
             </div>
         </div>";
 

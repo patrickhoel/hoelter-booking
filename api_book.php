@@ -152,7 +152,7 @@ try {
             <a href='$footerImpressum' style='color: #86868b; text-decoration: underline; margin-right: 15px;'>Impressum</a>
             <a href='$footerPrivacy' style='color: #86868b; text-decoration: underline;'>Datenschutz</a>
             <br><br>
-            <span style='color: #d2d2d7;'>Powered by <strong>Planago</strong></span>
+            <span style='color: #d2d2d7;'>Powered by <a href='https://planago.de' target='_blank' style='color: inherit; text-decoration: none;'><strong>Planago</strong></a></span>
         </div>
     </div>";
     
@@ -230,8 +230,28 @@ try {
 
         // 4. Admin über die erfolgreiche Verschiebung informieren
         if (!empty($adminEmail)) {
+            $statusHtml = $require_manual ? "<span style='color: #ff9500;'>Ausstehend (Muss bestätigt werden)</span>" : "<span style='color: #34c759;'>Automatisch bestätigt</span>";
             $adminSubj = "Kunde hat Termin verschoben: $eventName am " . $startTime->format('d.m. H:i');
-            $adminBody = "Ein Kunde hat auf deine Verschiebungs-Anfrage reagiert und einen neuen Termin gewählt.<br><strong>Neuer Zeitpunkt:</strong> $formattedDateStr um $formattedTimeStr Uhr.<br><strong>Status:</strong> " . ($require_manual ? "Ausstehend (Muss im Dashboard bestätigt werden - Status: 'Neuer Terminvorschlag')" : "Automatisch bestätigt.");
+            $adminBody = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Termin verschoben</h1>
+                    <p style='color: #86868b; font-size: 16px;'>Ein Kunde hat auf deine Verschiebungs-Anfrage reagiert.</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Kunde</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$name <br><a href='mailto:$email' style='color: #34c759; font-size: 14px; text-decoration: none;'>$email</a></td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Neuer Zeitpunkt</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$formattedDateStr um $formattedTimeStr Uhr</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Status</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$statusHtml</td></tr>
+                    </table>
+                </div>
+                <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                    <a href='$baseUrl/admin.php' style='display: inline-block; background-color: #007aff; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Zum Admin-Dashboard</a>
+                </div>
+            " . $emailFooter;
             sendSystemMail($adminEmail, $adminSubj, $adminBody);
         }
 
@@ -320,8 +340,30 @@ try {
 
         // 6. Benachrichtigung an Admin
         if (!empty($adminEmail)) {
+            $statusHtml = $require_manual ? "<span style='color: #ff9500;'>Ausstehend (Muss bestätigt werden)</span>" : "<span style='color: #34c759;'>Automatisch bestätigt</span>";
             $adminSubj = "Neue Buchung: $eventName am " . $startTime->format('d.m. H:i');
-            $adminBody = "<h2>Neue Termin-Aktivität</h2><p><strong>Kunde:</strong> $name ($email)</p><p><strong>Terminart:</strong> $eventName</p><p><strong>Zeitpunkt:</strong> $formattedDate</p><p><strong>Status:</strong> " . ($require_manual ? 'Ausstehend (Muss im Dashboard bestätigt werden)' : 'Automatisch bestätigt') . "</p>";
+            $adminBody = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);'>
+                <div style='text-align: center; margin-bottom: 25px;'>
+                    <h1 style='color: #1d1d1f; font-size: 24px; margin-bottom: 5px;'>Neue Termin-Aktivität</h1>
+                    <p style='color: #86868b; font-size: 16px;'>Ein neuer Termin wurde " . ($require_manual ? 'angefragt' : 'gebucht') . ".</p>
+                </div>
+                <div style='background-color: #f5f5f7; padding: 20px; border-radius: 14px; margin-bottom: 25px;'>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Kunde</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$name <br><a href='mailto:$email' style='color: #34c759; font-size: 14px; text-decoration: none;'>$email</a></td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Was</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$eventName</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Wann</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px; padding-bottom: 15px;'>$formattedDate</td></tr>
+                        <tr><td style='color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px;'>Status</td></tr>
+                        <tr><td style='color: #1d1d1f; font-weight: 600; font-size: 17px;'>$statusHtml</td></tr>
+                    </table>
+                </div>
+                <div style='text-align: center; border-top: 1px solid #d2d2d7; padding-top: 25px;'>
+                    <a href='$baseUrl/admin.php' style='display: inline-block; background-color: #007aff; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; font-size: 14px;'>Zum Admin-Dashboard</a>
+                </div>
+            " . $emailFooter;
             sendSystemMail($adminEmail, $adminSubj, $adminBody);
         }
 

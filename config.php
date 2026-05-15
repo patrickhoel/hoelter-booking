@@ -152,7 +152,7 @@ function generateIcsData($eventName, $startTimeObj, $durationMinutes) {
     $ics .= "VERSION:2.0\r\n";
     $ics .= "PRODID:-//Planago//Planago Booking//DE\r\n";
     $ics .= "CALSCALE:GREGORIAN\r\n";
-    $ics .= "METHOD:REQUEST\r\n"; // Wichtig, damit Mail-Programme es als Einladung erkennen
+    $ics .= "METHOD:PUBLISH\r\n"; // PUBLISH verhindert, dass Gmail die Mail wegen fehlendem Organizer blockiert
     $ics .= "BEGIN:VEVENT\r\n";
     $ics .= "DTSTAMP:{$now}\r\n";
     $ics .= "DTSTART:{$dtStart}\r\n";
