@@ -38,6 +38,8 @@ function addFilesToZip($zip, $files, $directories) {
             // Sichert auch hier ab, dass immer Vorwärts-Slashes genutzt werden
             $zipName = ltrim(str_replace(['\\', '/'], '/', $file), '/');
             $zip->addFile($file, $zipName);
+        } else {
+            die("<p style='color:red; font-size: 16px;'><strong>🛑 Kritischer Fehler beim Build:</strong> Die Datei <code>{$file}</code> fehlt in deinem Entwicklungsordner!<br><br>Hast du die Installation lokal getestet und die Dateien haben sich am Ende selbst gelöscht? Bitte stelle sie wieder her, bevor du ein Release baust.</p></div>");
         }
     }
     
