@@ -83,7 +83,7 @@ if ($updateZip->open($updateZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)
 $installZipPath = $releaseDir . $installFileName;
 $installZip = new ZipArchive();
 if ($installZip->open($installZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-    addFilesToZip($installZip, array_merge($baseFiles, ['install.php', 'setup.php']), $directories);
+    addFilesToZip($installZip, array_merge($baseFiles, ['install.php']), $directories);
     $installZip->close();
     echo "<p>✅ Kunden-Installations-ZIP erstellt: <strong>{$installFileName}</strong> (Gespeichert in 3_software_releases)</p>";
 }
