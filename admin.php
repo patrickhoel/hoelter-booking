@@ -30,6 +30,18 @@ $csrfToken = initCsrfToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planago - Admin Panel</title>
     <link rel="stylesheet" href="assets/admin_style.css">
+    <style nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
+        /* Verhindert den horizontalen Scrollbalken bei schmalen iFrames/Handys */
+        .tabs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            overflow-x: hidden !important;
+        }
+        .tabs-container .tab-btn {
+            flex: 1 1 auto;
+        }
+    </style>
     <?php if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE): ?>
     <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         function syncDemoTheme() {
