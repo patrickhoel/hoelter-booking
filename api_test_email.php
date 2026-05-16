@@ -22,6 +22,11 @@ if (!validateCsrfToken($clientToken)) {
     exit;
 }
 
+if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE) {
+    echo json_encode(['message' => 'Im Demo-Modus ist diese Funktion simuliert. Die Einstellungen sind korrekt!']);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 
 $host = $data['smtp_host'] ?? '';

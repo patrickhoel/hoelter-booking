@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($error): ?>
             <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
-        <form method="POST">
+        <form method="POST" autocomplete="off">
             <?php $isDemo = defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE; ?>
             <input type="text" name="username" placeholder="Benutzername..." required <?= $isDemo ? 'value="admin" readonly' : 'autofocus' ?>>
             <input type="password" name="password" placeholder="Passwort..." required <?= $isDemo ? 'value="Admin1234567" readonly' : '' ?>>

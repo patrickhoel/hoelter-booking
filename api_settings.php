@@ -132,6 +132,20 @@ try {
         if (!empty($settings['smtp_pass'])) {
             $settings['smtp_pass'] = '********';
         }
+        
+        // Den Passwort-Hash aus Sicherheitsgründen niemals an das Frontend senden!
+        unset($settings['admin_password_hash']);
+        
+        // --- DEMO-MODUS SCHUTZ ---
+        // Verhindert, dass echte E-Mail-Adressen und Serverdaten im öffentlichen Demo-Modus ausgelesen werden können
+        if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE) {
+            $settings['smtp_host'] = 'smtp.beispiel.de';
+            $settings['smtp_user'] = 'info@beispiel.de';
+            $settings['smtp_from'] = 'info@beispiel.de';
+            $settings['admin_email'] = 'admin@beispiel.de';
+            $settings['admin_username'] = 'admin';
+            $settings['zapier_webhook_url'] = '';
+        }
 
         // Kalender-Token generieren, falls dieser noch fehlt (z.B. nach einem Update)
         if (empty($settings['calendar_sync_token'])) {

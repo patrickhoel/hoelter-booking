@@ -76,58 +76,45 @@ $csrfToken = initCsrfToken();
         <div class="tabs tabs-container">
             <button class="tab-btn active" id="btn-tab-bookings">Buchungen</button>
             <button class="tab-btn" id="btn-tab-events">Terminarten</button>
-            <button class="tab-btn" id="btn-tab-process">Buchungsprozess</button>
+            <button class="tab-btn" id="btn-tab-process">Zeiten & Prozess</button>
+            <button class="tab-btn" id="btn-tab-company">Profil & Design</button>
+            <button class="tab-btn" id="btn-tab-integration">Integrationen & Automatisierung</button>
             <button class="tab-btn" id="btn-tab-email">E-Mail & SMTP</button>
-            <button class="tab-btn" id="btn-tab-company">Unternehmensprofil</button>
-            <button class="tab-btn" id="btn-tab-integration">Widget & Kalender</button>
         </div>
         
-        <!-- Ein gemeinsames Formular umfasst nun beide Einstellungs-Tabs -->
-        <form id="settingsForm">
+        <!-- Ein gemeinsames Formular umfasst nun alle Einstellungs-Tabs -->
+        <form id="settingsForm" autocomplete="off">
             
-            <!-- E-MAIL TAB -->
-            <div id="tab-email" class="tab-content d-none">
+            <!-- ZEITEN & PROZESS TAB -->
+            <div id="tab-process" class="tab-content d-none">
                 <div class="card">
-                    <h2>E-Mail & SMTP</h2>
+                    <h2>Reguläre Arbeitszeiten</h2>
+                    <p class="text-muted mt-0">Wann bist du grundsätzlich für Termine verfügbar?</p>
                     <div class="settings-group">
                         <div class="form-group">
-                            <label>SMTP Host</label>
-                            <input type="text" id="smtpHost" placeholder="smtp.deinedomain.de">
+                            <label for="startTime">Startzeit</label>
+                            <input type="time" id="startTime" required>
                         </div>
                         <div class="form-group">
-                            <label>SMTP Port</label>
-                            <input type="text" id="smtpPort" placeholder="587">
-                        </div>
-                        <div class="form-group">
-                            <label>Benutzername</label>
-                            <input type="text" id="smtpUser">
-                        </div>
-                        <div class="form-group">
-                            <label>Passwort</label>
-                            <input type="password" id="smtpPass">
-                        </div>
-                        <div class="form-group">
-                            <label>Absender Name</label>
-                            <input type="text" id="smtpFromName" placeholder="Z.B. Planago Booking">
-                        </div>
-                        <div class="form-group">
-                            <label>Absender E-Mail</label>
-                            <input type="email" id="smtpFromEmail" placeholder="info@deinedomain.de">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Admin E-Mail (Benachrichtigung bei neuen Buchungen)</label>
-                            <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
+                            <label for="endTime">Endzeit</label>
+                            <input type="time" id="endTime" required>
                         </div>
                     </div>
-                    <div class="gap-10 mt-20">
-                        <button type="submit" class="btn-success mt-0 w-auto">Einstellungen speichern</button>
-                        <button type="button" class="btn-secondary mt-0 w-auto" id="btn-test-email">Test-E-Mail senden</button>
-                    </div>
-                    <div class="settingsMessage settings-msg"></div>
                 </div>
+
+                <div class="card">
+                    <h2>Buchungs-Ablauf</h2>
+                    <label class="checkbox-label mb-0">
+                        <input type="checkbox" id="requireManualConf" class="w-auto">
+                        <strong>Zwei-Wege-Bestätigung (Manuelle Bestätigung durch Admin erforderlich)</strong>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-success mt-20 w-auto">Zeiten & Prozess speichern</button>
+                <div class="settingsMessage settings-msg"></div>
             </div>
 
-            <!-- UNTERNEHMENS-TAB -->
+            <!-- PROFIL & DESIGN TAB -->
             <div id="tab-company" class="tab-content d-none">
                 <div class="card">
                     <h2>Unternehmensdaten</h2>
@@ -156,6 +143,12 @@ $csrfToken = initCsrfToken();
                             <label>Link zu den AGB (Optional)</label>
                             <input type="text" id="companyLinkAgb" placeholder="https://...">
                         </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Design & Branding</h2>
+                    <div class="settings-group">
                         <div class="form-group full-width">
                             <label>Unternehmens-Logo</label>
                             <div class="gap-15 align-center">
@@ -163,7 +156,7 @@ $csrfToken = initCsrfToken();
                                 <input type="file" id="companyLogoInput" accept="image/*" class="w-auto">
                                 <button type="button" class="btn-danger btn-icon d-none w-auto" id="removeLogoBtn" style="height: 38px; padding: 0 15px;">Löschen</button>
                             </div>
-                            <p class="fs-12 text-muted mt-5">Wird im Widget und in den E-Mails angezeigt.</p>
+                            <p class="fs-12 text-muted mt-5">Wird im Kunden-Widget und in den E-Mails angezeigt.</p>
                         </div>
                         <div class="form-group">
                             <label>Akzentfarbe (Kunden-Widget)</label>
@@ -180,18 +173,6 @@ $csrfToken = initCsrfToken();
                                 <option value="dark">Immer Dunkel (Empfohlen für dunkle Websites)</option>
                             </select>
                         </div>
-                        <div class="form-group full-width mt-15 pt-15 border-top">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="enableReviewEmail" class="w-auto">
-                                <strong>Automatische Google-Bewertungs-E-Mail aktivieren</strong>
-                            </label>
-                            <p class="fs-12 text-muted mt-0 mb-15">Sendet deinen Kunden 24 Stunden nach ihrem abgeschlossenen Termin automatisch eine freundliche E-Mail mit der Bitte um eine Bewertung.</p>
-                            
-                            <div id="reviewLinkContainer" class="d-none">
-                                <label>Dein Google Bewertungs-Link (Kurz-URL)</label>
-                                <input type="text" id="googleReviewLink" placeholder="https://g.page/r/...">
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -204,93 +185,132 @@ $csrfToken = initCsrfToken();
                         </div>
                         <div class="form-group">
                             <label>Neues Passwort (leer lassen, um es beizubehalten)</label>
-                            <input type="password" id="adminNewPassword" placeholder="***">
+                            <input type="password" id="adminNewPassword" placeholder="***" autocomplete="new-password">
                             <p class="fs-12 text-muted mt-5">Mindestens 12 Zeichen, inkl. Groß-, Kleinbuchstaben und Zahlen.</p>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-success mt-20 w-auto">Unternehmensprofil speichern</button>
+                <button type="submit" class="btn-success mt-20 w-auto">Profil & Design speichern</button>
                 <div class="settingsMessage settings-msg"></div>
             </div>
 
-            <!-- BUCHUNGSPROZESS TAB -->
-            <div id="tab-process" class="tab-content d-none">
+            <!-- INTEGRATIONEN & AUTOMATISIERUNG TAB -->
+            <div id="tab-integration" class="tab-content d-none">
                 <div class="card">
-                    <h2>Buchungs-Ablauf</h2>
-                    <label class="checkbox-label mb-0">
-                        <input type="checkbox" id="requireManualConf" class="w-auto">
-                        <strong>Zwei-Wege-Bestätigung (Manuelle Bestätigung durch Admin erforderlich)</strong>
-                    </label>
-                </div>
-
-                <div class="card">
-                    <h2>Integrationen & Webhooks</h2>
-                     <div class="form-group full-width">
-                        <label for="zapierWebhookUrl">Webhook URL (Zapier / Make.com) - Optional</label>
-                        <input type="text" id="zapierWebhookUrl" placeholder="https://hooks.zapier.com/hooks/catch/...">
-                        <p class="fs-13 text-muted mt-5" style="line-height: 1.5;">Verbinde Planago mit über 5.000 Apps (z.B. über Zapier oder die kostenlose Alternative Make.com). Erstelle dort einen Webhook-Trigger und füge die URL hier ein. Bei jeder Buchung werden die Daten automatisch dorthin gesendet.</p>
-                        <div class="warning-box">
-                            <strong class="warning-text">⚠️ Wichtiger Datenschutz-Hinweis (DSGVO):</strong>
-                            <p class="warning-subtext">Planago speichert alle Daten zu 100% lokal. <strong>Sobald du hier eine URL einträgst</strong>, werden Kundendaten (Name, E-Mail) bei einer Buchung an externe Anbieter gesendet. Du musst dies zwingend in der Datenschutzerklärung deiner Website angeben!</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2>Reguläre Arbeitszeiten</h2>
-                    <p class="text-muted mt-0">Wann bist du grundsätzlich für Termine verfügbar?</p>
+                    <h2>Automatisierung (Nach der Buchung)</h2>
                     <div class="settings-group">
-                        <div class="form-group">
-                            <label for="startTime">Startzeit</label>
-                            <input type="time" id="startTime" required>
+                        <div class="form-group full-width">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableReviewEmail" class="w-auto">
+                                <strong>Automatische Google-Bewertungs-E-Mail aktivieren</strong>
+                            </label>
+                            <p class="fs-12 text-muted mt-0 mb-15">Sendet deinen Kunden 24 Stunden nach ihrem abgeschlossenen Termin automatisch eine freundliche E-Mail mit der Bitte um eine Bewertung.</p>
+                            
+                            <div id="reviewLinkContainer" class="d-none mb-20">
+                                <label>Dein Google Bewertungs-Link (Kurz-URL)</label>
+                                <input type="text" id="googleReviewLink" placeholder="https://g.page/r/...">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="endTime">Endzeit</label>
-                            <input type="time" id="endTime" required>
+                        
+                        <div class="form-group full-width border-top-dashed pt-15">
+                            <label for="zapierWebhookUrl">Webhook URL (Zapier / Make.com) - Optional</label>
+                            <input type="text" id="zapierWebhookUrl" placeholder="https://hooks.zapier.com/hooks/catch/...">
+                            <p class="fs-13 text-muted mt-5" style="line-height: 1.5;">Verbinde Planago mit über 5.000 Apps. Erstelle einen Webhook-Trigger in Zapier/Make und füge die URL hier ein. Bei jeder Buchung werden die Daten dorthin gesendet.</p>
+                            <div class="warning-box mt-10">
+                                <strong class="warning-text">⚠️ Wichtiger Datenschutz-Hinweis (DSGVO):</strong>
+                                <p class="warning-subtext">Sobald du hier eine URL einträgst, werden Kundendaten an externe Anbieter gesendet. Du musst dies zwingend in deiner Datenschutzerklärung angeben!</p>
+                            </div>
                         </div>
                     </div>
+                    <button type="submit" class="btn-success mt-15 w-auto">Automatisierung speichern</button>
+                    <div class="settingsMessage settings-msg"></div>
                 </div>
-                <button type="submit" class="btn-success mt-20 w-auto">Prozess & Zeiten speichern</button>
-                <div class="settingsMessage settings-msg"></div>
+
+                <div class="card">
+                    <h2>Links & Widget auf der Website einbinden</h2>
+                    <p class="mt-0 text-muted">Wähle hier eine Terminart aus, um den passenden direkten Link oder den HTML-Code für deine Website (z. B. WordPress, Wix) zu generieren.</p>
+
+                    <div class="form-group mt-25 pb-15 border-bottom-dashed">
+                        <label for="widgetEventSelect" class="fs-15 text-main">Für welche Terminart möchtest du den Link/Code erstellen?</label>
+                        <select id="widgetEventSelect" class="max-w-400 font-bold cursor-pointer">
+                            <option value="">Lade Terminarten...</option>
+                        </select>
+                    </div>
+
+                    <h3 class="mt-25">1. Direkter Link</h3>
+                    <p class="text-muted mt-0 fs-14">Teile diesen Link auf Instagram, WhatsApp oder verlinke ihn auf einem Button deiner Website.</p>
+                    <div class="gap-10">
+                        <input type="text" id="directLink" readonly class="copy-input">
+                        <button type="button" class="btn-secondary w-auto" id="btn-copy-direct">Kopieren</button>
+                    </div>
+
+                    <h3 class="mt-25">2. Widget einbinden (iFrame)</h3>
+                    <p class="text-muted mt-0 fs-14">Kopiere diesen HTML-Code und füge ihn auf deiner Website in einen "HTML" oder "Code" Block ein.</p>
+                    <div class="gap-10 align-start">
+                        <textarea id="iframeCode" readonly rows="4" class="iframe-textarea"></textarea>
+                        <button type="button" class="btn-secondary w-auto" id="btn-copy-iframe">Kopieren</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Kalender-Synchronisation (Abo-Link)</h2>
+                    <p class="text-muted mt-0 fs-14">Kopiere diesen Link und füge ihn bei <strong>Apple Kalender</strong>, <strong>Google Kalender</strong> oder <strong>Outlook</strong> unter "Kalender abonnieren / Aus URL hinzufügen" ein. Danach erscheinen alle Planago-Buchungen automatisch in deinem Kalender!</p>
+                    <div class="gap-10 mt-15">
+                        <input type="text" id="icalLink" readonly class="copy-input">
+                        <button type="button" class="btn-secondary w-auto" id="btn-copy-ical">Kopieren</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- E-MAIL & SMTP TAB -->
+            <div id="tab-email" class="tab-content d-none">
+                <div class="card">
+                    <h2>E-Mail & SMTP Server</h2>
+                    <p class="text-muted mt-0 mb-20">Hinterlege hier deine E-Mail-Adresse und optional deine SMTP-Zugangsdaten, damit Planago Bestätigungen an Kunden versenden kann.</p>
+                    <div class="settings-group">
+                        <div class="form-group full-width mb-15">
+                            <label>Admin E-Mail <span style="font-weight: normal; color: #888;">(Hierhin gehen Benachrichtigungen bei neuen Buchungen)</span></label>
+                            <input type="email" id="adminEmail" placeholder="admin@deinedomain.de">
+                        </div>
+                        <div class="form-group">
+                            <label>Absender Name</label>
+                            <input type="text" id="smtpFromName" placeholder="Z.B. Planago Booking">
+                        </div>
+                        <div class="form-group">
+                            <label>Absender E-Mail <span style="font-weight: normal; color: #888;">(Zwingend erforderlich)</span></label>
+                            <input type="email" id="smtpFromEmail" placeholder="info@deinedomain.de">
+                        </div>
+                        
+                        <div class="full-width border-top-dashed mt-10 pt-15 mb-10">
+                            <strong style="color: var(--text-main);">Eigener SMTP-Server (Optional)</strong>
+                            <p class="text-muted fs-13 mt-5 mb-0">Wenn du die Felder unten leer lässt, verschickt der Server E-Mails über seine interne Funktion (Empfohlen für IONOS/Strato, um Firewall-Probleme zu umgehen).</p>
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Host</label>
+                            <input type="text" id="smtpHost" placeholder="smtp.deinedomain.de">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Port</label>
+                            <input type="text" id="smtpPort" placeholder="465 oder 587">
+                        </div>
+                        <div class="form-group">
+                            <label>Benutzername</label>
+                            <input type="text" id="smtpUser">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort</label>
+                            <input type="password" id="smtpPass" autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="gap-10 mt-20">
+                        <button type="submit" class="btn-success mt-0 w-auto">E-Mail-Einstellungen speichern</button>
+                        <button type="button" class="btn-secondary mt-0 w-auto" id="btn-test-email">Test-E-Mail senden</button>
+                    </div>
+                    <div class="settingsMessage settings-msg"></div>
+                </div>
             </div>
         </form>
-
-        <!-- WIDGET & LINK TAB -->
-        <div id="tab-integration" class="tab-content d-none">
-            <div class="card">
-                <h2>Links, Widget & Kalender-Sync</h2>
-                <p class="mt-0 text-muted">Wähle hier eine Terminart aus, um den passenden direkten Link oder den HTML-Code für deine Website (z. B. WordPress, Wix) zu generieren. So kannst du Kunden auf deiner Website gezielt zur Buchung dieser spezifischen Leistung leiten.</p>
-
-                <div class="form-group mt-25 pb-15 border-bottom-dashed">
-                    <label for="widgetEventSelect" class="fs-15 text-main">Für welche Terminart möchtest du den Link/Code erstellen?</label>
-                    <select id="widgetEventSelect" class="max-w-400 font-bold cursor-pointer">
-                        <option value="">Lade Terminarten...</option>
-                    </select>
-                </div>
-
-                <h3 class="mt-25">1. Direkter Link</h3>
-                <p class="text-muted mt-0 fs-14">Teile diesen Link auf Instagram, WhatsApp oder verlinke ihn auf einem Button deiner Website.</p>
-                <div class="gap-10">
-                    <input type="text" id="directLink" readonly class="copy-input">
-                    <button type="button" class="btn-secondary w-auto" id="btn-copy-direct">Kopieren</button>
-                </div>
-
-                <h3 class="mt-25">2. Widget auf der Website einbinden (iFrame)</h3>
-                <p class="text-muted mt-0 fs-14">Kopiere diesen HTML-Code und füge ihn auf deiner Website direkt unter der Beschreibung für diese Terminart in einen "HTML" oder "Code" Block ein.</p>
-                <div class="gap-10 align-start">
-                    <textarea id="iframeCode" readonly rows="4" class="iframe-textarea"></textarea>
-                    <button type="button" class="btn-secondary w-auto" id="btn-copy-iframe">Kopieren</button>
-                </div>
-
-                <h3 class="mt-25">3. Kalender-Synchronisation (Abo-Link)</h3>
-                <p class="text-muted mt-0 fs-14">Kopiere diesen Link und füge ihn bei <strong>Apple Kalender</strong>, <strong>Google Kalender</strong> oder <strong>Outlook</strong> unter "Kalender abonnieren / Aus URL hinzufügen" ein. Danach erscheinen alle Planago-Buchungen automatisch in deinem Kalender!</p>
-                <div class="gap-10">
-                    <input type="text" id="icalLink" readonly class="copy-input">
-                    <button type="button" class="btn-secondary w-auto" id="btn-copy-ical">Kopieren</button>
-                </div>
-            </div>
-        </div>
 
         <div class="card tab-content d-none" id="tab-events">
             <h2>Terminarten</h2>
