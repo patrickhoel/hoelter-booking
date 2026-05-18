@@ -279,6 +279,9 @@ tr:hover td { background-color: var(--bg-color); }
 .warning-box { background: rgba(255, 159, 10, 0.1); border: 1px solid rgba(255, 159, 10, 0.3); padding: 10px 15px; border-radius: 8px; margin-top: 10px; }
 .warning-text { color: #d97706; font-size: 13px; margin-bottom: 5px; display: block; }
 .warning-subtext { color: #b45309; font-size: 12px; margin: 0; }
+.info-box { background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); padding: 10px 15px; border-radius: 8px; margin-top: 10px; }
+.info-text { color: #007aff; font-size: 13px; margin-bottom: 5px; display: block; }
+.info-subtext { color: #0056b3; font-size: 12px; margin: 0; }
 .copy-input { flex-grow: 1; font-size: 14px; cursor: text; }
 .iframe-textarea { flex-grow: 1; font-family: monospace; font-size: 13px; resize: none; cursor: text; }
 .readonly-link { width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px; }

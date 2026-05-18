@@ -7,6 +7,20 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 try {
+    // --- LIZENZ-CHECK (LOKAL) ---
+    $db = getDb();
+    $stmt = $db->query("SELECT license_status FROM settings LIMIT 1");
+    $license_status = $stmt->fetchColumn();
+
+    if ($license_status !== 'valid' && PLANAGO_LICENSE_KEY !== 'demo-key') {
+        http_response_code(402); // Payment Required
+        echo json_encode(['available_slots' => [], 'error' => 'Ihre Planago-Lizenz ist ungültig oder gesperrt.']);
+        exit;
+    }
+} catch (Exception $e) { /* Ignore DB errors here, main logic will catch them */ }
+// -----------------------------
+
+try {
     $db = getDb();
 
     // 1. Eingabedaten aus der URL holen und validieren

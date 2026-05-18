@@ -9,6 +9,20 @@ if (session_status() === PHP_SESSION_NONE) {
 header('Content-Type: application/json');
 
 try {
+    // --- LIZENZ-CHECK (LOKAL) ---
+    $db = getDb();
+    $stmt = $db->query("SELECT license_status FROM settings LIMIT 1");
+    $license_status = $stmt->fetchColumn();
+
+    if ($license_status !== 'valid' && PLANAGO_LICENSE_KEY !== 'demo-key') {
+        http_response_code(402); // Payment Required
+        echo json_encode(['error' => 'Ihre Planago-Lizenz ist ungültig oder gesperrt. Buchung nicht möglich.']);
+        exit;
+    }
+} catch (Exception $e) { /* Ignore DB errors here, main logic will catch them */ }
+// -----------------------------
+
+try {
     // CSRF Token Validierung
     $headers = function_exists('getallheaders') ? getallheaders() : [];
     $clientToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $headers['X-CSRF-Token'] ?? $headers['X-Csrf-Token'] ?? '';

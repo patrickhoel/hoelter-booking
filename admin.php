@@ -211,6 +211,32 @@ $csrfToken = initCsrfToken();
             <!-- INTEGRATIONEN & AUTOMATISIERUNG TAB -->
             <div id="tab-integration" class="tab-content d-none">
                 <div class="card">
+                    <h2>Automatisierung (Vor dem Termin)</h2>
+                    <div class="settings-group">
+                        <div class="form-group full-width">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableReminders" class="w-auto">
+                                <strong>Automatische Termin-Erinnerungen per E-Mail aktivieren</strong>
+                            </label>
+                            <p class="fs-12 text-muted mt-0 mb-15">Sendet deinen Kunden automatisch eine Erinnerung vor ihrem Termin.</p>
+                            
+                            <div id="reminderOptionsContainer" class="d-none mb-20">
+                                <label for="reminderHours">Wann soll die Erinnerung gesendet werden?</label>
+                                <select id="reminderHours" class="w-auto cursor-pointer">
+                                    <option value="24">24 Stunden vorher</option>
+                                    <option value="12">12 Stunden vorher</option>
+                                    <option value="6">6 Stunden vorher</option>
+                                    <option value="1">1 Stunde vorher</option>
+                                </select>
+                            </div>
+                             <div class="info-box">
+                                <strong class="info-text">💡 Wie funktioniert das?</strong>
+                                <p class="info-subtext">Um sicherzustellen, dass Erinnerungen auch dann versendet werden, wenn deine Website selten besucht wird, wird diese Funktion durch einen zentralen Server von Planago alle 15-30 Minuten angestoßen ("gepingt"). Dieser Service ist für dich kostenlos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
                     <h2>Automatisierung (Nach der Buchung)</h2>
                     <div class="settings-group">
                         <div class="form-group full-width">
@@ -236,7 +262,7 @@ $csrfToken = initCsrfToken();
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn-success mt-15 w-auto">Automatisierung speichern</button>
+                    <button type="submit" class="btn-success mt-20 w-auto">Automatisierungen speichern</button>
                     <div class="settingsMessage settings-msg"></div>
                 </div>
 
@@ -472,6 +498,7 @@ $csrfToken = initCsrfToken();
             document.getElementById('useGlobalSchedule')?.addEventListener('change', toggleScheduleOptions);
             document.getElementById('btnAddCustomField')?.addEventListener('click', addCustomField);
             document.getElementById('btnSaveEventSettings')?.addEventListener('click', saveEventSettings);
+            document.getElementById('enableReminders')?.addEventListener('change', toggleReminderOptions);
             document.getElementById('bookingFilter')?.addEventListener('change', loadBookings);
             
             document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => openTab(e.target.id.replace('btn-', ''))));
@@ -498,6 +525,14 @@ $csrfToken = initCsrfToken();
             document.execCommand('copy');
             alert("Erfolgreich kopiert!");
             window.getSelection().removeAllRanges();
+        }
+
+        function toggleReminderOptions() {
+            if (document.getElementById('enableReminders').checked) {
+                document.getElementById('reminderOptionsContainer').classList.remove('d-none');
+            } else {
+                document.getElementById('reminderOptionsContainer').classList.add('d-none');
+            }
         }
 
         function getAuthHeaders() {
@@ -666,6 +701,10 @@ $csrfToken = initCsrfToken();
                 
                 if (data.enable_review_email == 1) document.getElementById('reviewLinkContainer').classList.remove('d-none');
                 else document.getElementById('reviewLinkContainer').classList.add('d-none');
+
+                document.getElementById('enableReminders').checked = data.enable_reminders == 1;
+                document.getElementById('reminderHours').value = data.reminder_hours_before || 24;
+                toggleReminderOptions();
                 document.getElementById('zapierWebhookUrl').value = data.zapier_webhook_url || '';
                 document.getElementById('themeMode').value = data.theme_mode || 'auto';
                 
@@ -708,6 +747,8 @@ $csrfToken = initCsrfToken();
                 admin_new_password: document.getElementById('adminNewPassword').value,
                 admin_email: document.getElementById('adminEmail').value,
                 zapier_webhook_url: document.getElementById('zapierWebhookUrl').value,
+                enable_reminders: document.getElementById('enableReminders').checked ? 1 : 0,
+                reminder_hours_before: document.getElementById('reminderHours').value,
                 theme_mode: document.getElementById('themeMode').value
             };
             fetch('api_settings.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) })

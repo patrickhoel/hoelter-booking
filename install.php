@@ -16,6 +16,47 @@ if (isset($_POST['finish_installation'])) {
 echo "<div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 40px auto; padding: 40px; border: 1px solid #d2d2d7; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); background: #ffffff;'>";
 echo "<h1 style='color: #1d1d1f; margin-top: 0; text-align: center;'>Planago Setup 🚀</h1>";
 
+// --- NEU: LIZENZ-CHECK (Die Hochzeit) ---
+$domain = $_SERVER['HTTP_HOST'] ?? 'unknown';
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$cronUrl = rtrim($protocol . "://" . $domain . $basePath, '/') . '/cron.php';
+
+// Phoning Home zu deinem Server
+if (PLANAGO_LICENSE_KEY !== 'demo-key') {
+    $ch = curl_init('https://planago.de/api_license.php');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+        'license_key' => PLANAGO_LICENSE_KEY,
+        'domain' => $domain,
+        'cron_url' => $cronUrl
+    ]));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $licenseValid = false;
+    $licenseError = 'Der Lizenz-Server ist aktuell nicht erreichbar. Bitte versuche es in ein paar Minuten erneut.';
+
+    if ($response) {
+        $licenseData = json_decode($response, true);
+        if (isset($licenseData['status']) && $licenseData['status'] === 'valid') {
+            $licenseValid = true;
+        } else {
+            $licenseError = $licenseData['message'] ?? 'Ungültige Lizenz.';
+        }
+    }
+
+    if (!$licenseValid) {
+        echo "<h2 style='color: #ff3b30; text-align: center;'>Setup blockiert</h2>";
+        echo "<p style='text-align: center; color: #1d1d1f;'>$licenseError</p>";
+        echo "</div>";
+        exit;
+    }
+}
+
 // 1. Prüfen, ob der /data/ Ordner existiert, falls nicht, automatisch anlegen
 if (!file_exists(__DIR__ . '/data')) {
     mkdir(__DIR__ . '/data', 0755, true);
@@ -100,7 +141,11 @@ try {
         "ALTER TABLE settings ADD COLUMN calendar_sync_token TEXT DEFAULT NULL",
         "ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'auto'",
         "ALTER TABLE settings ADD COLUMN force_password_change INTEGER DEFAULT 1",
-        "CREATE TABLE IF NOT EXISTS rate_limits (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT NOT NULL, action TEXT NOT NULL, timestamp DATETIME NOT NULL)"
+        "ALTER TABLE settings ADD COLUMN license_status TEXT DEFAULT 'valid'",
+        "ALTER TABLE settings ADD COLUMN license_last_check DATETIME DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE bookings ADD COLUMN reminder_sent INTEGER DEFAULT 0",
+        "ALTER TABLE settings ADD COLUMN enable_reminders INTEGER DEFAULT 0",
+        "ALTER TABLE settings ADD COLUMN reminder_hours_before INTEGER DEFAULT 24"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }
