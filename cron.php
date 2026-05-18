@@ -34,7 +34,8 @@ function checkLicense() {
     $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
     $cronUrl = rtrim($protocol . "://" . $domain . $basePath, '/') . '/cron.php';
 
-    $newStatus = 'invalid'; // Default to invalid if check fails
+    // Bei Netzwerkfehlern behalten wir den bisherigen Status, um niemanden auszusperren!
+    $newStatus = $settings['license_status']; 
 
     if (PLANAGO_LICENSE_KEY !== 'demo-key') {
         $ch = curl_init('https://planago.de/api_license.php');
@@ -52,8 +53,8 @@ function checkLicense() {
 
         if ($response) {
             $licenseData = json_decode($response, true);
-            if (isset($licenseData['status'])) {
-                // Possible statuses: valid, invalid, revoked
+            // Nur bei expliziten und gültigen Antworten den Status anpassen
+            if (isset($licenseData['status']) && in_array($licenseData['status'], ['valid', 'invalid', 'revoked'])) {
                 $newStatus = $licenseData['status'];
             }
         }
