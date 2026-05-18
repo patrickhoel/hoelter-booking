@@ -6,6 +6,37 @@ require_once 'config.php';
 // Wir geben JSON zurück
 header('Content-Type: application/json');
 
+// --- ORIGIN SECURITY (ANTI-SPAM & ANTI-EMBEDDING) ---
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https://" : "http://";
+$expected_origin = $protocol . $host;
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+
+// 1. If an Origin header is present, it must match the host. This is the most reliable check for fetch/XHR.
+if (!empty($origin) && $origin !== $expected_origin) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Zugriff verweigert (Origin Mismatch).']);
+    exit;
+}
+
+// 2. If no Origin header, it could be a same-origin request. Fall back to Referer.
+if (empty($origin) && !empty($referer)) {
+    if (strpos($referer, $expected_origin . '/') !== 0) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Zugriff verweigert (Referer Mismatch).']);
+        exit;
+    }
+}
+
+// 3. Block direct access without any origin/referer info, which is typical for bots/scripts.
+if (empty($origin) && empty($referer)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Direkte API-Anfragen sind nicht erlaubt.']);
+    exit;
+}
+
 try {
     // --- LIZENZ-CHECK (LOKAL) ---
     $db = getDb();
