@@ -5,6 +5,14 @@
 require_once 'config.php';
 $version = PLANAGO_VERSION;
 
+// --- RELEASE NOTES (WAS IST NEU?) ---
+// Trage hier vor dem Ausführen der Datei kurz ein, was sich geändert hat.
+$releaseNotes = "
+<ul style='margin: 0; padding-left: 20px;'>
+    <li><b>Neu:</b> Release Notes (Was ist neu?) Banner hinzugefügt.</li>
+    <li><b>Fix:</b> Layout-Probleme auf kleinen Bildschirmen behoben.</li>
+</ul>";
+
 echo "<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>";
 
 if (!class_exists('ZipArchive')) {
@@ -91,6 +99,7 @@ if ($installZip->open($installZipPath, ZipArchive::CREATE | ZipArchive::OVERWRIT
 // 3. VERSION.PHP (mit CORS Header) AUTOMATISCH GENERIEREN
 $versionJson = [ 
     "version" => $version, 
+    "release_notes" => trim($releaseNotes),
     "zip_url" => "https://planago.de/software_releases/{$updateFileName}",
     "install_zip_url" => "https://planago.de/software_releases/{$installFileName}"
 ];

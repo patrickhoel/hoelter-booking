@@ -69,9 +69,17 @@ $csrfToken = initCsrfToken();
         <div class="flex-between-center">
             <div>
                 <!-- Update Banner (wird per JS eingeblendet, wenn Update verfügbar) -->
-                <div id="updateBanner" class="update-banner d-none flex-between-center">
-                    <div><strong>🚀 Neues Planago-Update verfügbar!</strong> Version <span id="newVersionNumber"></span> ist da.</div>
-                    <button id="updateBtn" class="btn-update">Jetzt updaten</button>
+                <div id="updateBanner" class="update-banner d-none" style="display: flex; flex-direction: column; align-items: stretch;">
+                    <div class="flex-between-center w-100">
+                        <div id="updateBannerText">
+                            <strong id="updateBannerTitle">🚀 Neues Planago-Update verfügbar!</strong> 
+                            <span id="updateBannerSub">Version <span id="newVersionNumber"></span> ist da.</span>
+                            <a href="#" id="showReleaseNotesBtn" class="d-none" style="color: rgba(255,255,255,0.8); text-decoration: underline; font-size: 13px; margin-left: 10px;">Was ist neu?</a>
+                        </div>
+                        <button id="updateBtn" class="btn-update w-auto">Jetzt updaten</button>
+                        <a href="https://planago.de" target="_blank" id="renewLicenseBtn" class="btn-update d-none w-auto" style="color: #d97706; text-decoration: none;">Lizenz verlängern</a>
+                    </div>
+                    <div id="releaseNotesContent" class="d-none mt-10 fs-14" style="background: rgba(0,0,0,0.15); padding: 12px 16px; border-radius: 8px; line-height: 1.5;"></div>
                 </div>
 
                 <h1>Admin Dashboard</h1>
@@ -505,6 +513,10 @@ $csrfToken = initCsrfToken();
             document.getElementById('enableReminders')?.addEventListener('change', toggleReminderOptions);
             document.getElementById('bookingFilter')?.addEventListener('change', loadBookings);
             
+            document.getElementById('showReleaseNotesBtn')?.addEventListener('click', (e) => {
+                e.preventDefault(); document.getElementById('releaseNotesContent').classList.toggle('d-none');
+            });
+            
             document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => openTab(e.target.id.replace('btn-', ''))));
             
             // Event-Delegation für dynamisch geladene Buttons in den Tabellen
@@ -591,12 +603,28 @@ $csrfToken = initCsrfToken();
                         latestUpdateUrl = data.update_zip_url || data.zip_url || data.install_zip_url;
                         
                         const banner = document.getElementById('updateBanner');
+                        const notesBtn = document.getElementById('showReleaseNotesBtn');
+                        const notesContent = document.getElementById('releaseNotesContent');
+                        const updateBtn = document.getElementById('updateBtn');
+                        const renewBtn = document.getElementById('renewLicenseBtn');
+                        const bannerTitle = document.getElementById('updateBannerTitle');
+                        const bannerSub = document.getElementById('updateBannerSub');
+
+                        if (data.release_notes) {
+                            notesContent.innerHTML = data.release_notes;
+                            notesBtn.classList.remove('d-none');
+                        }
+                        
                         if (updatesEnabled === 1) {
                             banner.classList.remove('d-none');
                         } else {
                             banner.classList.remove('d-none');
                             banner.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-                            banner.innerHTML = `<div><strong>⚠️ Neues Update (v${data.version}) verfügbar!</strong> Deine Update-Lizenz ist jedoch abgelaufen.</div><a href="https://planago.de" target="_blank" class="btn-update" style="color: #d97706; text-decoration: none; padding: 8px 15px; display: inline-block;">Lizenz verlängern</a>`;
+                            banner.style.boxShadow = '0 4px 12px rgba(245,158,11,0.3)';
+                            bannerTitle.innerText = '⚠️ Neues Update verfügbar!';
+                            bannerSub.innerText = `Version ${data.version} ist da, aber deine Update-Lizenz ist abgelaufen.`;
+                            updateBtn.classList.add('d-none');
+                            renewBtn.classList.remove('d-none');
                         }
                     }
                 }).catch(e => console.error('Fehler beim Update-Check (Falsche URL oder Datei nicht erreichbar):', e));
