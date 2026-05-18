@@ -21,6 +21,8 @@ try {
     try { $db->exec("ALTER TABLE bookings ADD COLUMN reminder_sent INTEGER DEFAULT 0"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN enable_reminders INTEGER DEFAULT 0"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN reminder_hours_before INTEGER DEFAULT 24"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE settings ADD COLUMN license_status TEXT DEFAULT 'valid'"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE settings ADD COLUMN license_last_check DATETIME DEFAULT CURRENT_TIMESTAMP"); } catch (Exception $e) {}
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // CSRF Token Validierung
