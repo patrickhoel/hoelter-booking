@@ -11,6 +11,15 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 // Lade die Konfiguration, um den Lizenzschlüssel zu erhalten
 require_once 'config.php';
 
+$db = getDb();
+$stmt = $db->query("SELECT updates_enabled FROM settings LIMIT 1");
+$settings = $stmt->fetch(PDO::FETCH_ASSOC);
+if (isset($settings['updates_enabled']) && $settings['updates_enabled'] == 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Deine Update-Lizenz ist abgelaufen. Bitte verlängere sie, um neue Versionen installieren zu können.']);
+    exit;
+}
+
 header('Content-Type: application/json');
 
 // CSRF Token Validierung

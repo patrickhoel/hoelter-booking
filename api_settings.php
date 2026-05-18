@@ -23,6 +23,7 @@ try {
     try { $db->exec("ALTER TABLE settings ADD COLUMN reminder_hours_before INTEGER DEFAULT 24"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN license_status TEXT DEFAULT 'valid'"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN license_last_check DATETIME DEFAULT '1970-01-01 00:00:00'"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE settings ADD COLUMN updates_enabled INTEGER DEFAULT 1"); } catch (Exception $e) {}
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // CSRF Token Validierung

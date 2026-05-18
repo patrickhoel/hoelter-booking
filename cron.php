@@ -63,6 +63,9 @@ function checkLicense() {
             if (isset($licenseData['status'])) {
                 $newStatus = $licenseData['status'];
             }
+            if (isset($licenseData['updates_enabled'])) {
+                $db->prepare("UPDATE settings SET updates_enabled = ?")->execute([(int)$licenseData['updates_enabled']]);
+            }
         } else {
             // Lautloser Fehler für das Error-Log (für dich zum Debuggen)
             error_log("Planago License Check failed: HTTP $httpCode - Response: $response");

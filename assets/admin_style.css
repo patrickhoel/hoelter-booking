@@ -182,7 +182,8 @@ tr:hover td { background-color: var(--bg-color); }
 /* Modals (Popups) */
 .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); overflow-y: auto; }
 .modal-content { background-color: var(--surface-color); margin: 5% auto; padding: 32px; border-radius: var(--radius); width: 90%; max-width: 650px; border: 1px solid var(--border-color); color: var(--text-main); max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
-.custom-field-row { background: var(--bg-color); border-color: var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+.custom-field-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--bg-color); border-color: var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+.custom-field-row input[type="text"], .custom-field-row select { flex: 1; min-width: 150px; }
 .close { color: var(--text-muted); font-size: 24px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
 .close:hover { color: var(--danger); }
 
@@ -285,3 +286,49 @@ tr:hover td { background-color: var(--bg-color); }
 .copy-input { flex-grow: 1; font-size: 14px; cursor: text; }
 .iframe-textarea { flex-grow: 1; font-family: monospace; font-size: 13px; resize: none; cursor: text; }
 .readonly-link { width: 250px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; padding: 5px; border-radius: 3px; }
+
+
+/* --- MOBILE OPTIMIERUNG (Handy & Tablet) --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+}
+.table-responsive table {
+    margin-top: 0;
+    min-width: 800px; /* Erzwingt horizontales Scrollen statt Quetschen */
+    border: none;
+}
+.table-responsive th, .table-responsive td {
+    white-space: nowrap; /* Verhindert unschöne Zeilenumbrüche */
+}
+
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .admin-container { padding: 0; }
+    .card { padding: 20px; margin-bottom: 15px; }
+    
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.3rem; }
+    h3 { font-size: 1.1rem; }
+    
+    /* Flexboxen sauber untereinander stapeln */
+    .flex-between-center { flex-direction: column; align-items: stretch; gap: 15px; }
+    .flex-between-center > div { width: 100%; }
+    .btn-logout { align-self: flex-start; }
+    
+    .settings-group { grid-template-columns: 1fr; gap: 15px; }
+    .gap-20, .gap-15, .gap-10 { flex-wrap: wrap; }
+    
+    .modal-content { padding: 20px; width: 95%; margin: 10% auto; }
+    
+    /* Speichern-Buttons besser klickbar machen */
+    button.btn-success { width: 100% !important; }
+    
+    .action-cell { flex-wrap: wrap; gap: 5px; }
+    .action-cell button { flex: 1; justify-content: center; text-align: center; }
+}

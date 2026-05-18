@@ -370,21 +370,23 @@ $csrfToken = initCsrfToken();
                 <div id="eventMessage" class="font-bold text-success mt-10"></div>
             </form>
             
-            <table class="mt-20">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Dauer</th>
-                        <th>Plätze</th>
-                        <th>Puffer</th>
-                        <th>Link für Website</th>
-                        <th>Aktion</th>
-                    </tr>
-                </thead>
-                <tbody id="eventsTableBody">
-                    <tr><td colspan="6">Lade Terminarten...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="mt-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Dauer</th>
+                            <th>Plätze</th>
+                            <th>Puffer</th>
+                            <th>Link für Website</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr><td colspan="6">Lade Terminarten...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card tab-content" id="tab-bookings">
@@ -396,21 +398,23 @@ $csrfToken = initCsrfToken();
                     <option value="all">Alle Termine</option>
                 </select>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Datum & Uhrzeit</th>
-                        <th>Terminart</th>
-                        <th>Kunde</th>
-                        <th>E-Mail</th>
-                        <th>Zusatzinfos</th>
-                        <th>Aktion</th>
-                    </tr>
-                </thead>
-                <tbody id="bookingsTableBody">
-                    <tr><td colspan="6">Lade Buchungen...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Datum & Uhrzeit</th>
+                            <th>Terminart</th>
+                            <th>Kunde</th>
+                            <th>E-Mail</th>
+                            <th>Zusatzinfos</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTableBody">
+                        <tr><td colspan="6">Lade Buchungen...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div class="powered-by">
             Powered by <a href="https://planago.de" target="_blank">Planago</a>
@@ -560,6 +564,7 @@ $csrfToken = initCsrfToken();
         // --- UPDATE CHECK LOGIK ---
         const CURRENT_VERSION = "<?= PLANAGO_VERSION ?>";
         let latestUpdateUrl = "";
+        let updatesEnabled = 1;
 
         function isNewerVersion(oldVer, newVer) {
             const oldParts = oldVer.split('.').map(Number);
@@ -584,7 +589,15 @@ $csrfToken = initCsrfToken();
                     if (data.version && isNewerVersion(CURRENT_VERSION, data.version)) {
                         document.getElementById('newVersionNumber').innerText = data.version;
                         latestUpdateUrl = data.update_zip_url || data.zip_url || data.install_zip_url;
-                        document.getElementById('updateBanner').classList.remove('d-none');
+                        
+                        const banner = document.getElementById('updateBanner');
+                        if (updatesEnabled === 1) {
+                            banner.classList.remove('d-none');
+                        } else {
+                            banner.classList.remove('d-none');
+                            banner.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                            banner.innerHTML = `<div><strong>⚠️ Neues Update (v${data.version}) verfügbar!</strong> Deine Update-Lizenz ist jedoch abgelaufen.</div><a href="https://planago.de" target="_blank" class="btn-update" style="color: #d97706; text-decoration: none; padding: 8px 15px; display: inline-block;">Lizenz verlängern</a>`;
+                        }
                     }
                 }).catch(e => console.error('Fehler beim Update-Check (Falsche URL oder Datei nicht erreichbar):', e));
         }
@@ -617,8 +630,6 @@ $csrfToken = initCsrfToken();
             }).catch(() => alert("Kritischer Fehler bei der Verbindung."));
         }
         
-        checkForUpdates(); // Direkt beim Laden im Hintergrund prüfen!
-
         // --- LOGO UPLOAD LOGIK ---
         let logoBase64 = '';
         let removeLogoFlag = false;
@@ -712,6 +723,9 @@ $csrfToken = initCsrfToken();
                     const baseUrl = window.location.href.split('?')[0].replace('admin.php', '');
                     document.getElementById('icalLink').value = baseUrl + "ical_feed.php?token=" + data.calendar_sync_token;
                 }
+                
+                updatesEnabled = data.updates_enabled !== undefined ? parseInt(data.updates_enabled) : 1;
+                checkForUpdates();
             });
 
         document.getElementById('enableReviewEmail').addEventListener('change', function() {
