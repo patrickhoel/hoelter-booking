@@ -34,8 +34,8 @@ function checkLicense() {
     $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
     $cronUrl = rtrim($protocol . "://" . $domain . $basePath, '/') . '/cron.php';
 
-    // Bei Netzwerkfehlern behalten wir den bisherigen Status, um niemanden auszusperren!
-    $newStatus = $settings['license_status']; 
+    // KRITISCHER FIX: Bei Netzwerkfehlern immer den letzten bekannten Status beibehalten!
+    $newStatus = $settings['license_status'] ?? 'invalid'; 
 
     if (PLANAGO_LICENSE_KEY !== 'demo-key') {
         $ch = curl_init('https://planago.de/api_license.php');
@@ -46,17 +46,26 @@ function checkLicense() {
             'domain' => $domain,
             'cron_url' => $cronUrl
         ]));
+        
+        // Wichtige Header & Optionen für stabile Verbindungen
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Planago-Client/1.0'); // Verhindert Blockaden durch Firewalls
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);    // Verhindert IPv6 Timeouts
+
         $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($response) {
+        // Nur wenn wir einen echten "200 OK" Status und eine Antwort bekommen haben, werten wir aus
+        if ($response && $httpCode === 200) {
             $licenseData = json_decode($response, true);
-            // Nur bei expliziten und gültigen Antworten den Status anpassen
-            if (isset($licenseData['status']) && in_array($licenseData['status'], ['valid', 'invalid', 'revoked'])) {
+            if (isset($licenseData['status'])) {
                 $newStatus = $licenseData['status'];
             }
+        } else {
+            // Lautloser Fehler für das Error-Log (für dich zum Debuggen)
+            error_log("Planago License Check failed: HTTP $httpCode - Response: $response");
         }
     } else {
         $newStatus = 'valid'; // Demo key is always valid
