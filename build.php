@@ -9,8 +9,7 @@ $version = PLANAGO_VERSION;
 // Trage hier vor dem Ausführen der Datei kurz ein, was sich geändert hat.
 $releaseNotes = "
 <ul style='margin: 0; padding-left: 20px;'>
-    <li><b>Neu:</b> Release Notes (Was ist neu?) Banner hinzugefügt.</li>
-    <li><b>Fix:</b> Layout-Probleme auf kleinen Bildschirmen behoben.</li>
+    <li><b>Fix:</b> Ungewollte Scrollbalken bei Tabellen in der Desktop-Ansicht entfernt.</li>
 </ul>";
 
 echo "<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>";
@@ -26,6 +25,12 @@ if (!is_dir($releaseDir)) {
 }
 
 echo "<h2>🚀 Starte Build-Prozess für Planago v{$version}...</h2>";
+
+// --- NEU: Release Notes zur visuellen Kontrolle anzeigen ---
+echo "<div style='background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>";
+echo "<h3 style='margin-top: 0; margin-bottom: 10px; color: #495057; font-size: 16px;'>📝 Eingetragene Release Notes für v{$version}:</h3>";
+echo "<div style='font-size: 14px;'>" . $releaseNotes . "</div>";
+echo "</div>";
 
 // Welche Dateien sollen zwingend gepackt werden?
 $baseFiles = [
