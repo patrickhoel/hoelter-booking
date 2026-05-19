@@ -92,11 +92,13 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
         const themeMode = '<?= $themeMode ?>';
         const isDemoMode = <?= (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE) ? 'true' : 'false' ?>;
         
-        function updateTheme() {
+        function updateTheme(forcedTheme = null) {
             const fpThemeLink = document.getElementById('flatpickr-theme');
             let isDark = false;
             
-            if (isDemoMode) {
+            if (forcedTheme) {
+                isDark = (forcedTheme === 'dark');
+            } else if (isDemoMode) {
                 const savedTheme = localStorage.getItem('planago-theme');
                 if (savedTheme === 'dark') isDark = true;
                 else if (savedTheme === 'light') isDark = false;
@@ -130,15 +132,17 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
             });
         }
         
+        // Immer auf Theme-Wechsel vom Parent (z.B. Landingpage) hören!
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'theme-change') {
+                if (isDemoMode) localStorage.setItem('planago-theme', e.data.theme);
+                updateTheme(e.data.theme);
+            }
+        });
+
         if (isDemoMode) {
             window.addEventListener('storage', (e) => {
                 if (e.key === 'planago-theme') updateTheme();
-            });
-            window.addEventListener('message', (e) => {
-                if (e.data && e.data.type === 'theme-change') {
-                    localStorage.setItem('planago-theme', e.data.theme);
-                    updateTheme();
-                }
             });
         }
     </script>
