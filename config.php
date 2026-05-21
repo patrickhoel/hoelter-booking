@@ -352,4 +352,83 @@ function getCsrfToken() {
 function validateCsrfToken($token) {
     return hash_equals($_SESSION['csrf_token'] ?? '', $token ?? '');
 }
+
+// --- NEU: ZENTRALE FEIERTAGS-BERECHNUNG ---
+function getPlanagoBlockedDates($holidaysJson) {
+    $data = json_decode($holidaysJson, true);
+    if (!$data) return [];
+    
+    // Abwärtskompatibilität: Falls noch das alte Format ["2026-12-24"] gespeichert ist
+    if (is_array($data) && !isset($data['auto_holidays'])) {
+        return $data;
+    }
+    
+    $blocked = [];
+    
+    // 1. Manuelle Betriebsferien / Einzelne Tage
+    // 1. Manuelle Betriebsferien / Einzelne Tage oder Zeiträume
+    if (!empty($data['custom'])) {
+        // Erlaubt sowohl Arrays als auch alte Komma-Strings
+        $customParts = is_array($data['custom']) ? $data['custom'] : explode(', ', $data['custom']);
+        
+        foreach ($customParts as $dateStr) {
+            $dateStr = trim($dateStr);
+            if (strpos($dateStr, ' to ') !== false) {
+                // Flatpickr Zeitraum aufsplitten und alle Tage dazwischen berechnen
+                $parts = explode(' to ', $dateStr);
+                if (count($parts) == 2) {
+                    try {
+                        $start = new DateTime($parts[0]);
+                        $end = new DateTime($parts[1]);
+                        $end->modify('+1 day'); // Damit der letzte Tag auch wirklich blockiert wird
+                        $period = new DatePeriod($start, new DateInterval('P1D'), $end);
+                        foreach ($period as $dt) {
+                            $blocked[] = $dt->format('Y-m-d');
+                        }
+                    } catch (Exception $e) {}
+                }
+            } else if (!empty($dateStr)) {
+                $blocked[] = $dateStr; // Einzelne Tage abfangen
+            }
+        }
+    }
+    
+    // 2. Automatische Feiertage für aktuelles und nächstes Jahr berechnen
+    $auto = $data['auto_holidays'] ?? [];
+    if (!empty($auto)) {
+        $currentYear = (int)date('Y');
+        $yearsToCheck = [$currentYear, $currentYear + 1]; // Dieses und nächstes Jahr blockieren
+        
+        foreach ($yearsToCheck as $year) {
+            $easterTimestamp = easter_date($year);
+            
+            // Feste Feiertage
+            $holidays = [
+                'neujahr' => "$year-01-01",
+                'tag_der_arbeit' => "$year-05-01",
+                'tag_der_dt_einheit' => "$year-10-03",
+                'heiligabend' => "$year-12-24",
+                'weihnachten1' => "$year-12-25",
+                'weihnachten2' => "$year-12-26",
+                'silvester' => "$year-12-31"
+            ];
+            
+            // Bewegliche Feiertage (berechnet vom Ostersonntag)
+            $holidays['karfreitag'] = date('Y-m-d', strtotime("-2 days", $easterTimestamp));
+            $holidays['ostermontag'] = date('Y-m-d', strtotime("+1 day", $easterTimestamp));
+            $holidays['himmelfahrt'] = date('Y-m-d', strtotime("+39 days", $easterTimestamp));
+            $holidays['pfingstmontag'] = date('Y-m-d', strtotime("+50 days", $easterTimestamp));
+            
+            // Prüfen, welche Haken der Admin gesetzt hat
+            foreach ($holidays as $key => $dateStr) {
+                if (!empty($auto[$key])) {
+                    $blocked[] = $dateStr;
+                }
+            }
+        }
+    }
+    
+    // Array bereinigen und zurückgeben
+    return array_values(array_unique($blocked));
+}
 ?>

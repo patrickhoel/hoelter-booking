@@ -140,8 +140,25 @@ $csrfToken = initCsrfToken();
                 <div class="card">
                     <h2>Urlaub & Feiertage</h2>
                     <p class="text-muted mt-0">An diesen Tagen können generell keine Termine gebucht werden.</p>
+                    
+                    <h3 class="fs-15 mt-15 mb-10">1. Automatische Feiertage (Schließen an:)</h3>
+                    <div class="gap-10 flex-wrap mb-20" style="background: var(--input-bg); padding: 15px; border-radius: 8px;">
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="neujahr"> Neujahr (01.01.)</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="karfreitag"> Karfreitag</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="ostermontag"> Ostermontag</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="tag_der_arbeit"> Tag d. Arbeit (01.05.)</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="himmelfahrt"> Christi Himmelfahrt</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="pfingstmontag"> Pfingstmontag</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="tag_der_dt_einheit"> Dt. Einheit (03.10.)</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="heiligabend"> Heiligabend (24.12.)</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="weihnachten1"> 1. Weihnachtsfeiertag</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="weihnachten2"> 2. Weihnachtsfeiertag</label>
+                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="silvester"> Silvester (31.12.)</label>
+                    </div>
+
+                    <h3 class="fs-15 mb-10">2. Betriebsferien / Individueller Urlaub</h3>
                     <div class="form-group full-width">
-                        <input type="text" id="holidays" placeholder="Tage auswählen..." class="custom-input" style="background-color: var(--input-bg);">
+                        <input type="text" id="holidays" placeholder="Zusätzliche freie Tage auswählen..." class="custom-input" style="background-color: var(--input-bg);">
                     </div>
                 </div>
 
@@ -720,6 +737,61 @@ $csrfToken = initCsrfToken();
             document.getElementById('removeLogoBtn').classList.add('d-none');
         }
 
+        // --- NEUER URLAUBS-MANAGER ---
+        let customVacations = []; 
+
+        const rangePicker = flatpickr("#vacation-range-picker", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d.m.Y", // Zeigt deutsches Format im Eingabefeld
+            locale: "de"
+        });
+
+        function renderVacationList() {
+            const list = document.getElementById('vacation-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            if (customVacations.length === 0) {
+                list.innerHTML = '<p style="color: #888; font-size: 13px; margin: 0;">Keine Betriebsferien eingetragen.</p>';
+                return;
+            }
+
+            customVacations.forEach((vacationStr, index) => {
+                let displayStr = vacationStr;
+                // Datum für die Anzeige von YYYY-MM-DD auf TT.MM.YYYY umbauen
+                if(vacationStr.includes(' to ')) {
+                    const parts = vacationStr.split(' to ');
+                    displayStr = parts[0].split('-').reverse().join('.') + ' - ' + parts[1].split('-').reverse().join('.');
+                } else {
+                    displayStr = vacationStr.split('-').reverse().join('.');
+                }
+
+                list.innerHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <span>🌴 <b>${displayStr}</b></span>
+                        <button type="button" onclick="removeVacation(${index})" style="background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Entfernen</button>
+                    </div>
+                `;
+            });
+        }
+
+        window.removeVacation = function(index) {
+            customVacations.splice(index, 1);
+            renderVacationList();
+        };
+
+        document.getElementById('add-vacation-btn').addEventListener('click', () => {
+            // Nimmt den originalen "YYYY-MM-DD to YYYY-MM-DD" String aus dem versteckten Input
+            const val = document.getElementById('vacation-range-picker').value;
+            if (val) {
+                customVacations.push(val);
+                rangePicker.clear();
+                renderVacationList();
+            }
+        });
+
         // 1. Einstellungen beim Laden abrufen
         fetch('api_settings.php')
             .then(r => r.json())
@@ -766,14 +838,25 @@ $csrfToken = initCsrfToken();
                     document.getElementById('icalLink').value = baseUrl + "ical_feed.php?token=" + data.calendar_sync_token;
                 }
                 
-                let savedHolidays = [];
-                try { savedHolidays = JSON.parse(data.holidays_json || '[]'); } catch(e) {}
-                flatpickr("#holidays", {
-                    mode: "multiple",
-                    dateFormat: "Y-m-d",
-                    locale: "de",
-                    defaultDate: savedHolidays
+                let savedSettings = { auto_holidays: {}, custom: "" };
+                try { 
+                    const parsed = JSON.parse(data.holidays_json || '{}'); 
+                    // Abwärtskompatibilität, falls es noch ein altes Array ist
+                    if (Array.isArray(parsed)) savedSettings.custom = parsed.join(', ');
+                    else savedSettings = parsed;
+                } catch(e) {}
+                
+                // Haken bei den Feiertagen setzen
+                const auto = savedSettings.auto_holidays || {};
+                document.querySelectorAll('.auto-holiday').forEach(cb => {
+                    cb.checked = !!auto[cb.value];
                 });
+
+                // Urlaubs-Array laden
+                if (savedSettings.custom) {
+                    customVacations = Array.isArray(savedSettings.custom) ? savedSettings.custom : savedSettings.custom.split(', ').filter(Boolean);
+                }
+                renderVacationList(); // Liste das erste Mal zeichnen
                 
                 updatesEnabled = data.updates_enabled !== undefined ? parseInt(data.updates_enabled) : 1;
                 checkForUpdates();
@@ -787,8 +870,15 @@ $csrfToken = initCsrfToken();
         // 2. Einstellungen absenden und speichern
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            let holidaysStr = document.getElementById('holidays').value;
-            let holidaysArr = holidaysStr ? holidaysStr.split(', ') : [];
+            
+            let autoHolidays = {};
+            document.querySelectorAll('.auto-holiday').forEach(cb => {
+                autoHolidays[cb.value] = cb.checked;
+            });
+            const holidaysJsonObj = {
+                auto_holidays: autoHolidays,
+                custom: customVacations
+            };
             
             const data = { 
                 work_start_time: document.getElementById('startTime').value, 
@@ -818,7 +908,7 @@ $csrfToken = initCsrfToken();
                 enable_reminders: document.getElementById('enableReminders').checked ? 1 : 0,
                 reminder_hours_before: document.getElementById('reminderHours').value,
                 theme_mode: document.getElementById('themeMode').value,
-                holidays_json: JSON.stringify(holidaysArr)
+                holidays_json: JSON.stringify(holidaysJsonObj)
             };
             fetch('api_settings.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) })
             .then(r => r.json())

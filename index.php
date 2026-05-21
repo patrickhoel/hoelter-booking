@@ -68,7 +68,9 @@ $companyAddress = $sysSettings['company_address'] ?? '';
 $accentColor = $sysSettings['widget_accent_color'] ?? '#34c759';
 $companyLogo = $sysSettings['company_logo'] ?? '';
 $themeMode = $sysSettings['theme_mode'] ?? 'auto';
-$holidaysJson = $sysSettings['holidays_json'] ?? '[]';
+$holidaysRaw = $sysSettings['holidays_json'] ?? '{}';
+$blockedDatesArray = getPlanagoBlockedDates($holidaysRaw);
+$holidaysJson = json_encode($blockedDatesArray);
 ?>
 <!DOCTYPE html>
 <html lang="de">

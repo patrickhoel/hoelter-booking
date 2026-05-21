@@ -97,9 +97,9 @@ try {
         exit;
     }
     
-    // NEU: Wenn das Datum ein Feiertag/Urlaubstag ist, gib leere Liste zurück
-    $holidays = json_decode($settings['holidays_json'] ?? '[]', true);
-    if (is_array($holidays) && in_array($targetDate->format('Y-m-d'), $holidays)) {
+    // NEU: Feiertage & Urlaub prüfen
+    $holidays = getPlanagoBlockedDates($settings['holidays_json'] ?? '{}');
+    if (in_array($targetDate->format('Y-m-d'), $holidays)) {
         echo json_encode(['available_slots' => []]);
         exit;
     }

@@ -167,8 +167,8 @@ try {
     $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
     
     // Sicherheits-Check: Ist es ein Feiertag?
-    $holidays = json_decode($sysSettings['holidays_json'] ?? '[]', true);
-    if (is_array($holidays) && in_array($startTime->format('Y-m-d'), $holidays)) {
+    $holidays = getPlanagoBlockedDates($sysSettings['holidays_json'] ?? '{}');
+    if (in_array($startTime->format('Y-m-d'), $holidays)) {
         http_response_code(400);
         throw new Exception("Dieser Tag ist ein Feiertag oder Urlaubstag und kann nicht gebucht werden.");
     }
