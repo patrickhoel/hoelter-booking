@@ -48,6 +48,58 @@ $csrfToken = initCsrfToken();
         .tabs-container .tab-btn {
             flex: 1 1 auto;
         }
+        .holidays-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .holiday-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--input-bg);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .holiday-card:hover {
+            border-color: var(--text-muted);
+            transform: translateY(-1px);
+        }
+        .holiday-card:has(input:checked) {
+            border-color: var(--danger);
+            background: rgba(255, 59, 48, 0.05); /* Zartes Rot als Hintergrund */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.15);
+        }
+        .holiday-card input[type="checkbox"] {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--danger);
+            cursor: pointer;
+        }
+        .holiday-card span {
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .holiday-card span::after {
+            content: 'Geöffnet';
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .holiday-card:has(input:checked) span::after {
+            content: 'Geschlossen';
+            color: var(--danger);
+        }
     </style>
     <?php if (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE): ?>
     <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
@@ -142,23 +194,29 @@ $csrfToken = initCsrfToken();
                     <p class="text-muted mt-0">An diesen Tagen können generell keine Termine gebucht werden.</p>
                     
                     <h3 class="fs-15 mt-15 mb-10">1. Automatische Feiertage (Schließen an:)</h3>
-                    <div class="gap-10 flex-wrap mb-20" style="background: var(--input-bg); padding: 15px; border-radius: 8px;">
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="neujahr"> Neujahr (01.01.)</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="karfreitag"> Karfreitag</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="ostermontag"> Ostermontag</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="tag_der_arbeit"> Tag d. Arbeit (01.05.)</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="himmelfahrt"> Christi Himmelfahrt</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="pfingstmontag"> Pfingstmontag</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="tag_der_dt_einheit"> Dt. Einheit (03.10.)</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="heiligabend"> Heiligabend (24.12.)</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="weihnachten1"> 1. Weihnachtsfeiertag</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="weihnachten2"> 2. Weihnachtsfeiertag</label>
-                        <label class="checkbox-label font-normal cursor-pointer w-auto m-0"><input type="checkbox" class="auto-holiday" value="silvester"> Silvester (31.12.)</label>
+                    <div class="holidays-grid">
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="neujahr"> <span>Neujahr (01.01.)</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="karfreitag"> <span>Karfreitag</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="ostermontag"> <span>Ostermontag</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="tag_der_arbeit"> <span>Tag d. Arbeit (01.05.)</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="himmelfahrt"> <span>Christi Himmelfahrt</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="pfingstmontag"> <span>Pfingstmontag</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="tag_der_dt_einheit"> <span>Dt. Einheit (03.10.)</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="heiligabend"> <span>Heiligabend (24.12.)</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="weihnachten1"> <span>1. Weihnachtsfeiertag</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="weihnachten2"> <span>2. Weihnachtsfeiertag</span></label>
+                        <label class="holiday-card"><input type="checkbox" class="auto-holiday" value="silvester"> <span>Silvester (31.12.)</span></label>
                     </div>
 
                     <h3 class="fs-15 mb-10">2. Betriebsferien / Individueller Urlaub</h3>
-                    <div class="form-group full-width">
-                        <input type="text" id="holidays" placeholder="Zusätzliche freie Tage auswählen..." class="custom-input" style="background-color: var(--input-bg);">
+                    <div style="background: var(--input-bg); padding: 15px; border-radius: 8px;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="vacation-range-picker" placeholder="Zeitraum wählen (z.B. 10.08. bis 24.08.)" class="custom-input" style="flex-grow: 1; background-color: var(--card-bg);">
+                            <button type="button" id="add-vacation-btn" class="btn-secondary w-auto" style="white-space: nowrap; padding: 0 20px;">+ Hinzufügen</button>
+                        </div>
+                        
+                        <div id="vacation-list" style="display: flex; flex-direction: column; gap: 10px;">
+                            </div>
                     </div>
                 </div>
 
@@ -527,6 +585,39 @@ $csrfToken = initCsrfToken();
     </div>
 
     <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
+        // --- NEUER URLAUBS-MANAGER ---
+        let customVacations = []; 
+        let rangePicker;
+
+        function renderVacationList() {
+            const list = document.getElementById('vacation-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            if (customVacations.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; margin: 0;">Keine Betriebsferien eingetragen.</p>';
+                return;
+            }
+
+            customVacations.forEach((vacationStr, index) => {
+                let displayStr = vacationStr;
+                if(vacationStr.includes(' to ') || vacationStr.includes(' bis ')) {
+                    const separator = vacationStr.includes(' bis ') ? ' bis ' : ' to ';
+                    const parts = vacationStr.split(separator);
+                    displayStr = parts[0].split('-').reverse().join('.') + ' - ' + parts[1].split('-').reverse().join('.');
+                } else {
+                    displayStr = vacationStr.split('-').reverse().join('.');
+                }
+
+                list.innerHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <span>🌴 <b>${displayStr}</b></span>
+                        <button type="button" data-action="remove-vacation" data-index="${index}" class="btn-danger btn-icon" style="padding: 5px 10px; height: auto;">Entfernen</button>
+                    </div>
+                `;
+            });
+        }
+
         // --- CSP EVENT LISTENERS (Keine Inline-Events mehr!) ---
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('updateBtn')?.addEventListener('click', startUpdate);
@@ -550,6 +641,24 @@ $csrfToken = initCsrfToken();
             
             document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => openTab(e.target.id.replace('btn-', ''))));
             
+            rangePicker = flatpickr("#vacation-range-picker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d.m.Y", // Zeigt deutsches Format im Eingabefeld
+                locale: "de"
+            });
+
+            document.getElementById('add-vacation-btn')?.addEventListener('click', () => {
+                let val = document.getElementById('vacation-range-picker').value;
+                if (val) {
+                    val = val.replace(' bis ', ' to '); // Zwingt Flatpickr zu einem einheitlichen Format
+                    customVacations.push(val);
+                    rangePicker.clear();
+                    renderVacationList();
+                }
+            });
+
             // Event-Delegation für dynamisch geladene Buttons in den Tabellen
             document.addEventListener('click', (e) => {
                 if (e.target.matches('[data-action="edit-event"]')) editEvent(e.target.getAttribute('data-id'));
@@ -559,6 +668,10 @@ $csrfToken = initCsrfToken();
                 if (e.target.matches('[data-action="offer-alternative"]')) offerAlternative(e.target.getAttribute('data-id'));
                 if (e.target.matches('[data-action="select-text"]')) e.target.select();
                 if (e.target.matches('[data-action="remove-field"]')) removeField(e.target.getAttribute('data-index'));
+                if (e.target.matches('[data-action="remove-vacation"]')) {
+                    customVacations.splice(e.target.getAttribute('data-index'), 1);
+                    renderVacationList();
+                }
             });
             document.addEventListener('change', (e) => {
                 if (e.target.matches('[data-action="update-field"]')) updateField(e.target.getAttribute('data-index'), e.target.getAttribute('data-key'), e.target.type === 'checkbox' ? e.target.checked : e.target.value);
@@ -737,61 +850,6 @@ $csrfToken = initCsrfToken();
             document.getElementById('removeLogoBtn').classList.add('d-none');
         }
 
-        // --- NEUER URLAUBS-MANAGER ---
-        let customVacations = []; 
-
-        const rangePicker = flatpickr("#vacation-range-picker", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d.m.Y", // Zeigt deutsches Format im Eingabefeld
-            locale: "de"
-        });
-
-        function renderVacationList() {
-            const list = document.getElementById('vacation-list');
-            if (!list) return;
-            list.innerHTML = '';
-            
-            if (customVacations.length === 0) {
-                list.innerHTML = '<p style="color: #888; font-size: 13px; margin: 0;">Keine Betriebsferien eingetragen.</p>';
-                return;
-            }
-
-            customVacations.forEach((vacationStr, index) => {
-                let displayStr = vacationStr;
-                // Datum für die Anzeige von YYYY-MM-DD auf TT.MM.YYYY umbauen
-                if(vacationStr.includes(' to ')) {
-                    const parts = vacationStr.split(' to ');
-                    displayStr = parts[0].split('-').reverse().join('.') + ' - ' + parts[1].split('-').reverse().join('.');
-                } else {
-                    displayStr = vacationStr.split('-').reverse().join('.');
-                }
-
-                list.innerHTML += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <span>🌴 <b>${displayStr}</b></span>
-                        <button type="button" onclick="removeVacation(${index})" style="background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Entfernen</button>
-                    </div>
-                `;
-            });
-        }
-
-        window.removeVacation = function(index) {
-            customVacations.splice(index, 1);
-            renderVacationList();
-        };
-
-        document.getElementById('add-vacation-btn').addEventListener('click', () => {
-            // Nimmt den originalen "YYYY-MM-DD to YYYY-MM-DD" String aus dem versteckten Input
-            const val = document.getElementById('vacation-range-picker').value;
-            if (val) {
-                customVacations.push(val);
-                rangePicker.clear();
-                renderVacationList();
-            }
-        });
-
         // 1. Einstellungen beim Laden abrufen
         fetch('api_settings.php')
             .then(r => r.json())
@@ -852,11 +910,10 @@ $csrfToken = initCsrfToken();
                     cb.checked = !!auto[cb.value];
                 });
 
-                // Urlaubs-Array laden
                 if (savedSettings.custom) {
                     customVacations = Array.isArray(savedSettings.custom) ? savedSettings.custom : savedSettings.custom.split(', ').filter(Boolean);
                 }
-                renderVacationList(); // Liste das erste Mal zeichnen
+                renderVacationList();
                 
                 updatesEnabled = data.updates_enabled !== undefined ? parseInt(data.updates_enabled) : 1;
                 checkForUpdates();

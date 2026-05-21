@@ -7,11 +7,13 @@ $version = PLANAGO_VERSION;
 
 // --- RELEASE NOTES (WAS IST NEU?) ---
 // Trage hier vor dem Ausführen der Datei kurz ein, was sich geändert hat.
-$releaseNotes = "
+$releaseNotes = <<<'HTML'
 <ul style='margin: 0; padding-left: 20px;'>
-    <li><b>Feature:</b> Neues Feiertags- und Urlaubssystem! Du kannst nun im Admin-Panel unter 'Zeiten & Prozess' globale Tage markieren, an denen keine Buchungen möglich sind.</li>
-    <li><b>Fix:</b> Diverse Zeitzonen-Korrekturen (Sommer-/Winterzeit) für den Hintergrund-Server (Cronjobs) und das Dashboard.</li>
-</ul>";
+    <li><b>Feature:</b> Premium Urlaubsmanager! Eigene Betriebsferien lassen sich nun ganz bequem über eine intuitive Kalender-Zeitraum-Auswahl hinzufügen und verwalten.</li>
+    <li><b>Design:</b> Komplett neues Kachel-Grid für die automatischen Feiertage im Dashboard inkl. klarer roter "Geschlossen"-Markierung beim Aktivieren.</li>
+    <li><b>Fix:</b> Behebung eines Formatierungsfehlers, bei dem Zeiträume durch deutsche Browsersprachen ("bis" statt "to") falsch verarbeitet wurden.</li>
+</ul>
+HTML;
 
 echo "<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>";
 

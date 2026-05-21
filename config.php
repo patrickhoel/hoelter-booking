@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.4.0'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.4.1'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -373,9 +373,10 @@ function getPlanagoBlockedDates($holidaysJson) {
         
         foreach ($customParts as $dateStr) {
             $dateStr = trim($dateStr);
-            if (strpos($dateStr, ' to ') !== false) {
+            if (strpos($dateStr, ' to ') !== false || strpos($dateStr, ' bis ') !== false) {
                 // Flatpickr Zeitraum aufsplitten und alle Tage dazwischen berechnen
-                $parts = explode(' to ', $dateStr);
+                $separator = strpos($dateStr, ' bis ') !== false ? ' bis ' : ' to ';
+                $parts = explode($separator, $dateStr);
                 if (count($parts) == 2) {
                     try {
                         $start = new DateTime($parts[0]);
