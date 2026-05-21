@@ -30,6 +30,12 @@ $csrfToken = initCsrfToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Planago - Admin Panel</title>
+    
+    <!-- Flatpickr CSS & JS für die Feiertags-Auswahl -->
+    <link rel="stylesheet" href="assets/flatpickr/flatpickr.min.css?v=<?= PLANAGO_VERSION ?>">
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/flatpickr.min.js?v=<?= PLANAGO_VERSION ?>"></script>
+    <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>" src="assets/flatpickr/de.js?v=<?= PLANAGO_VERSION ?>"></script>
+    
     <link rel="stylesheet" href="assets/admin_style.css">
     <style nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         /* Verhindert den horizontalen Scrollbalken bei schmalen iFrames/Handys */
@@ -131,6 +137,14 @@ $csrfToken = initCsrfToken();
                     </label>
                 </div>
                 
+                <div class="card">
+                    <h2>Urlaub & Feiertage</h2>
+                    <p class="text-muted mt-0">An diesen Tagen können generell keine Termine gebucht werden.</p>
+                    <div class="form-group full-width">
+                        <input type="text" id="holidays" placeholder="Tage auswählen..." class="custom-input" style="background-color: var(--input-bg);">
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-success mt-20 w-auto">Zeiten & Prozess speichern</button>
                 <div class="settingsMessage settings-msg"></div>
             </div>
@@ -752,6 +766,15 @@ $csrfToken = initCsrfToken();
                     document.getElementById('icalLink').value = baseUrl + "ical_feed.php?token=" + data.calendar_sync_token;
                 }
                 
+                let savedHolidays = [];
+                try { savedHolidays = JSON.parse(data.holidays_json || '[]'); } catch(e) {}
+                flatpickr("#holidays", {
+                    mode: "multiple",
+                    dateFormat: "Y-m-d",
+                    locale: "de",
+                    defaultDate: savedHolidays
+                });
+                
                 updatesEnabled = data.updates_enabled !== undefined ? parseInt(data.updates_enabled) : 1;
                 checkForUpdates();
             });
@@ -764,6 +787,9 @@ $csrfToken = initCsrfToken();
         // 2. Einstellungen absenden und speichern
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            let holidaysStr = document.getElementById('holidays').value;
+            let holidaysArr = holidaysStr ? holidaysStr.split(', ') : [];
+            
             const data = { 
                 work_start_time: document.getElementById('startTime').value, 
                 work_end_time: document.getElementById('endTime').value,
@@ -791,7 +817,8 @@ $csrfToken = initCsrfToken();
                 zapier_webhook_url: document.getElementById('zapierWebhookUrl').value,
                 enable_reminders: document.getElementById('enableReminders').checked ? 1 : 0,
                 reminder_hours_before: document.getElementById('reminderHours').value,
-                theme_mode: document.getElementById('themeMode').value
+                theme_mode: document.getElementById('themeMode').value,
+                holidays_json: JSON.stringify(holidaysArr)
             };
             fetch('api_settings.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) })
             .then(r => r.json())

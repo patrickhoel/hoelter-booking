@@ -163,8 +163,16 @@ try {
     }
     
     // 3.5 Prüfen, ob Zwei-Wege-Bestätigung aktiv ist
-    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email, company_link_impressum, company_link_privacy, company_link_agb, company_address, company_logo FROM settings LIMIT 1");
+    $settingStmt = $db->query("SELECT require_manual_confirmation, company_name, admin_email, company_link_impressum, company_link_privacy, company_link_agb, company_address, company_logo, holidays_json FROM settings LIMIT 1");
     $sysSettings = $settingStmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Sicherheits-Check: Ist es ein Feiertag?
+    $holidays = json_decode($sysSettings['holidays_json'] ?? '[]', true);
+    if (is_array($holidays) && in_array($startTime->format('Y-m-d'), $holidays)) {
+        http_response_code(400);
+        throw new Exception("Dieser Tag ist ein Feiertag oder Urlaubstag und kann nicht gebucht werden.");
+    }
+
     $require_manual = $sysSettings['require_manual_confirmation'] ?? 0;
     $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
     $adminEmail = $sysSettings['admin_email'] ?? '';

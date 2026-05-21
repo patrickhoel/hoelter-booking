@@ -5,6 +5,7 @@ const datePickerEl = document.getElementById('datePicker');
 const activeDays = JSON.parse(datePickerEl.getAttribute('data-activedays') || "[1,2,3,4,5,6]");
 const noticeMinHours = parseInt(datePickerEl.getAttribute('data-minhours') || "24");
 const noticeMaxDays = parseInt(datePickerEl.getAttribute('data-maxdays') || "60");
+const holidays = JSON.parse(datePickerEl.getAttribute('data-holidays') || "[]");
 
 const now = new Date();
 const minAllowedDate = new Date(now.getTime() + (noticeMinHours * 60 * 60 * 1000));
@@ -23,7 +24,8 @@ flatpickr("#datePicker", {
         function(date) {
             // Deaktiviere alle Tage, die NICHT in unserer activeDays Liste sind
             return !activeDays.includes(date.getDay());
-        }
+            },
+            ...holidays // Fügt die blockierten Feiertage hinzu
     ],
     onChange: function(selectedDates, dateStr, instance) {
         // Wenn ein Datum angeklickt wird: Lade freie Termine

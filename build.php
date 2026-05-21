@@ -9,7 +9,8 @@ $version = PLANAGO_VERSION;
 // Trage hier vor dem Ausführen der Datei kurz ein, was sich geändert hat.
 $releaseNotes = "
 <ul style='margin: 0; padding-left: 20px;'>
-    <li><b>Fix:</b> Ungewollte Scrollbalken bei Tabellen in der Desktop-Ansicht entfernt.</li>
+    <li><b>Feature:</b> Neues Feiertags- und Urlaubssystem! Du kannst nun im Admin-Panel unter 'Zeiten & Prozess' globale Tage markieren, an denen keine Buchungen möglich sind.</li>
+    <li><b>Fix:</b> Diverse Zeitzonen-Korrekturen (Sommer-/Winterzeit) für den Hintergrund-Server (Cronjobs) und das Dashboard.</li>
 </ul>";
 
 echo "<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>";

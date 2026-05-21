@@ -24,6 +24,7 @@ try {
     try { $db->exec("ALTER TABLE settings ADD COLUMN license_status TEXT DEFAULT 'valid'"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN license_last_check DATETIME DEFAULT '1970-01-01 00:00:00'"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE settings ADD COLUMN updates_enabled INTEGER DEFAULT 1"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE settings ADD COLUMN holidays_json TEXT DEFAULT '[]'"); } catch (Exception $e) {}
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // CSRF Token Validierung
@@ -68,6 +69,7 @@ try {
         $theme_mode = $data['theme_mode'] ?? 'auto';
         $enable_reminders = isset($data['enable_reminders']) ? (int)$data['enable_reminders'] : 0;
         $reminder_hours_before = $data['reminder_hours_before'] ?? 24;
+        $holidays_json = $data['holidays_json'] ?? '[]';
         
         // Aktuelle sensible Settings auslesen
         $stmtCurrent = $db->query("SELECT company_logo, smtp_pass FROM settings LIMIT 1");
@@ -111,8 +113,8 @@ try {
                 }
             }
 
-            $sql = "UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?, admin_username = ?, widget_accent_color = ?, company_logo = ?, google_review_link = ?, enable_review_email = ?, zapier_webhook_url = ?, theme_mode = ?, enable_reminders = ?, reminder_hours_before = ?";
-            $params = [$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb, $admin_username, $widget_accent_color, $company_logo, $google_review_link, $enable_review_email, $zapier_webhook_url, $theme_mode, $enable_reminders, $reminder_hours_before];
+            $sql = "UPDATE settings SET work_start_time = ?, work_end_time = ?, require_manual_confirmation = ?, smtp_from = ?, smtp_host = ?, smtp_port = ?, smtp_user = ?, smtp_pass = ?, company_name = ?, admin_email = ?, smtp_from_name = ?, company_phone = ?, company_address = ?, company_link_impressum = ?, company_link_privacy = ?, company_link_agb = ?, admin_username = ?, widget_accent_color = ?, company_logo = ?, google_review_link = ?, enable_review_email = ?, zapier_webhook_url = ?, theme_mode = ?, enable_reminders = ?, reminder_hours_before = ?, holidays_json = ?";
+            $params = [$start, $end, $manual, $smtp_from, $smtp_host, $smtp_port, $smtp_user, $smtp_pass, $company_name, $admin_email, $smtp_from_name, $company_phone, $company_address, $company_link_impressum, $company_link_privacy, $company_link_agb, $admin_username, $widget_accent_color, $company_logo, $google_review_link, $enable_review_email, $zapier_webhook_url, $theme_mode, $enable_reminders, $reminder_hours_before, $holidays_json];
             
             if (!empty($admin_new_password)) {
                 $sql .= ", admin_password_hash = ?, force_password_change = 0";

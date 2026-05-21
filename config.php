@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.3.10'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.4.0'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {

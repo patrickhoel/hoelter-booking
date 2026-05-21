@@ -146,7 +146,8 @@ try {
         "ALTER TABLE bookings ADD COLUMN reminder_sent INTEGER DEFAULT 0",
         "ALTER TABLE settings ADD COLUMN enable_reminders INTEGER DEFAULT 0",
         "ALTER TABLE settings ADD COLUMN reminder_hours_before INTEGER DEFAULT 24",
-        "ALTER TABLE settings ADD COLUMN updates_enabled INTEGER DEFAULT 1"
+        "ALTER TABLE settings ADD COLUMN updates_enabled INTEGER DEFAULT 1",
+        "ALTER TABLE settings ADD COLUMN holidays_json TEXT DEFAULT '[]'"
     ];
     foreach ($migrations as $sql) {
         try { $db->exec($sql); } catch (PDOException $e) { /* Ignorieren, falls Spalte schon existiert */ }

@@ -58,7 +58,7 @@ $noticeMinHours = $event['notice_min_hours'] ?? 24;
 $noticeMaxDays = $event['notice_max_days'] ?? 60;
 
 // --- NEU: Impressum & Datenschutz auslesen ---
-$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo, theme_mode FROM settings LIMIT 1");
+$settingsStmt = $db->query("SELECT company_name, company_link_impressum, company_link_privacy, company_link_agb, company_address, widget_accent_color, company_logo, theme_mode, holidays_json FROM settings LIMIT 1");
 $sysSettings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
 $companyName = $sysSettings['company_name'] ?? 'Planago Booking';
 $impressumLink = $sysSettings['company_link_impressum'] ?? '';
@@ -68,6 +68,7 @@ $companyAddress = $sysSettings['company_address'] ?? '';
 $accentColor = $sysSettings['widget_accent_color'] ?? '#34c759';
 $companyLogo = $sysSettings['company_logo'] ?? '';
 $themeMode = $sysSettings['theme_mode'] ?? 'auto';
+$holidaysJson = $sysSettings['holidays_json'] ?? '[]';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -250,6 +251,7 @@ $themeMode = $sysSettings['theme_mode'] ?? 'auto';
                 <label for="datePicker">Wähle ein Datum</label>
                 <input type="text" id="datePicker" placeholder="Datum auswählen..." 
                     data-activedays="<?= htmlspecialchars(json_encode($activeDays)) ?>"
+                    data-holidays="<?= htmlspecialchars($holidaysJson) ?>"
                     data-minhours="<?= $noticeMinHours ?>"
                     data-maxdays="<?= $noticeMaxDays ?>"
                     required>

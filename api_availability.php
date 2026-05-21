@@ -69,7 +69,7 @@ try {
     $stmt->execute([$eventId]);
     $event = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $settingsStmt = $db->query("SELECT work_start_time, work_end_time FROM settings LIMIT 1");
+    $settingsStmt = $db->query("SELECT work_start_time, work_end_time, holidays_json FROM settings LIMIT 1");
     $settings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$event || !$settings) {
@@ -93,6 +93,13 @@ try {
     // Wenn der angefragte Wochentag nicht aktiv ist, gib leere Liste zurück
     $requestedDayOfWeek = (int)$targetDate->format('w');
     if (!in_array($requestedDayOfWeek, $activeDays)) {
+        echo json_encode(['available_slots' => []]);
+        exit;
+    }
+    
+    // NEU: Wenn das Datum ein Feiertag/Urlaubstag ist, gib leere Liste zurück
+    $holidays = json_decode($settings['holidays_json'] ?? '[]', true);
+    if (is_array($holidays) && in_array($targetDate->format('Y-m-d'), $holidays)) {
         echo json_encode(['available_slots' => []]);
         exit;
     }
