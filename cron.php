@@ -19,7 +19,7 @@ function checkLicense() {
 
     if (!$settings) return; // Should not happen on an installed system
 
-    $lastCheck = new DateTime($settings['license_last_check'] ?? '1970-01-01');
+    $lastCheck = new DateTime($settings['license_last_check'] ?? '1970-01-01', new DateTimeZone('UTC'));
     $now = new DateTime();
     $diff = $now->getTimestamp() - $lastCheck->getTimestamp();
 
@@ -95,8 +95,8 @@ function sendReviewEmails() {
         FROM bookings 
         WHERE status = 'confirmed' 
         AND review_email_sent = 0 
-        AND start_time < datetime('now', '-24 hours')
-        AND start_time > datetime('now', '-30 days') -- Don't send for very old bookings
+        AND start_time < datetime('now', 'localtime', '-24 hours')
+        AND start_time > datetime('now', 'localtime', '-30 days') -- Don't send for very old bookings
     ");
     $bookings = $bookingStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -131,8 +131,8 @@ function sendAppointmentReminders() {
         JOIN event_types e ON b.event_type_id = e.id
         WHERE b.status = 'confirmed'
         AND b.reminder_sent = 0
-        AND b.start_time > datetime('now')
-        AND b.start_time <= datetime('now', '+' || ? || ' hours')
+        AND b.start_time > datetime('now', 'localtime')
+        AND b.start_time <= datetime('now', 'localtime', '+' || ? || ' hours')
     ");
     $bookingStmt->execute([$hoursBefore]);
     $bookings = $bookingStmt->fetchAll(PDO::FETCH_ASSOC);
