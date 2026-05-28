@@ -15,7 +15,7 @@ $releaseNotes = <<<'HTML'
 </ul>
 HTML;
 
-echo "<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>";
+echo "<div style='font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 30px; line-height: 1.6; border: 1px solid #e5e5ea; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.05); background: #fff;'>";
 
 if (!class_exists('ZipArchive')) {
     die("<p style='color:red;'><strong>Fehler:</strong> Die PHP ZipArchive Erweiterung ist nicht aktiviert. Bitte aktiviere <code>extension=zip</code> in deiner php.ini (XAMPP Config) und starte Apache neu.</p></div>");
