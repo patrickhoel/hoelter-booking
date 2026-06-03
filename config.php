@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.4.1'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.4.2'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -42,32 +42,72 @@ if (in_array($currentScript, $strictPages)) {
 // --- LIZENZSCHLÜSSEL (aus Umgebungsvariablen/Datei) ---
 $licenseKey = getenv('PLANAGO_LICENSE_KEY');
 $demoMode = false;
-$appSecret = getenv('PLANAGO_APP_SECRET');
+$appSecret = getenv('PLANAGO_APP_SECRET') ?: '';
 
-if (empty($licenseKey) && file_exists(__DIR__ . '/.env')) {
+// =========================================================================
+// 1. SECURITY MIGRATION: .env zu .env.php konvertieren (Selbstheilung)
+// =========================================================================
+if (file_exists(__DIR__ . '/.env')) {
     $envContent = file_get_contents(__DIR__ . '/.env');
-    if (preg_match('/PLANAGO_LICENSE_KEY\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
-        $licenseKey = trim($matches[1]);
+    
+    // Falls der PHP-Schutz noch fehlt, hinzufügen
+    if (strpos($envContent, '<?php') === false) {
+        $envContent = "<?php http_response_code(403); exit; ?>\n" . $envContent;
     }
-    if (preg_match('/PLANAGO_DEMO_MODE\s*=\s*true/i', $envContent)) {
-        $demoMode = true;
-    }
-    if (preg_match('/PLANAGO_APP_SECRET\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
-        $appSecret = trim($matches[1]);
+    
+    // Neue .env.php schreiben und die unsichere .env sofort löschen
+    if (@file_put_contents(__DIR__ . '/.env.php', $envContent) !== false) {
+        @unlink(__DIR__ . '/.env');
     }
 }
 
-// Automatisches Generieren des APP_SECRETs für bestehende Installationen
+// =========================================================================
+// 2. DATEN AUSLESEN (Bevorzugt aus der neuen .env.php)
+// =========================================================================
+$envFile = file_exists(__DIR__ . '/.env.php') ? '/.env.php' : (file_exists(__DIR__ . '/.env') ? '/.env' : null);
+
+if ($envFile) {
+    $envContent = file_get_contents(__DIR__ . $envFile);
+    
+    // Lizenzschlüssel auslesen
+    if (empty($licenseKey) && preg_match('/PLANAGO_LICENSE_KEY\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
+        $licenseKey = trim($matches[1]);
+    }
+    
+    // App Secret auslesen (falls es in der Datei steht)
+    if (empty($appSecret) && preg_match('/PLANAGO_APP_SECRET\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
+        $appSecret = trim($matches[1]);
+    }
+    
+    // Demo Mode auslesen (falls vorhanden)
+    if (preg_match('/PLANAGO_DEMO_MODE\s*=\s*(true|1)/i', $envContent)) {
+        $demoMode = true;
+    }
+}
+
+// =========================================================================
+// 3. APP SECRET GENERIEREN (Falls noch nicht vorhanden)
+// =========================================================================
 if (empty($appSecret)) {
     $appSecret = bin2hex(random_bytes(32));
     $envAppend = "\nPLANAGO_APP_SECRET=" . $appSecret . "\n";
-    @file_put_contents(__DIR__ . '/.env', $envAppend, FILE_APPEND);
-    @chmod(__DIR__ . '/.env', 0600);
+    
+    $targetFile = __DIR__ . '/.env.php';
+    
+    // Falls die Datei gar nicht existiert, Basis mit Schutz anlegen
+    if (!file_exists($targetFile)) {
+        @file_put_contents($targetFile, "<?php http_response_code(403); exit; ?>\n");
+    }
+    
+    @file_put_contents($targetFile, $envAppend, FILE_APPEND);
+    @chmod($targetFile, 0600); // Setzt strenge Dateirechte
 }
 
-define('PLANAGO_LICENSE_KEY', $licenseKey ?: 'demo-key');
-define('PLANAGO_DEMO_MODE', $demoMode);
-define('PLANAGO_APP_SECRET', $appSecret);
+// --- KONSTANTEN SETZEN ---
+// Wichtig: encryptSecret(), update.php und install.php benötigen diese Konstanten zwingend!
+if (!defined('PLANAGO_LICENSE_KEY')) define('PLANAGO_LICENSE_KEY', $licenseKey);
+if (!defined('PLANAGO_APP_SECRET')) define('PLANAGO_APP_SECRET', $appSecret);
+if (!defined('PLANAGO_DEMO_MODE')) define('PLANAGO_DEMO_MODE', $demoMode);
 
 // --- SECRET ENCRYPTION ---
 function encryptSecret($plainText) {

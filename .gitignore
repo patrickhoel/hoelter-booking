@@ -13,3 +13,6 @@ instance/
 
 # Build-Dateien
 *.zip
+
+# env php
+*.env.php

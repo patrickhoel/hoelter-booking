@@ -9,9 +9,9 @@ $version = PLANAGO_VERSION;
 // Trage hier vor dem Ausführen der Datei kurz ein, was sich geändert hat.
 $releaseNotes = <<<'HTML'
 <ul style='margin: 0; padding-left: 20px;'>
-    <li><b>Feature:</b> Premium Urlaubsmanager! Eigene Betriebsferien lassen sich nun ganz bequem über eine intuitive Kalender-Zeitraum-Auswahl hinzufügen und verwalten.</li>
-    <li><b>Design:</b> Komplett neues Kachel-Grid für die automatischen Feiertage im Dashboard inkl. klarer roter "Geschlossen"-Markierung beim Aktivieren.</li>
-    <li><b>Fix:</b> Behebung eines Formatierungsfehlers, bei dem Zeiträume durch deutsche Browsersprachen ("bis" statt "to") falsch verarbeitet wurden.</li>
+    <li><b>Security:</b> Kritisches Sicherheitsupdate für alle Server-Umgebungen (speziell für Nginx & LiteSpeed). Optimiert den Schutz der Konfigurationsdateien vor unbefugtem Lesezugriff.</li>
+    <li><b>Security:</b> Verbesserte Eingabe-Validierung (XSS- und CSS-Injection Schutz) im Admin-Dashboard für noch höhere Sicherheit.</li>
+    <li><b>System:</b> Automatischer Migrationsprozess integriert. Das System heilt alte Dateistrukturen beim ersten Laden vollautomatisch.</li>
 </ul>
 HTML;
 
@@ -37,7 +37,7 @@ echo "</div>";
 
 // Welche Dateien sollen zwingend gepackt werden?
 $baseFiles = [
-    'admin.php', 'anleitung.php', 'api_availability.php', 'api_book.php', 
+    '.htaccess', 'admin.php', 'anleitung.php', 'api_availability.php', 'api_book.php', 
     'api_bookings.php', 'api_confirm_booking.php', 'api_delete_booking.php', 
     'api_delete_event.php', 'api_events.php', 'api_event_settings.php', 
     'api_reschedule_invite.php', 'api_settings.php', 'api_test_email.php', 

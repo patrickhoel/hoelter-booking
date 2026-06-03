@@ -92,7 +92,7 @@ $holidaysJson = json_encode($blockedDatesArray);
     
     <script nonce="<?= htmlspecialchars(CSP_NONCE) ?>">
         // --- THEME & FLATPICKR LOGIK ---
-        const themeMode = '<?= $themeMode ?>';
+        const themeMode = <?= json_encode($themeMode) ?>;
         const isDemoMode = <?= (defined('PLANAGO_DEMO_MODE') && PLANAGO_DEMO_MODE) ? 'true' : 'false' ?>;
         
         function updateTheme(forcedTheme = null) {

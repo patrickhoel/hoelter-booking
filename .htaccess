@@ -1,0 +1,9 @@
+# Verhindert den Zugriff auf .env Dateien
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Optional: Schützt auch andere versteckte Dateien
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

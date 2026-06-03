@@ -62,11 +62,42 @@ try {
         $company_link_agb = $data['company_link_agb'] ?? '';
         $admin_username = $data['admin_username'] ?? 'admin';
         $admin_new_password = $data['admin_new_password'] ?? '';
+        
+        // --- SECURITY FIX: Striktes Whitelisting & Validierung ---
         $widget_accent_color = $data['widget_accent_color'] ?? '#34c759';
+        // Lässt nur echte Hex-Farbwerte zu (verhindert CSS-Injection)
+        if (!preg_match('/^#[a-fA-F0-9]{3,8}$/', $widget_accent_color)) {
+            $widget_accent_color = '#34c759';
+        }
+        
+        $theme_mode = $data['theme_mode'] ?? 'auto';
+        // Lässt nur die 3 definierten Theme-Werte zu (verhindert XSS)
+        if (!in_array($theme_mode, ['auto', 'light', 'dark'])) {
+            $theme_mode = 'auto';
+        }
+        
+        $admin_email = $data['admin_email'] ?? '';
+        if (!empty($admin_email) && !filter_var($admin_email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400); echo json_encode(['error' => 'Ungültige Admin E-Mail-Adresse.']); exit;
+        }
+
+        $smtp_from = $data['smtp_from'] ?? '';
+        if (!empty($smtp_from) && !filter_var($smtp_from, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400); echo json_encode(['error' => 'Ungültige Absender E-Mail-Adresse.']); exit;
+        }
+        
+        // Validiert, dass Start- und Endzeit wirklich das Format HH:MM haben
+        if ($start && !preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $start)) {
+            http_response_code(400); echo json_encode(['error' => 'Ungültiges Startzeit-Format.']); exit;
+        }
+        if ($end && !preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $end)) {
+            http_response_code(400); echo json_encode(['error' => 'Ungültiges Endzeit-Format.']); exit;
+        }
+        // ---------------------------------------------------------
+
         $google_review_link = $data['google_review_link'] ?? '';
         $enable_review_email = isset($data['enable_review_email']) ? (int)$data['enable_review_email'] : 0;
         $zapier_webhook_url = $data['zapier_webhook_url'] ?? '';
-        $theme_mode = $data['theme_mode'] ?? 'auto';
         $enable_reminders = isset($data['enable_reminders']) ? (int)$data['enable_reminders'] : 0;
         $reminder_hours_before = $data['reminder_hours_before'] ?? 24;
         $holidays_json = $data['holidays_json'] ?? '[]';
