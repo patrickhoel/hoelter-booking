@@ -42,6 +42,9 @@ try {
     $db = getDb();
     $stmt = $db->query("SELECT license_status FROM settings LIMIT 1");
     $license_status = $stmt->fetchColumn();
+    
+    // Fallback: Falls die Spalte durch ein Update leer/null ist, gehen wir von 'valid' aus
+    if (empty($license_status)) { $license_status = 'valid'; }
 
     if ($license_status !== 'valid' && PLANAGO_LICENSE_KEY !== 'demo-key') {
         http_response_code(402); // Payment Required

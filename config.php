@@ -3,7 +3,7 @@
 // Hier definieren wir globale Einstellungen für das gesamte System
 
 // --- SYSTEM VERSION ---
-define('PLANAGO_VERSION', '1.4.2'); // WICHTIG: Bei jedem Update anpassen!
+define('PLANAGO_VERSION', '1.4.3'); // WICHTIG: Bei jedem Update anpassen!
 
 // --- SESSION SECURITY ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -103,11 +103,41 @@ if (empty($appSecret)) {
     @chmod($targetFile, 0600); // Setzt strenge Dateirechte
 }
 
+// =========================================================================
+// 3.5 DATENBANK-SCHUTZ: Dynamische Umbenennung (Security by Obscurity)
+// =========================================================================
+$dbFileName = '';
+
+// Schauen, ob wir schon einen sicheren Datenbanknamen in der .env.php haben
+if (!empty($envContent) && preg_match('/PLANAGO_DB_FILE\s*=\s*([^\n\r]+)/', $envContent, $matches)) {
+    $dbFileName = trim($matches[1]);
+}
+
+// Wenn nicht: Generieren, Umbenennen und Speichern
+if (empty($dbFileName)) {
+    // 1. Sicheren Zufallsnamen generieren
+    $dbFileName = 'database_' . bin2hex(random_bytes(16)) . '.db';
+    
+    // 2. Pfade definieren
+    $oldDbPath = __DIR__ . '/data/database.db';
+    $newDbPath = __DIR__ . '/data/' . $dbFileName;
+    
+    // 3. Migration: Wenn die alte, unsichere Datei noch existiert, benennen wir sie um!
+    if (file_exists($oldDbPath)) {
+        @rename($oldDbPath, $newDbPath);
+    }
+    
+    // 4. Den neuen Namen sicher in die .env.php schreiben
+    $envAppend = "\nPLANAGO_DB_FILE=" . $dbFileName . "\n";
+    @file_put_contents(__DIR__ . '/.env.php', $envAppend, FILE_APPEND);
+}
+
 // --- KONSTANTEN SETZEN ---
 // Wichtig: encryptSecret(), update.php und install.php benötigen diese Konstanten zwingend!
 if (!defined('PLANAGO_LICENSE_KEY')) define('PLANAGO_LICENSE_KEY', $licenseKey);
 if (!defined('PLANAGO_APP_SECRET')) define('PLANAGO_APP_SECRET', $appSecret);
 if (!defined('PLANAGO_DEMO_MODE')) define('PLANAGO_DEMO_MODE', $demoMode);
+if (!defined('PLANAGO_DB_FILE')) define('PLANAGO_DB_FILE', $dbFileName);
 
 // --- SECRET ENCRYPTION ---
 function encryptSecret($plainText) {
@@ -145,7 +175,7 @@ require_once __DIR__ . '/PHPMailer/src/Exception.php';
 require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
 require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 
-define('DB_PATH', __DIR__ . '/data/database.db');
+define('DB_PATH', __DIR__ . '/data/' . PLANAGO_DB_FILE);
 
 // --- DATENBANK SCHUTZ (CRITICAL) ---
 // Verhindert, dass jemand die Datenbank-Datei direkt über den Browser herunterlädt

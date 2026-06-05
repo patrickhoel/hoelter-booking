@@ -9,9 +9,9 @@ $version = PLANAGO_VERSION;
 // Trage hier vor dem Ausführen der Datei kurz ein, was sich geändert hat.
 $releaseNotes = <<<'HTML'
 <ul style='margin: 0; padding-left: 20px;'>
-    <li><b>Security:</b> Kritisches Sicherheitsupdate für alle Server-Umgebungen (speziell für Nginx & LiteSpeed). Optimiert den Schutz der Konfigurationsdateien vor unbefugtem Lesezugriff.</li>
-    <li><b>Security:</b> Verbesserte Eingabe-Validierung (XSS- und CSS-Injection Schutz) im Admin-Dashboard für noch höhere Sicherheit.</li>
-    <li><b>System:</b> Automatischer Migrationsprozess integriert. Das System heilt alte Dateistrukturen beim ersten Laden vollautomatisch.</li>
+    <li><b>Security (Kritisch):</b> Dynamischer Datenbank-Schutz. Die Datenbankdatei erhält ab sofort einen kryptischen Namen, um direkte Downloads durch unbefugte Dritte komplett auszuschließen.</li>
+    <li><b>Fix:</b> Behebung eines Fehlers in der Lizenzprüfung, der kurzzeitig zu ungültigen Lizenzen führen konnte.</li>
+    <li><b>System:</b> Automatische Hintergrund-Migration für bestehende Kunden, die die alte Datenbank nahtlos und sicher umbenennt.</li>
 </ul>
 HTML;
 
