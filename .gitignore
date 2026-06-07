@@ -16,3 +16,6 @@ instance/
 
 # env php
 *.env.php
+
+# .vscode
+*.vscode/
